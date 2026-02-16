@@ -1076,8 +1076,17 @@
             ctx.fillRect(player4.x + 19, player4.y + 28, 7, 12);
         }
 
-        // Draw Mila the Beagle (8-bit style dog - brown, white, and black beagle)
+        // Draw Mila the Beagle (8-bit style dog - brown, white, and black beagle, facing right)
         function drawPlayer5() {
+            // Tail (brown with white tip, wagging up) - now on the left
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(player5.x + 4, player5.y + 8, 4, 8);
+            ctx.fillRect(player5.x + 2, player5.y + 4, 4, 4);
+
+            // White tail tip
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(player5.x + 2, player5.y + 4, 4, 3);
+
             // Body (brown beagle body)
             ctx.fillStyle = '#8B4513';
             ctx.fillRect(player5.x + 8, player5.y + 8, 24, 12);
@@ -1086,41 +1095,49 @@
             ctx.fillStyle = '#FFFFFF';
             ctx.fillRect(player5.x + 12, player5.y + 12, 16, 8);
 
-            // Head (brown)
+            // Head (brown) - now on the right
             ctx.fillStyle = '#8B4513';
-            ctx.fillRect(player5.x, player5.y + 4, 12, 12);
+            ctx.fillRect(player5.x + 28, player5.y + 4, 12, 12);
 
-            // Snout (white)
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(player5.x - 4, player5.y + 8, 6, 6);
-
-            // Nose (black)
-            ctx.fillStyle = '#000';
-            ctx.fillRect(player5.x - 4, player5.y + 8, 4, 4);
-
-            // Long beagle ears (brown with black tips)
+            // Long beagle ears (brown with black tips) - repositioned for right-facing
             ctx.fillStyle = '#8B4513';
-            ctx.fillRect(player5.x + 2, player5.y + 4, 4, 12);
-            ctx.fillRect(player5.x + 8, player5.y + 4, 4, 12);
+            ctx.fillRect(player5.x + 28, player5.y + 4, 4, 12);
+            ctx.fillRect(player5.x + 34, player5.y + 4, 4, 12);
 
             // Black ear tips
             ctx.fillStyle = '#000';
-            ctx.fillRect(player5.x + 2, player5.y + 4, 4, 4);
-            ctx.fillRect(player5.x + 8, player5.y + 4, 4, 4);
+            ctx.fillRect(player5.x + 28, player5.y + 4, 4, 4);
+            ctx.fillRect(player5.x + 34, player5.y + 4, 4, 4);
+
+            // Snout (white) - now on the right
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(player5.x + 38, player5.y + 8, 6, 6);
+
+            // Nose (black)
+            ctx.fillStyle = '#000';
+            ctx.fillRect(player5.x + 40, player5.y + 8, 4, 4);
 
             // Eyes (big puppy eyes)
             ctx.fillStyle = '#000';
-            ctx.fillRect(player5.x + 4, player5.y + 8, 3, 3);
-            ctx.fillRect(player5.x + 9, player5.y + 8, 3, 3);
+            ctx.fillRect(player5.x + 31, player5.y + 8, 3, 3);
+            ctx.fillRect(player5.x + 36, player5.y + 8, 3, 3);
 
             // Eye sparkles
             ctx.fillStyle = '#FFF';
-            ctx.fillRect(player5.x + 5, player5.y + 8, 1, 1);
-            ctx.fillRect(player5.x + 10, player5.y + 8, 1, 1);
+            ctx.fillRect(player5.x + 32, player5.y + 8, 1, 1);
+            ctx.fillRect(player5.x + 37, player5.y + 8, 1, 1);
 
             // Tongue (happy dog!)
             ctx.fillStyle = '#FF69B4';
-            ctx.fillRect(player5.x - 2, player5.y + 12, 3, 2);
+            ctx.fillRect(player5.x + 41, player5.y + 12, 3, 2);
+
+            // Collar (red with tag)
+            ctx.fillStyle = '#FF0000';
+            ctx.fillRect(player5.x + 20, player5.y + 7, 12, 2);
+
+            // Gold tag
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(player5.x + 25, player5.y + 8, 2, 2);
 
             // Legs (brown)
             ctx.fillStyle = '#8B4513';
@@ -1133,23 +1150,6 @@
             ctx.fillRect(player5.x + 10, player5.y + 24, 4, 4);
             ctx.fillRect(player5.x + 18, player5.y + 24, 4, 4);
             ctx.fillRect(player5.x + 26, player5.y + 24, 4, 4);
-
-            // Tail (brown with white tip, wagging up)
-            ctx.fillStyle = '#8B4513';
-            ctx.fillRect(player5.x + 32, player5.y + 8, 4, 8);
-            ctx.fillRect(player5.x + 34, player5.y + 4, 4, 4);
-
-            // White tail tip
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(player5.x + 34, player5.y + 4, 4, 3);
-
-            // Collar (red with tag)
-            ctx.fillStyle = '#FF0000';
-            ctx.fillRect(player5.x + 8, player5.y + 7, 12, 2);
-
-            // Gold tag
-            ctx.fillStyle = '#FFD700';
-            ctx.fillRect(player5.x + 13, player5.y + 8, 2, 2);
         }
 
         // Draw platforms
