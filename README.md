@@ -14,13 +14,22 @@ This is a simple but exciting adventure game where you control a character with 
    - You can double-click the file, or
    - Right-click and select "Open with" and choose your browser
 
-2. The game will start automatically!
+2. Choose your character:
+   - **Eleanor** 👑 - The Princess with blonde hair and a crown
+   - **William** 🧢 - The Prince with brown hair and a cap
+
+3. The game will start after you select your character!
 
 ### Controls
 
-- **Left Arrow (←)**: Move left
-- **Right Arrow (→)**: Move right
-- **Spacebar**: Jump
+**Keyboard:**
+- **Eleanor**: Arrow keys (← →) to move, **Spacebar** to jump
+- **William**: **A** and **D** keys to move, **W** key to jump
+
+**Gamepad (🎮):**
+- **Left Stick / D-Pad**: Move left/right
+- **A Button**: Jump
+- Works with any standard gamepad (Xbox, PlayStation, etc.)
 
 ### Game Objective
 
@@ -37,12 +46,14 @@ This is a simple but exciting adventure game where you control a character with 
 ## Features
 
 - 8-bit pixel art style graphics
-- Character with blonde hair and crown
+- **Two playable characters**: Eleanor (Princess) and William (Prince)
+- Character selection screen at the start
 - Adorable animated axolotls with wiggling gills
 - Interactive bouncy flowers that launch you into the air
   - Straight-up flowers for vertical boosts
   - Angled flowers for directional launches
 - Cheerful 8-bit background music with sound effects
+- **Gamepad support** 🎮 - Play with any standard controller!
 - Side-scrolling gameplay
 - Collectible stars
 - Dangerous obstacles

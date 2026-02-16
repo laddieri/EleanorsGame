@@ -234,6 +234,7 @@
                 <p>The Princess</p>
                 <p><strong>Controls:</strong></p>
                 <p>Arrow keys + SPACE</p>
+                <p>or 🎮 Gamepad</p>
             </div>
             <div class="character-card william" onclick="selectCharacter('william')">
                 <div class="character-preview">🧢</div>
@@ -241,6 +242,7 @@
                 <p>The Prince</p>
                 <p><strong>Controls:</strong></p>
                 <p>A/D + W</p>
+                <p>or 🎮 Gamepad</p>
             </div>
         </div>
     </div>
@@ -258,6 +260,7 @@
         <h2>How to Play</h2>
         <p><strong>Eleanor (Pink):</strong> <span class="key">← →</span> to move, <span class="key">SPACE</span> to jump</p>
         <p><strong>William (Blue):</strong> <span class="key">A D</span> to move, <span class="key">W</span> to jump</p>
+        <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
         <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
         <p>Jump into flowers 🌸 to launch into the sky!</p>
         <p>Watch out for the fire obstacles! 🔥</p>
@@ -435,6 +438,7 @@
                     <p><strong>Playing as Eleanor 👑</strong></p>
                     <p>Use <span class="key">← →</span> arrow keys to move</p>
                     <p>Press <span class="key">SPACE</span> to jump</p>
+                    <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
                     <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
                     <p>Jump into flowers 🌸 to launch into the sky!</p>
                     <p>Watch out for the fire obstacles! 🔥</p>
@@ -445,6 +449,7 @@
                     <p><strong>Playing as William 🧢</strong></p>
                     <p>Use <span class="key">A D</span> keys to move</p>
                     <p>Press <span class="key">W</span> to jump</p>
+                    <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
                     <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
                     <p>Jump into flowers 🌸 to launch into the sky!</p>
                     <p>Watch out for the fire obstacles! 🔥</p>
@@ -514,6 +519,83 @@
             }
             keys[e.code] = false;
         });
+
+        // ===== GAMEPAD SUPPORT =====
+        let gamepadConnected = false;
+        let gamepadIndex = null;
+
+        // Listen for gamepad connection
+        window.addEventListener("gamepadconnected", (e) => {
+            console.log("Gamepad connected:", e.gamepad.id);
+            gamepadConnected = true;
+            gamepadIndex = e.gamepad.index;
+        });
+
+        window.addEventListener("gamepaddisconnected", (e) => {
+            console.log("Gamepad disconnected");
+            gamepadConnected = false;
+            gamepadIndex = null;
+        });
+
+        // Poll gamepad state and update controls
+        function updateGamepadInput() {
+            if (!gamepadConnected) return;
+
+            const gamepads = navigator.getGamepads();
+            const gamepad = gamepads[gamepadIndex];
+
+            if (!gamepad) return;
+
+            // Deadzone for analog sticks
+            const deadzone = 0.2;
+
+            // Left stick or D-pad for movement
+            const leftStickX = gamepad.axes[0]; // Left stick horizontal (-1 to 1)
+            const dpadLeft = gamepad.buttons[14]?.pressed;
+            const dpadRight = gamepad.buttons[15]?.pressed;
+
+            // A button (button 0) for jumping
+            const aButton = gamepad.buttons[0]?.pressed;
+
+            // Map gamepad to keyboard controls based on selected character
+            if (selectedCharacter === 'eleanor') {
+                // Eleanor uses arrow keys + space
+                if (leftStickX < -deadzone || dpadLeft) {
+                    keys['ArrowLeft'] = true;
+                    keys['ArrowRight'] = false;
+                } else if (leftStickX > deadzone || dpadRight) {
+                    keys['ArrowRight'] = true;
+                    keys['ArrowLeft'] = false;
+                } else {
+                    keys['ArrowLeft'] = false;
+                    keys['ArrowRight'] = false;
+                }
+
+                if (aButton) {
+                    keys['Space'] = true;
+                } else {
+                    keys['Space'] = false;
+                }
+            } else if (selectedCharacter === 'william') {
+                // William uses A/D + W
+                if (leftStickX < -deadzone || dpadLeft) {
+                    keys['KeyA'] = true;
+                    keys['KeyD'] = false;
+                } else if (leftStickX > deadzone || dpadRight) {
+                    keys['KeyD'] = true;
+                    keys['KeyA'] = false;
+                } else {
+                    keys['KeyA'] = false;
+                    keys['KeyD'] = false;
+                }
+
+                if (aButton) {
+                    keys['KeyW'] = true;
+                } else {
+                    keys['KeyW'] = false;
+                }
+            }
+        }
 
         // Initialize game objects
         function init() {
@@ -1110,6 +1192,9 @@
             requestAnimationFrame(gameLoop);
 
             if (!gameRunning) return;
+
+            // Poll gamepad input
+            updateGamepadInput();
 
             // Draw everything
             drawBackground();
