@@ -127,9 +127,37 @@
             background: #C71585;
             transform: scale(1.05);
         }
+
+        #musicToggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #FF1493;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #musicToggle:hover {
+            background: #C71585;
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body>
+    <button id="musicToggle" title="Toggle Music">🔊</button>
+
     <h1>🌟 Eleanor's Adventure 🌟</h1>
 
     <canvas id="gameCanvas" width="800" height="600"></canvas>
@@ -156,6 +184,142 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+
+        // ===== 8-BIT AUDIO SYSTEM =====
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let musicEnabled = true;
+        let currentMelodyNote = 0;
+        let backgroundMusicInterval = null;
+
+        // Musical notes frequencies (in Hz)
+        const notes = {
+            'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23,
+            'G4': 392.00, 'A4': 440.00, 'B4': 493.88,
+            'C5': 523.25, 'D5': 587.33, 'E5': 659.25, 'F5': 698.46,
+            'G5': 783.99, 'A5': 880.00, 'B5': 987.77,
+            'C6': 1046.50, 'REST': 0
+        };
+
+        // Cheerful melody - Happy adventure theme!
+        const melody = [
+            { note: 'C5', duration: 0.2 },
+            { note: 'E5', duration: 0.2 },
+            { note: 'G5', duration: 0.2 },
+            { note: 'C6', duration: 0.3 },
+            { note: 'G5', duration: 0.1 },
+            { note: 'E5', duration: 0.2 },
+
+            { note: 'D5', duration: 0.2 },
+            { note: 'F5', duration: 0.2 },
+            { note: 'A5', duration: 0.2 },
+            { note: 'G5', duration: 0.4 },
+
+            { note: 'E5', duration: 0.2 },
+            { note: 'G5', duration: 0.2 },
+            { note: 'C6', duration: 0.2 },
+            { note: 'B5', duration: 0.2 },
+            { note: 'A5', duration: 0.2 },
+            { note: 'G5', duration: 0.2 },
+
+            { note: 'F5', duration: 0.2 },
+            { note: 'A5', duration: 0.2 },
+            { note: 'G5', duration: 0.2 },
+            { note: 'E5', duration: 0.2 },
+            { note: 'C5', duration: 0.4 },
+            { note: 'REST', duration: 0.2 }
+        ];
+
+        // Play a single 8-bit note using square wave
+        function playNote(frequency, duration, volume = 0.1) {
+            if (!musicEnabled || frequency === 0) return;
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.type = 'square'; // Classic 8-bit sound!
+            oscillator.frequency.value = frequency;
+
+            gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        // Play the background music loop
+        function playBackgroundMusic() {
+            if (!musicEnabled) return;
+
+            const noteData = melody[currentMelodyNote];
+            const frequency = notes[noteData.note];
+
+            playNote(frequency, noteData.duration, 0.05); // Quieter for background
+
+            currentMelodyNote = (currentMelodyNote + 1) % melody.length;
+        }
+
+        // Star collection sound effect
+        function playStarSound() {
+            if (!musicEnabled) return;
+
+            // Ascending arpeggio
+            playNote(notes['C5'], 0.08, 0.15);
+            setTimeout(() => playNote(notes['E5'], 0.08, 0.15), 80);
+            setTimeout(() => playNote(notes['G5'], 0.08, 0.15), 160);
+            setTimeout(() => playNote(notes['C6'], 0.15, 0.15), 240);
+        }
+
+        // Damage/lose life sound effect
+        function playDamageSound() {
+            if (!musicEnabled) return;
+
+            // Descending dramatic sound
+            playNote(notes['G5'], 0.1, 0.2);
+            setTimeout(() => playNote(notes['E5'], 0.1, 0.2), 100);
+            setTimeout(() => playNote(notes['C5'], 0.1, 0.2), 200);
+            setTimeout(() => playNote(notes['A4'], 0.3, 0.2), 300);
+        }
+
+        // Jump sound effect
+        function playJumpSound() {
+            if (!musicEnabled) return;
+            playNote(notes['E5'], 0.1, 0.08);
+            setTimeout(() => playNote(notes['G5'], 0.1, 0.08), 50);
+        }
+
+        // Toggle music on/off
+        document.getElementById('musicToggle').addEventListener('click', function() {
+            musicEnabled = !musicEnabled;
+            this.textContent = musicEnabled ? '🔊' : '🔇';
+
+            if (musicEnabled) {
+                startBackgroundMusic();
+            } else {
+                stopBackgroundMusic();
+            }
+        });
+
+        // Start the background music
+        function startBackgroundMusic() {
+            if (backgroundMusicInterval) return;
+
+            currentMelodyNote = 0;
+            backgroundMusicInterval = setInterval(() => {
+                const noteData = melody[currentMelodyNote];
+                playBackgroundMusic();
+            }, 250); // Play a note every 250ms
+        }
+
+        // Stop the background music
+        function stopBackgroundMusic() {
+            if (backgroundMusicInterval) {
+                clearInterval(backgroundMusicInterval);
+                backgroundMusicInterval = null;
+            }
+        }
 
         // Game state
         let gameRunning = true;
@@ -433,6 +597,7 @@
             if (keys['Space'] && !player.jumping) {
                 player.velocityY = -15;
                 player.jumping = true;
+                playJumpSound();
             }
 
             // Apply gravity
@@ -496,6 +661,7 @@
                         star.collected = true;
                         score += 10;
                         document.getElementById('score').textContent = score;
+                        playStarSound();
                     }
                 }
             });
@@ -521,6 +687,7 @@
         function loseLife() {
             lives--;
             document.getElementById('lives').textContent = lives;
+            playDamageSound();
 
             // Reset player position
             player.x = 100;
@@ -573,6 +740,7 @@
         // Start the game
         init();
         gameLoop();
+        startBackgroundMusic();
     </script>
 </body>
 </html>
