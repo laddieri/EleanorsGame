@@ -23,8 +23,10 @@ This is a simple but exciting adventure game where you control a character with 
 ### Controls
 
 **Keyboard:**
-- **Eleanor**: Arrow keys (← →) to move, **Spacebar** to jump
-- **William**: **A** and **D** keys to move, **W** key to jump
+- **All Characters**: Arrow keys (← →) to move, **Spacebar** to jump
+
+**Mobile Touch:**
+- Use on-screen buttons to move left/right and jump
 
 **Gamepad (🎮):**
 - **Left Stick / D-Pad**: Move left/right

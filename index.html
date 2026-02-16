@@ -514,7 +514,7 @@
                 <h3>William</h3>
                 <p>The Prince</p>
                 <p><strong>Controls:</strong></p>
-                <p>A/D + W</p>
+                <p>Arrow keys + SPACE</p>
                 <p>📱 Touch or 🎮 Gamepad</p>
             </div>
             <div class="character-card mom" onclick="selectCharacter('mom')">
@@ -556,8 +556,7 @@
 
     <div id="instructions">
         <h2>How to Play</h2>
-        <p><strong>Eleanor (Pink):</strong> <span class="key">← →</span> to move, <span class="key">SPACE</span> to jump</p>
-        <p><strong>William (Blue):</strong> <span class="key">A D</span> to move, <span class="key">W</span> to jump</p>
+        <p><strong>Controls:</strong> <span class="key">← →</span> arrow keys to move, <span class="key">SPACE</span> to jump</p>
         <p><strong>📱 Mobile:</strong> Use on-screen buttons to move and jump</p>
         <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
         <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
@@ -764,8 +763,8 @@
                 instructionsDiv.innerHTML = `
                     <h2>How to Play</h2>
                     <p><strong>Playing as William 🧢</strong></p>
-                    <p>Use <span class="key">A D</span> keys to move</p>
-                    <p>Press <span class="key">W</span> to jump</p>
+                    <p>Use <span class="key">← →</span> arrow keys to move</p>
+                    <p>Press <span class="key">SPACE</span> to jump</p>
                     <p><strong>📱 Mobile:</strong> Use on-screen buttons</p>
                     <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
                     <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
@@ -949,12 +948,8 @@
 
             // Helper function to map touch to appropriate key based on selected character
             function getMovementKeys() {
-                if (selectedCharacter === 'william') {
-                    return { left: 'KeyA', right: 'KeyD', jump: 'KeyW' };
-                } else {
-                    // Eleanor, Mom, Dad, and Mila all use arrow keys
-                    return { left: 'ArrowLeft', right: 'ArrowRight', jump: 'Space' };
-                }
+                // All characters use arrow keys and Space
+                return { left: 'ArrowLeft', right: 'ArrowRight', jump: 'Space' };
             }
 
             // Left button
@@ -1061,61 +1056,22 @@
             // A button (button 0) for jumping
             const aButton = gamepad.buttons[0]?.pressed;
 
-            // Map gamepad to keyboard controls based on selected character
-            if (selectedCharacter === 'eleanor') {
-                // Eleanor uses arrow keys + space
-                if (leftStickX < -deadzone || dpadLeft) {
-                    keys['ArrowLeft'] = true;
-                    keys['ArrowRight'] = false;
-                } else if (leftStickX > deadzone || dpadRight) {
-                    keys['ArrowRight'] = true;
-                    keys['ArrowLeft'] = false;
-                } else {
-                    keys['ArrowLeft'] = false;
-                    keys['ArrowRight'] = false;
-                }
+            // Map gamepad to keyboard controls - all characters use arrow keys + space
+            if (leftStickX < -deadzone || dpadLeft) {
+                keys['ArrowLeft'] = true;
+                keys['ArrowRight'] = false;
+            } else if (leftStickX > deadzone || dpadRight) {
+                keys['ArrowRight'] = true;
+                keys['ArrowLeft'] = false;
+            } else {
+                keys['ArrowLeft'] = false;
+                keys['ArrowRight'] = false;
+            }
 
-                if (aButton) {
-                    keys['Space'] = true;
-                } else {
-                    keys['Space'] = false;
-                }
-            } else if (selectedCharacter === 'william') {
-                // William uses A/D + W
-                if (leftStickX < -deadzone || dpadLeft) {
-                    keys['KeyA'] = true;
-                    keys['KeyD'] = false;
-                } else if (leftStickX > deadzone || dpadRight) {
-                    keys['KeyD'] = true;
-                    keys['KeyA'] = false;
-                } else {
-                    keys['KeyA'] = false;
-                    keys['KeyD'] = false;
-                }
-
-                if (aButton) {
-                    keys['KeyW'] = true;
-                } else {
-                    keys['KeyW'] = false;
-                }
-            } else if (selectedCharacter === 'mom' || selectedCharacter === 'dad' || selectedCharacter === 'mila') {
-                // Mom, Dad, and Mila use arrow keys + space
-                if (leftStickX < -deadzone || dpadLeft) {
-                    keys['ArrowLeft'] = true;
-                    keys['ArrowRight'] = false;
-                } else if (leftStickX > deadzone || dpadRight) {
-                    keys['ArrowRight'] = true;
-                    keys['ArrowLeft'] = false;
-                } else {
-                    keys['ArrowLeft'] = false;
-                    keys['ArrowRight'] = false;
-                }
-
-                if (aButton) {
-                    keys['Space'] = true;
-                } else {
-                    keys['Space'] = false;
-                }
+            if (aButton) {
+                keys['Space'] = true;
+            } else {
+                keys['Space'] = false;
             }
         }
 
@@ -1788,17 +1744,17 @@
 
         // Update player 2 (William) physics
         function updatePlayer2() {
-            // Horizontal movement (WASD keys)
-            if (keys['KeyD']) {
+            // Horizontal movement (Arrow keys)
+            if (keys['ArrowRight']) {
                 player2.velocityX = 5;
-            } else if (keys['KeyA']) {
+            } else if (keys['ArrowLeft']) {
                 player2.velocityX = -5;
             } else {
                 player2.velocityX = 0;
             }
 
-            // Jump (W key)
-            if (keys['KeyW'] && !player2.jumping) {
+            // Jump (Space key)
+            if (keys['Space'] && !player2.jumping) {
                 player2.velocityY = -22;  // Slightly smaller jump for the younger brother
                 player2.jumping = true;
                 playJumpSound();
