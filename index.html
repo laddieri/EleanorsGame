@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eleanor's Adventure - 8-Bit Side Scroller</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        h1 {
+            color: #FF1493;
+            text-shadow: 3px 3px 0px #FFB6C1, 6px 6px 0px #FFC0CB;
+            font-size: 48px;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        #gameCanvas {
+            border: 8px solid #8B4513;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            background: #87CEEB;
+            image-rendering: pixelated;
+        }
+
+        #gameInfo {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            gap: 30px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .score {
+            color: #FFD700;
+            text-shadow: 2px 2px 0px #FF8C00;
+        }
+
+        .lives {
+            color: #FF1493;
+            text-shadow: 2px 2px 0px #C71585;
+        }
+
+        #instructions {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            text-align: center;
+        }
+
+        #instructions h2 {
+            color: #FF1493;
+            margin-bottom: 10px;
+        }
+
+        #instructions p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+
+        .key {
+            background: #FFB6C1;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 0 5px;
+        }
+
+        #gameOver {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            z-index: 1000;
+        }
+
+        #gameOver h2 {
+            color: #FF1493;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        #gameOver button {
+            background: #FF1493;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        #gameOver button:hover {
+            background: #C71585;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <h1>🌟 Eleanor's Adventure 🌟</h1>
+
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <div id="gameInfo">
+        <div class="score">⭐ Stars: <span id="score">0</span></div>
+        <div class="lives">❤️ Lives: <span id="lives">3</span></div>
+    </div>
+
+    <div id="instructions">
+        <h2>How to Play</h2>
+        <p>Use <span class="key">← →</span> arrow keys to move</p>
+        <p>Press <span class="key">SPACE</span> to jump</p>
+        <p>Collect stars ⭐ and avoid the obstacles! 🔥</p>
+    </div>
+
+    <div id="gameOver">
+        <h2>Game Over!</h2>
+        <p>Final Score: <span id="finalScore">0</span></p>
+        <button onclick="location.reload()">Play Again!</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game state
+        let gameRunning = true;
+        let score = 0;
+        let lives = 3;
+        let scrollOffset = 0;
+        let gameSpeed = 2;
+
+        // Player object
+        const player = {
+            x: 100,
+            y: 400,
+            width: 32,
+            height: 32,
+            velocityY: 0,
+            velocityX: 0,
+            jumping: false,
+            color: '#FF1493'
+        };
+
+        // Game objects arrays
+        let platforms = [];
+        let stars = [];
+        let obstacles = [];
+
+        // Keyboard controls
+        const keys = {};
+
+        document.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        // Initialize game objects
+        function init() {
+            // Create ground platform
+            platforms.push({ x: 0, y: 550, width: 10000, height: 50, color: '#228B22' });
+
+            // Create floating platforms
+            for (let i = 0; i < 20; i++) {
+                platforms.push({
+                    x: 200 + i * 400,
+                    y: 500 - Math.random() * 250,
+                    width: 150 + Math.random() * 100,
+                    height: 20,
+                    color: '#8B4513'
+                });
+            }
+
+            // Create stars to collect
+            for (let i = 0; i < 30; i++) {
+                stars.push({
+                    x: 300 + i * 300,
+                    y: 200 + Math.random() * 200,
+                    size: 20,
+                    collected: false
+                });
+            }
+
+            // Create obstacles
+            for (let i = 0; i < 15; i++) {
+                obstacles.push({
+                    x: 500 + i * 600,
+                    y: 518,
+                    width: 32,
+                    height: 32,
+                    color: '#FF4500'
+                });
+            }
+        }
+
+        // Draw player (8-bit style character)
+        function drawPlayer() {
+            // Body
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x + 8, player.y + 8, 16, 16);
+
+            // Head
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(player.x + 8, player.y, 16, 8);
+
+            // Eyes
+            ctx.fillStyle = '#000';
+            ctx.fillRect(player.x + 10, player.y + 2, 3, 3);
+            ctx.fillRect(player.x + 19, player.y + 2, 3, 3);
+
+            // Legs
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x + 8, player.y + 24, 6, 8);
+            ctx.fillRect(player.x + 18, player.y + 24, 6, 8);
+
+            // Crown (because Eleanor is royalty!)
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(player.x + 8, player.y - 4, 4, 4);
+            ctx.fillRect(player.x + 14, player.y - 6, 4, 6);
+            ctx.fillRect(player.x + 20, player.y - 4, 4, 4);
+        }
+
+        // Draw platforms
+        function drawPlatforms() {
+            platforms.forEach(platform => {
+                const screenX = platform.x - scrollOffset;
+                if (screenX + platform.width > 0 && screenX < canvas.width) {
+                    ctx.fillStyle = platform.color;
+                    ctx.fillRect(screenX, platform.y, platform.width, platform.height);
+
+                    // Add grass texture to ground
+                    if (platform.y === 550) {
+                        ctx.fillStyle = '#32CD32';
+                        for (let i = 0; i < platform.width; i += 10) {
+                            ctx.fillRect(screenX + i, platform.y, 8, 4);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Draw stars
+        function drawStars() {
+            stars.forEach(star => {
+                if (!star.collected) {
+                    const screenX = star.x - scrollOffset;
+                    if (screenX > -50 && screenX < canvas.width + 50) {
+                        // Draw star shape (8-bit style)
+                        ctx.fillStyle = '#FFD700';
+                        ctx.fillRect(screenX + 8, star.y, 4, 20);
+                        ctx.fillRect(screenX, star.y + 8, 20, 4);
+                        ctx.fillRect(screenX + 4, star.y + 4, 12, 12);
+
+                        // Add sparkle
+                        ctx.fillStyle = '#FFF';
+                        ctx.fillRect(screenX + 9, star.y + 9, 2, 2);
+                    }
+                }
+            });
+        }
+
+        // Draw obstacles
+        function drawObstacles() {
+            obstacles.forEach(obstacle => {
+                const screenX = obstacle.x - scrollOffset;
+                if (screenX > -50 && screenX < canvas.width + 50) {
+                    // Draw fire/obstacle (8-bit style)
+                    ctx.fillStyle = obstacle.color;
+                    ctx.fillRect(screenX + 8, obstacle.y, 16, 24);
+                    ctx.fillRect(screenX + 4, obstacle.y + 8, 24, 16);
+
+                    ctx.fillStyle = '#FF8C00';
+                    ctx.fillRect(screenX + 12, obstacle.y + 4, 8, 16);
+
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(screenX + 14, obstacle.y + 8, 4, 8);
+                }
+            });
+        }
+
+        // Draw background elements
+        function drawBackground() {
+            // Sky gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(1, '#E0F6FF');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Clouds
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            for (let i = 0; i < 5; i++) {
+                const cloudX = (i * 250 - scrollOffset * 0.3) % (canvas.width + 200) - 100;
+                ctx.fillRect(cloudX, 50 + i * 40, 60, 20);
+                ctx.fillRect(cloudX + 20, 40 + i * 40, 60, 20);
+                ctx.fillRect(cloudX + 40, 50 + i * 40, 60, 20);
+            }
+
+            // Sun
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(700, 50, 60, 60);
+            ctx.fillStyle = '#FFA500';
+            ctx.fillRect(710, 60, 40, 40);
+        }
+
+        // Update player physics
+        function updatePlayer() {
+            // Horizontal movement
+            if (keys['ArrowRight']) {
+                player.velocityX = 5;
+            } else if (keys['ArrowLeft']) {
+                player.velocityX = -5;
+            } else {
+                player.velocityX = 0;
+            }
+
+            // Jump
+            if (keys['Space'] && !player.jumping) {
+                player.velocityY = -15;
+                player.jumping = true;
+            }
+
+            // Apply gravity
+            player.velocityY += 0.8;
+            player.y += player.velocityY;
+            player.x += player.velocityX;
+
+            // Keep player in bounds horizontally
+            if (player.x < 0) player.x = 0;
+            if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
+
+            // Check platform collisions
+            let onPlatform = false;
+            platforms.forEach(platform => {
+                if (checkCollision(player, {
+                    x: platform.x - scrollOffset,
+                    y: platform.y,
+                    width: platform.width,
+                    height: platform.height
+                })) {
+                    if (player.velocityY > 0) {
+                        player.y = platform.y - player.height;
+                        player.velocityY = 0;
+                        player.jumping = false;
+                        onPlatform = true;
+                    }
+                }
+            });
+
+            // Fall off the world
+            if (player.y > canvas.height) {
+                loseLife();
+            }
+
+            // Scroll the world
+            if (player.x > canvas.width / 2) {
+                scrollOffset += gameSpeed;
+                player.x = canvas.width / 2;
+            }
+        }
+
+        // Check collision between two rectangles
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        // Check star collection
+        function checkStarCollection() {
+            stars.forEach(star => {
+                if (!star.collected) {
+                    const starRect = {
+                        x: star.x - scrollOffset,
+                        y: star.y,
+                        width: 20,
+                        height: 20
+                    };
+                    if (checkCollision(player, starRect)) {
+                        star.collected = true;
+                        score += 10;
+                        document.getElementById('score').textContent = score;
+                    }
+                }
+            });
+        }
+
+        // Check obstacle collision
+        function checkObstacleCollision() {
+            obstacles.forEach(obstacle => {
+                const obstacleRect = {
+                    x: obstacle.x - scrollOffset,
+                    y: obstacle.y,
+                    width: obstacle.width,
+                    height: obstacle.height
+                };
+                if (checkCollision(player, obstacleRect)) {
+                    loseLife();
+                    obstacle.x = -1000; // Move obstacle off screen
+                }
+            });
+        }
+
+        // Lose a life
+        function loseLife() {
+            lives--;
+            document.getElementById('lives').textContent = lives;
+
+            // Reset player position
+            player.x = 100;
+            player.y = 400;
+            player.velocityY = 0;
+            player.velocityX = 0;
+            player.jumping = false;
+
+            if (lives <= 0) {
+                gameOver();
+            }
+        }
+
+        // Game over
+        function gameOver() {
+            gameRunning = false;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+
+        // Main game loop
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            // Draw everything
+            drawBackground();
+            drawPlatforms();
+            drawStars();
+            drawObstacles();
+            drawPlayer();
+
+            // Update game state
+            updatePlayer();
+            checkStarCollection();
+            checkObstacleCollision();
+
+            // Increase difficulty gradually
+            if (score > 50 && gameSpeed < 4) {
+                gameSpeed = 3;
+            }
+            if (score > 100 && gameSpeed < 5) {
+                gameSpeed = 4;
+            }
+
+            // Continue the loop
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game
+        init();
+        gameLoop();
+    </script>
+</body>
+</html>
