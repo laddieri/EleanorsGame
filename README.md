@@ -4,7 +4,7 @@ A fun and colorful 8-bit style side-scrolling game created to teach young creato
 
 ## About This Game
 
-This is a simple but exciting adventure game where you control a character with a crown, jumping across platforms, collecting stars, and avoiding obstacles. The game gets progressively more challenging as you collect more stars!
+This is a simple but exciting adventure game where you control a character with blonde hair and a crown, jumping across platforms, collecting stars, meeting friendly axolotls, and avoiding obstacles. The game gets progressively more challenging as you collect more stars!
 
 ## How to Play
 
@@ -25,6 +25,7 @@ This is a simple but exciting adventure game where you control a character with 
 ### Game Objective
 
 - Collect as many **stars** ⭐ as possible (each star is worth 10 points!)
+- Meet the cute **axolotls** scattered throughout the world (they're friendly!)
 - Avoid the **fire obstacles** 🔥 (they cost you a life!)
 - Don't fall off platforms or you'll lose a life
 - You have 3 lives to get the highest score possible
@@ -33,6 +34,8 @@ This is a simple but exciting adventure game where you control a character with 
 ## Features
 
 - 8-bit pixel art style graphics
+- Character with blonde hair and crown
+- Adorable animated axolotls with wiggling gills
 - Side-scrolling gameplay
 - Collectible stars
 - Dangerous obstacles
