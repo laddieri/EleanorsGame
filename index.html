@@ -158,7 +158,7 @@
 <body>
     <button id="musicToggle" title="Toggle Music">🔊</button>
 
-    <h1>🌟 Eleanor's Adventure 🌟</h1>
+    <h1>🌟 Eleanor & William's Adventure 🌟</h1>
 
     <canvas id="gameCanvas" width="800" height="600"></canvas>
 
@@ -169,8 +169,8 @@
 
     <div id="instructions">
         <h2>How to Play</h2>
-        <p>Use <span class="key">← →</span> arrow keys to move</p>
-        <p>Press <span class="key">SPACE</span> to jump</p>
+        <p><strong>Eleanor (Pink):</strong> <span class="key">← →</span> to move, <span class="key">SPACE</span> to jump</p>
+        <p><strong>William (Blue):</strong> <span class="key">A D</span> to move, <span class="key">W</span> to jump</p>
         <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
         <p>Jump into flowers 🌸 to launch into the sky!</p>
         <p>Watch out for the fire obstacles! 🔥</p>
@@ -340,7 +340,7 @@
         let scrollOffset = 0;
         let gameSpeed = 2;
 
-        // Player object
+        // Player objects
         const player = {
             x: 100,
             y: 400,
@@ -349,7 +349,20 @@
             velocityY: 0,
             velocityX: 0,
             jumping: false,
-            color: '#FF1493'
+            color: '#FF1493',
+            name: 'Eleanor'
+        };
+
+        const player2 = {
+            x: 150,
+            y: 400,
+            width: 28,
+            height: 28,
+            velocityY: 0,
+            velocityX: 0,
+            jumping: false,
+            color: '#1E90FF',
+            name: 'William'
         };
 
         // Game objects arrays
@@ -364,7 +377,7 @@
 
         document.addEventListener('keydown', (e) => {
             // Prevent default browser behavior for game keys
-            if (['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.code)) {
+            if (['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
                 e.preventDefault();
             }
             keys[e.code] = true;
@@ -372,7 +385,7 @@
 
         document.addEventListener('keyup', (e) => {
             // Prevent default browser behavior for game keys
-            if (['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.code)) {
+            if (['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
                 e.preventDefault();
             }
             keys[e.code] = false;
@@ -486,6 +499,42 @@
             ctx.fillRect(player.x + 9, player.y - 3, 2, 2);
             ctx.fillRect(player.x + 15, player.y - 5, 2, 2);
             ctx.fillRect(player.x + 21, player.y - 3, 2, 2);
+        }
+
+        // Draw William (8-bit style character - Eleanor's younger brother)
+        function drawPlayer2() {
+            // Body (blue shirt)
+            ctx.fillStyle = player2.color;
+            ctx.fillRect(player2.x + 7, player2.y + 7, 14, 14);
+
+            // Head (skin tone)
+            ctx.fillStyle = '#FDBCB4';
+            ctx.fillRect(player2.x + 7, player2.y, 14, 7);
+
+            // Brown hair
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(player2.x + 6, player2.y - 1, 16, 3);
+            ctx.fillRect(player2.x + 5, player2.y + 1, 4, 4);
+            ctx.fillRect(player2.x + 19, player2.y + 1, 4, 4);
+
+            // Eyes
+            ctx.fillStyle = '#000';
+            ctx.fillRect(player2.x + 9, player2.y + 2, 2, 2);
+            ctx.fillRect(player2.x + 17, player2.y + 2, 2, 2);
+
+            // Smile
+            ctx.fillStyle = '#FF69B4';
+            ctx.fillRect(player2.x + 11, player2.y + 5, 6, 2);
+
+            // Legs
+            ctx.fillStyle = player2.color;
+            ctx.fillRect(player2.x + 7, player2.y + 21, 5, 7);
+            ctx.fillRect(player2.x + 16, player2.y + 21, 5, 7);
+
+            // Small cap
+            ctx.fillStyle = '#4169E1';
+            ctx.fillRect(player2.x + 7, player2.y - 3, 14, 2);
+            ctx.fillRect(player2.x + 9, player2.y - 5, 10, 2);
         }
 
         // Draw platforms
@@ -762,6 +811,57 @@
             }
         }
 
+        // Update player 2 (William) physics
+        function updatePlayer2() {
+            // Horizontal movement (WASD keys)
+            if (keys['KeyD']) {
+                player2.velocityX = 5;
+            } else if (keys['KeyA']) {
+                player2.velocityX = -5;
+            } else {
+                player2.velocityX = 0;
+            }
+
+            // Jump (W key)
+            if (keys['KeyW'] && !player2.jumping) {
+                player2.velocityY = -22;  // Slightly smaller jump for the younger brother
+                player2.jumping = true;
+                playJumpSound();
+            }
+
+            // Apply gravity
+            player2.velocityY += 0.8;
+            player2.y += player2.velocityY;
+            player2.x += player2.velocityX;
+
+            // Keep player in bounds horizontally
+            if (player2.x < 0) player2.x = 0;
+            if (player2.x > canvas.width - player2.width) player2.x = canvas.width - player2.width;
+
+            // Check platform collisions
+            let onPlatform = false;
+            platforms.forEach(platform => {
+                if (checkCollision(player2, {
+                    x: platform.x - scrollOffset,
+                    y: platform.y,
+                    width: platform.width,
+                    height: platform.height
+                })) {
+                    if (player2.velocityY > 0) {
+                        player2.y = platform.y - player2.height;
+                        player2.velocityY = 0;
+                        player2.jumping = false;
+                        onPlatform = true;
+                    }
+                }
+            });
+
+            // Fall off the world
+            if (player2.y > canvas.height) {
+                loseLife();
+            }
+        }
+
         // Check collision between two rectangles
         function checkCollision(rect1, rect2) {
             return rect1.x < rect2.x + rect2.width &&
@@ -780,7 +880,7 @@
                         width: 20,
                         height: 20
                     };
-                    if (checkCollision(player, starRect)) {
+                    if (checkCollision(player, starRect) || checkCollision(player2, starRect)) {
                         star.collected = true;
                         score += 10;
                         document.getElementById('score').textContent = score;
@@ -799,7 +899,7 @@
                     width: obstacle.width,
                     height: obstacle.height
                 };
-                if (checkCollision(player, obstacleRect)) {
+                if (checkCollision(player, obstacleRect) || checkCollision(player2, obstacleRect)) {
                     loseLife();
                     obstacle.x = -1000; // Move obstacle off screen
                 }
@@ -815,27 +915,42 @@
                     width: flower.width,
                     height: flower.height
                 };
+
+                // Check Eleanor
                 if (checkCollision(player, flowerRect)) {
-                    // Apply boost based on flower angle
                     playFlowerBoostSound();
 
                     if (flower.angle === 'up') {
-                        // Shoot straight up!
                         player.velocityY = -20;
                         player.jumping = true;
                     } else if (flower.angle === 'right') {
-                        // Shoot diagonally up-right
                         player.velocityY = -18;
                         player.velocityX = 12;
                         player.jumping = true;
                     } else if (flower.angle === 'left') {
-                        // Shoot diagonally up-left
                         player.velocityY = -18;
                         player.velocityX = -12;
                         player.jumping = true;
                     }
+                    flower.bounceAnim = 0;
+                }
 
-                    // Visual feedback - make flower bounce
+                // Check William
+                if (checkCollision(player2, flowerRect)) {
+                    playFlowerBoostSound();
+
+                    if (flower.angle === 'up') {
+                        player2.velocityY = -20;
+                        player2.jumping = true;
+                    } else if (flower.angle === 'right') {
+                        player2.velocityY = -18;
+                        player2.velocityX = 12;
+                        player2.jumping = true;
+                    } else if (flower.angle === 'left') {
+                        player2.velocityY = -18;
+                        player2.velocityX = -12;
+                        player2.jumping = true;
+                    }
                     flower.bounceAnim = 0;
                 }
             });
@@ -847,12 +962,19 @@
             document.getElementById('lives').textContent = lives;
             playDamageSound();
 
-            // Reset player position
+            // Reset Eleanor's position
             player.x = 100;
             player.y = 400;
             player.velocityY = 0;
             player.velocityX = 0;
             player.jumping = false;
+
+            // Reset William's position
+            player2.x = 150;
+            player2.y = 400;
+            player2.velocityY = 0;
+            player2.velocityX = 0;
+            player2.jumping = false;
 
             if (lives <= 0) {
                 gameOver();
@@ -878,9 +1000,11 @@
             drawStars();
             drawObstacles();
             drawPlayer();
+            drawPlayer2();
 
             // Update game state
             updatePlayer();
+            updatePlayer2();
             checkStarCollection();
             checkObstacleCollision();
             checkFlowerBoost();
