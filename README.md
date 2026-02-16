@@ -33,6 +33,7 @@ This is a simple but exciting adventure game where you control a character with 
 
 ### Game Objective
 
+- **Complete each level** by reaching the victory flag pole at the end! 🏁
 - Collect as many **stars** ⭐ as possible (each star is worth 10 points!)
 - Meet the cute **axolotls** scattered throughout the world (they're friendly!)
 - Jump into **flowers** 🌸 to launch high into the sky!
@@ -40,12 +41,18 @@ This is a simple but exciting adventure game where you control a character with 
   - Orange flowers shoot you diagonally (left or right)
 - Avoid the **fire obstacles** 🔥 (they cost you a life!)
 - Don't fall off platforms or you'll lose a life
-- You have 3 lives to get the highest score possible
-- The game gets faster as you collect more stars!
+- You have 3 lives to complete as many levels as possible
+- Each level gets progressively harder with longer distances, more obstacles, and faster gameplay!
+- Watch for the **FINISH** flag to complete each level with a celebration! 🎉
 
 ## Features
 
 - 8-bit pixel art style graphics
+- **Multiple levels** with increasing difficulty! 🏆
+  - Each level is longer and more challenging than the last
+  - Victory flag pole at the end of each level (like Mario!)
+  - Celebration animation when you complete a level
+  - Progressive difficulty with more obstacles, gaps, and speed
 - **Two playable characters**: Eleanor (Princess) and William (Prince)
 - Character selection screen at the start
 - Adorable animated axolotls with wiggling gills
@@ -61,7 +68,7 @@ This is a simple but exciting adventure game where you control a character with 
 - Score tracking
 - Lives system
 - Beautiful background with clouds and sun
-- Progressive difficulty
+- Level completion screens with stats
 
 ## For Young Creators
 

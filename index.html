@@ -128,6 +128,56 @@
             transform: scale(1.05);
         }
 
+        #levelComplete {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            z-index: 1000;
+        }
+
+        #levelComplete h2 {
+            color: #FFD700;
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 0px #FF8C00;
+        }
+
+        #levelComplete p {
+            font-size: 24px;
+            margin: 10px 0;
+            color: #333;
+        }
+
+        #levelComplete button {
+            background: #FFD700;
+            color: #333;
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        #levelComplete button:hover {
+            background: #FFA500;
+            transform: scale(1.05);
+        }
+
+        .level-display {
+            color: #1E90FF;
+            text-shadow: 2px 2px 0px #0066CC;
+        }
+
         #musicToggle {
             position: fixed;
             top: 20px;
@@ -252,6 +302,7 @@
     <canvas id="gameCanvas" width="800" height="600"></canvas>
 
     <div id="gameInfo">
+        <div class="level-display">🏆 Level: <span id="level">1</span></div>
         <div class="score">⭐ Stars: <span id="score">0</span></div>
         <div class="lives">❤️ Lives: <span id="lives">3</span></div>
     </div>
@@ -266,9 +317,18 @@
         <p>Watch out for the fire obstacles! 🔥</p>
     </div>
 
+    <div id="levelComplete">
+        <h2>🎉 Level Complete! 🎉</h2>
+        <p>Level <span id="completedLevel">1</span> Cleared!</p>
+        <p>Stars Collected: <span id="levelStars">0</span></p>
+        <p>Total Score: <span id="levelScore">0</span></p>
+        <button onclick="nextLevel()">Next Level ➡️</button>
+    </div>
+
     <div id="gameOver">
         <h2>Game Over!</h2>
         <p>Final Score: <span id="finalScore">0</span></p>
+        <p>Levels Completed: <span id="levelsCompleted">0</span></p>
         <button onclick="location.reload()">Play Again!</button>
     </div>
 
@@ -288,7 +348,8 @@
             'G4': 392.00, 'A4': 440.00, 'B4': 493.88,
             'C5': 523.25, 'D5': 587.33, 'E5': 659.25, 'F5': 698.46,
             'G5': 783.99, 'A5': 880.00, 'B5': 987.77,
-            'C6': 1046.50, 'D6': 1174.66, 'E6': 1318.51, 'REST': 0
+            'C6': 1046.50, 'D6': 1174.66, 'E6': 1318.51, 'F6': 1396.91,
+            'G6': 1567.98, 'A6': 1760.00, 'REST': 0
         };
 
         // Cheerful melody - Happy adventure theme!
@@ -468,6 +529,12 @@
         let scrollOffset = 0;
         let gameSpeed = 2;
         let selectedCharacter = null;  // 'eleanor' or 'william'
+        let currentLevel = 1;
+        let levelWidth = 5000;  // Base level width
+        let flagPole = null;
+        let reachedFlag = false;
+        let victoryAnimation = 0;
+        let levelStarsCollected = 0;
 
         // Player objects
         const player = {
@@ -597,36 +664,64 @@
             }
         }
 
-        // Initialize game objects
-        function init() {
-            // Create ground platform
-            platforms.push({ x: 0, y: 550, width: 10000, height: 50, color: '#228B22' });
+        // Initialize game objects for a specific level
+        function initLevel(level) {
+            // Clear all arrays
+            platforms = [];
+            stars = [];
+            obstacles = [];
+            axolotls = [];
+            flowers = [];
 
-            // Create floating platforms
-            for (let i = 0; i < 20; i++) {
+            // Reset level stats
+            levelStarsCollected = 0;
+            reachedFlag = false;
+            victoryAnimation = 0;
+
+            // Calculate level properties based on difficulty
+            levelWidth = 5000 + (level - 1) * 1500;  // Levels get longer
+            const platformCount = 15 + level * 5;  // More platforms
+            const starCount = 20 + level * 10;  // More stars
+            const obstacleCount = 10 + level * 5;  // More obstacles
+            const axolotlCount = 8 + level * 2;  // More friends
+
+            // Adjust game speed based on level
+            gameSpeed = 2 + (level - 1) * 0.5;  // Gets faster each level
+
+            // Create ground platform
+            platforms.push({ x: 0, y: 550, width: levelWidth + 1000, height: 50, color: '#228B22' });
+
+            // Create floating platforms with increasing difficulty
+            const minGap = Math.max(200, 300 - level * 20);  // Gaps get harder
+            const maxGap = Math.max(350, 500 - level * 30);
+
+            for (let i = 0; i < platformCount; i++) {
+                const gap = minGap + Math.random() * (maxGap - minGap);
+                const platformWidth = Math.max(80, 150 - level * 5) + Math.random() * 100;
                 platforms.push({
-                    x: 200 + i * 400,
+                    x: 200 + i * gap,
                     y: 500 - Math.random() * 250,
-                    width: 150 + Math.random() * 100,
+                    width: platformWidth,
                     height: 20,
                     color: '#8B4513'
                 });
             }
 
             // Create stars to collect
-            for (let i = 0; i < 30; i++) {
+            for (let i = 0; i < starCount; i++) {
                 stars.push({
-                    x: 300 + i * 300,
+                    x: 300 + i * (levelWidth / starCount),
                     y: 200 + Math.random() * 200,
                     size: 20,
                     collected: false
                 });
             }
 
-            // Create obstacles
-            for (let i = 0; i < 15; i++) {
+            // Create obstacles (more frequent in later levels)
+            const obstacleSpacing = Math.max(300, 600 - level * 50);
+            for (let i = 0; i < obstacleCount; i++) {
                 obstacles.push({
-                    x: 500 + i * 600,
+                    x: 500 + i * obstacleSpacing + Math.random() * 200,
                     y: 518,
                     width: 32,
                     height: 32,
@@ -635,9 +730,9 @@
             }
 
             // Create friendly axolotls on platforms
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < axolotlCount; i++) {
                 axolotls.push({
-                    x: 400 + i * 800,
+                    x: 400 + i * (levelWidth / axolotlCount),
                     y: 490,
                     width: 40,
                     height: 24,
@@ -645,23 +740,39 @@
                 });
             }
 
-            // Create bouncy flowers on ground and platforms
-            // Straight up flowers
-            flowers.push({ x: 800, y: 518, width: 24, height: 32, angle: 'up', color: '#FF69B4', bounceAnim: 0 });
-            flowers.push({ x: 1500, y: 518, width: 24, height: 32, angle: 'up', color: '#FF1493', bounceAnim: 0 });
-            flowers.push({ x: 2800, y: 518, width: 24, height: 32, angle: 'up', color: '#FF69B4', bounceAnim: 0 });
-            flowers.push({ x: 4200, y: 518, width: 24, height: 32, angle: 'up', color: '#FF1493', bounceAnim: 0 });
-            flowers.push({ x: 5600, y: 518, width: 24, height: 32, angle: 'up', color: '#FF69B4', bounceAnim: 0 });
+            // Create bouncy flowers (more in later levels)
+            const flowerCount = 5 + level * 3;
+            for (let i = 0; i < flowerCount; i++) {
+                const x = 800 + i * (levelWidth / flowerCount);
+                const angle = i % 3 === 0 ? 'up' : (i % 2 === 0 ? 'right' : 'left');
+                const color = angle === 'up' ? '#FF69B4' : '#FFA500';
+                flowers.push({ x: x, y: 518, width: 24, height: 32, angle: angle, color: color, bounceAnim: 0 });
+            }
 
-            // Angled flowers (shoot diagonally)
-            flowers.push({ x: 1200, y: 518, width: 24, height: 32, angle: 'right', color: '#FFA500', bounceAnim: 0 });
-            flowers.push({ x: 2200, y: 518, width: 24, height: 32, angle: 'left', color: '#FFA500', bounceAnim: 0 });
-            flowers.push({ x: 3500, y: 518, width: 24, height: 32, angle: 'right', color: '#FFA500', bounceAnim: 0 });
-            flowers.push({ x: 4800, y: 518, width: 24, height: 32, angle: 'left', color: '#FFA500', bounceAnim: 0 });
+            // Add some flowers on platforms
+            for (let i = 0; i < Math.min(platforms.length, 3); i++) {
+                const platform = platforms[Math.floor(Math.random() * platforms.length)];
+                flowers.push({
+                    x: platform.x + platform.width / 2,
+                    y: platform.y - 32,
+                    width: 24,
+                    height: 32,
+                    angle: 'up',
+                    color: '#FF1493',
+                    bounceAnim: 0
+                });
+            }
 
-            // Flowers on platforms
-            flowers.push({ x: 600, y: 468, width: 24, height: 32, angle: 'up', color: '#FF1493', bounceAnim: 0 });
-            flowers.push({ x: 2000, y: 380, width: 24, height: 32, angle: 'up', color: '#FF69B4', bounceAnim: 0 });
+            // Create the victory flag pole at the end of the level!
+            flagPole = {
+                x: levelWidth - 200,
+                y: 450,
+                width: 20,
+                height: 100,
+                flagY: 450,
+                flagWidth: 60,
+                flagHeight: 40
+            };
         }
 
         // Draw player (8-bit style character)
@@ -936,6 +1047,58 @@
             });
         }
 
+        // Draw victory flag pole (8-bit style)
+        function drawFlagPole() {
+            if (!flagPole) return;
+
+            const screenX = flagPole.x - scrollOffset;
+            if (screenX < -100 || screenX > canvas.width + 100) return;
+
+            // Flag pole
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(screenX, flagPole.y, flagPole.width, flagPole.height);
+
+            // Flag pole top
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(screenX + 5, flagPole.y - 10, 10, 10);
+
+            // Animated flag (waves in the wind)
+            const wave = Math.sin(Date.now() / 200) * 3;
+            ctx.fillStyle = reachedFlag ? '#FFD700' : '#FF1493';  // Gold when reached
+
+            // Flag body
+            ctx.fillRect(screenX + flagPole.width, flagPole.flagY + wave, flagPole.flagWidth, flagPole.flagHeight);
+
+            // Flag pattern (checkered for victory)
+            if (reachedFlag) {
+                ctx.fillStyle = '#FFA500';
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        if ((i + j) % 2 === 0) {
+                            ctx.fillRect(
+                                screenX + flagPole.width + i * 15,
+                                flagPole.flagY + wave + j * 13,
+                                15, 13
+                            );
+                        }
+                    }
+                }
+            } else {
+                // Star on flag before reaching it
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(screenX + flagPole.width + 22, flagPole.flagY + wave + 15, 8, 2);
+                ctx.fillRect(screenX + flagPole.width + 24, flagPole.flagY + wave + 13, 4, 6);
+            }
+
+            // Draw "FINISH" text near flag when close
+            const activePlayer = selectedCharacter === 'eleanor' ? player : player2;
+            if (activePlayer && Math.abs(activePlayer.x - screenX) < 300) {
+                ctx.fillStyle = 'rgba(255, 215, 0, 0.8)';
+                ctx.font = 'bold 24px "Courier New"';
+                ctx.fillText('FINISH!', screenX - 20, flagPole.y - 30);
+            }
+        }
+
         // Draw background elements
         function drawBackground() {
             // Sky gradient
@@ -1097,6 +1260,7 @@
                     if (checkCollision(activePlayer, starRect)) {
                         star.collected = true;
                         score += 10;
+                        levelStarsCollected++;
                         document.getElementById('score').textContent = score;
                         playStarSound();
                     }
@@ -1153,6 +1317,100 @@
             });
         }
 
+        // Check if player reached the flag pole
+        function checkFlagReached() {
+            if (reachedFlag || !flagPole) return;
+
+            const activePlayer = selectedCharacter === 'eleanor' ? player : player2;
+            const flagRect = {
+                x: flagPole.x - scrollOffset,
+                y: flagPole.y,
+                width: flagPole.width + flagPole.flagWidth,
+                height: flagPole.height
+            };
+
+            if (checkCollision(activePlayer, flagRect)) {
+                reachedFlag = true;
+                victoryAnimation = 0;
+                playVictorySound();
+
+                // Stop player movement
+                activePlayer.velocityX = 0;
+            }
+        }
+
+        // Victory sound effect
+        function playVictorySound() {
+            if (!musicEnabled) return;
+
+            // Triumphant ascending melody
+            playNote(notes['C5'], 0.15, 0.2);
+            setTimeout(() => playNote(notes['E5'], 0.15, 0.2), 150);
+            setTimeout(() => playNote(notes['G5'], 0.15, 0.2), 300);
+            setTimeout(() => playNote(notes['C6'], 0.3, 0.2), 450);
+            setTimeout(() => playNote(notes['E6'], 0.3, 0.2), 600);
+            setTimeout(() => playNote(notes['G6'], 0.5, 0.25), 900);
+        }
+
+        // Play victory animation and transition to next level
+        function playVictoryAnimation() {
+            victoryAnimation++;
+
+            const activePlayer = selectedCharacter === 'eleanor' ? player : player2;
+
+            // Make player jump in celebration
+            if (victoryAnimation < 60) {
+                if (victoryAnimation % 20 === 0) {
+                    activePlayer.velocityY = -15;
+                }
+            }
+
+            // After animation, show level complete screen
+            if (victoryAnimation > 90) {
+                levelComplete();
+            }
+        }
+
+        // Level complete
+        function levelComplete() {
+            gameRunning = false;
+            document.getElementById('completedLevel').textContent = currentLevel;
+            document.getElementById('levelStars').textContent = levelStarsCollected;
+            document.getElementById('levelScore').textContent = score;
+            document.getElementById('levelComplete').style.display = 'block';
+        }
+
+        // Start next level
+        function nextLevel() {
+            document.getElementById('levelComplete').style.display = 'none';
+            currentLevel++;
+            document.getElementById('level').textContent = currentLevel;
+
+            // Reset player position
+            if (selectedCharacter === 'eleanor') {
+                player.x = 100;
+                player.y = 400;
+                player.velocityY = 0;
+                player.velocityX = 0;
+                player.jumping = false;
+            } else {
+                player2.x = 150;
+                player2.y = 400;
+                player2.velocityY = 0;
+                player2.velocityX = 0;
+                player2.jumping = false;
+            }
+
+            // Reset scroll
+            scrollOffset = 0;
+
+            // Initialize new level
+            initLevel(currentLevel);
+
+            // Resume game
+            gameRunning = true;
+        }
+
         // Lose a life
         function loseLife() {
             lives--;
@@ -1183,6 +1441,7 @@
         function gameOver() {
             gameRunning = false;
             document.getElementById('finalScore').textContent = score;
+            document.getElementById('levelsCompleted').textContent = currentLevel - 1;
             document.getElementById('gameOver').style.display = 'block';
         }
 
@@ -1203,31 +1462,36 @@
             drawAxolotls();
             drawStars();
             drawObstacles();
+            drawFlagPole();
+
+            // If reached flag, play victory animation
+            if (reachedFlag) {
+                playVictoryAnimation();
+            }
 
             // Draw and update only the selected character
             if (selectedCharacter === 'eleanor') {
                 drawPlayer();
-                updatePlayer();
+                if (!reachedFlag) {
+                    updatePlayer();
+                }
             } else if (selectedCharacter === 'william') {
                 drawPlayer2();
-                updatePlayer2();
+                if (!reachedFlag) {
+                    updatePlayer2();
+                }
             }
 
-            checkStarCollection();
-            checkObstacleCollision();
-            checkFlowerBoost();
-
-            // Increase difficulty gradually
-            if (score > 50 && gameSpeed < 4) {
-                gameSpeed = 3;
-            }
-            if (score > 100 && gameSpeed < 5) {
-                gameSpeed = 4;
+            if (!reachedFlag) {
+                checkStarCollection();
+                checkObstacleCollision();
+                checkFlowerBoost();
+                checkFlagReached();
             }
         }
 
         // Initialize game (but don't start until character is selected)
-        init();
+        initLevel(currentLevel);
         gameLoop();
     </script>
 </body>
