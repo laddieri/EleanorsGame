@@ -153,10 +153,97 @@
             background: #C71585;
             transform: scale(1.1);
         }
+
+        #characterSelect {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            z-index: 1000;
+        }
+
+        #characterSelect h2 {
+            color: #FF1493;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .character-options {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .character-card {
+            background: linear-gradient(to bottom, #FFB6C1, #FFC0CB);
+            border: 4px solid #FF1493;
+            border-radius: 15px;
+            padding: 30px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 200px;
+        }
+
+        .character-card:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 16px rgba(255, 20, 147, 0.5);
+        }
+
+        .character-card.william {
+            background: linear-gradient(to bottom, #87CEEB, #B0E0E6);
+            border-color: #1E90FF;
+        }
+
+        .character-card.william:hover {
+            box-shadow: 0 8px 16px rgba(30, 144, 255, 0.5);
+        }
+
+        .character-card h3 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .character-card p {
+            font-size: 16px;
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .character-preview {
+            font-size: 48px;
+            margin: 15px 0;
+        }
     </style>
 </head>
 <body>
     <button id="musicToggle" title="Toggle Music">🔊</button>
+
+    <div id="characterSelect">
+        <h2>Choose Your Character!</h2>
+        <div class="character-options">
+            <div class="character-card eleanor" onclick="selectCharacter('eleanor')">
+                <div class="character-preview">👑</div>
+                <h3>Eleanor</h3>
+                <p>The Princess</p>
+                <p><strong>Controls:</strong></p>
+                <p>Arrow keys + SPACE</p>
+            </div>
+            <div class="character-card william" onclick="selectCharacter('william')">
+                <div class="character-preview">🧢</div>
+                <h3>William</h3>
+                <p>The Prince</p>
+                <p><strong>Controls:</strong></p>
+                <p>A/D + W</p>
+            </div>
+        </div>
+    </div>
 
     <h1>🌟 Eleanor & William's Adventure 🌟</h1>
 
@@ -333,12 +420,49 @@
             }
         }
 
+        // Character selection function
+        function selectCharacter(character) {
+            selectedCharacter = character;
+
+            // Hide character selection screen
+            document.getElementById('characterSelect').style.display = 'none';
+
+            // Update instructions based on selected character
+            const instructionsDiv = document.getElementById('instructions');
+            if (character === 'eleanor') {
+                instructionsDiv.innerHTML = `
+                    <h2>How to Play</h2>
+                    <p><strong>Playing as Eleanor 👑</strong></p>
+                    <p>Use <span class="key">← →</span> arrow keys to move</p>
+                    <p>Press <span class="key">SPACE</span> to jump</p>
+                    <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
+                    <p>Jump into flowers 🌸 to launch into the sky!</p>
+                    <p>Watch out for the fire obstacles! 🔥</p>
+                `;
+            } else {
+                instructionsDiv.innerHTML = `
+                    <h2>How to Play</h2>
+                    <p><strong>Playing as William 🧢</strong></p>
+                    <p>Use <span class="key">A D</span> keys to move</p>
+                    <p>Press <span class="key">W</span> to jump</p>
+                    <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
+                    <p>Jump into flowers 🌸 to launch into the sky!</p>
+                    <p>Watch out for the fire obstacles! 🔥</p>
+                `;
+            }
+
+            // Start the game
+            gameRunning = true;
+            startBackgroundMusic();
+        }
+
         // Game state
-        let gameRunning = true;
+        let gameRunning = false;  // Start as false until character is selected
         let score = 0;
         let lives = 3;
         let scrollOffset = 0;
         let gameSpeed = 2;
+        let selectedCharacter = null;  // 'eleanor' or 'william'
 
         // Player objects
         const player = {
@@ -709,7 +833,8 @@
                     }
 
                     // Draw indicator arrows when player is near
-                    if (Math.abs(player.x - screenX) < 80 && Math.abs(player.y - flower.y) < 60) {
+                    const activePlayer = selectedCharacter === 'eleanor' ? player : player2;
+                    if (activePlayer && Math.abs(activePlayer.x - screenX) < 80 && Math.abs(activePlayer.y - flower.y) < 60) {
                         ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
                         if (flower.angle === 'up') {
                             // Up arrow
@@ -880,7 +1005,8 @@
                         width: 20,
                         height: 20
                     };
-                    if (checkCollision(player, starRect) || checkCollision(player2, starRect)) {
+                    const activePlayer = selectedCharacter === 'eleanor' ? player : player2;
+                    if (checkCollision(activePlayer, starRect)) {
                         star.collected = true;
                         score += 10;
                         document.getElementById('score').textContent = score;
@@ -899,7 +1025,8 @@
                     width: obstacle.width,
                     height: obstacle.height
                 };
-                if (checkCollision(player, obstacleRect) || checkCollision(player2, obstacleRect)) {
+                const activePlayer = selectedCharacter === 'eleanor' ? player : player2;
+                if (checkCollision(activePlayer, obstacleRect)) {
                     loseLife();
                     obstacle.x = -1000; // Move obstacle off screen
                 }
@@ -916,40 +1043,22 @@
                     height: flower.height
                 };
 
-                // Check Eleanor
-                if (checkCollision(player, flowerRect)) {
+                const activePlayer = selectedCharacter === 'eleanor' ? player : player2;
+
+                if (checkCollision(activePlayer, flowerRect)) {
                     playFlowerBoostSound();
 
                     if (flower.angle === 'up') {
-                        player.velocityY = -20;
-                        player.jumping = true;
+                        activePlayer.velocityY = -20;
+                        activePlayer.jumping = true;
                     } else if (flower.angle === 'right') {
-                        player.velocityY = -18;
-                        player.velocityX = 12;
-                        player.jumping = true;
+                        activePlayer.velocityY = -18;
+                        activePlayer.velocityX = 12;
+                        activePlayer.jumping = true;
                     } else if (flower.angle === 'left') {
-                        player.velocityY = -18;
-                        player.velocityX = -12;
-                        player.jumping = true;
-                    }
-                    flower.bounceAnim = 0;
-                }
-
-                // Check William
-                if (checkCollision(player2, flowerRect)) {
-                    playFlowerBoostSound();
-
-                    if (flower.angle === 'up') {
-                        player2.velocityY = -20;
-                        player2.jumping = true;
-                    } else if (flower.angle === 'right') {
-                        player2.velocityY = -18;
-                        player2.velocityX = 12;
-                        player2.jumping = true;
-                    } else if (flower.angle === 'left') {
-                        player2.velocityY = -18;
-                        player2.velocityX = -12;
-                        player2.jumping = true;
+                        activePlayer.velocityY = -18;
+                        activePlayer.velocityX = -12;
+                        activePlayer.jumping = true;
                     }
                     flower.bounceAnim = 0;
                 }
@@ -962,19 +1071,20 @@
             document.getElementById('lives').textContent = lives;
             playDamageSound();
 
-            // Reset Eleanor's position
-            player.x = 100;
-            player.y = 400;
-            player.velocityY = 0;
-            player.velocityX = 0;
-            player.jumping = false;
-
-            // Reset William's position
-            player2.x = 150;
-            player2.y = 400;
-            player2.velocityY = 0;
-            player2.velocityX = 0;
-            player2.jumping = false;
+            // Reset the selected player's position
+            if (selectedCharacter === 'eleanor') {
+                player.x = 100;
+                player.y = 400;
+                player.velocityY = 0;
+                player.velocityX = 0;
+                player.jumping = false;
+            } else {
+                player2.x = 150;
+                player2.y = 400;
+                player2.velocityY = 0;
+                player2.velocityX = 0;
+                player2.jumping = false;
+            }
 
             if (lives <= 0) {
                 gameOver();
@@ -999,12 +1109,16 @@
             drawAxolotls();
             drawStars();
             drawObstacles();
-            drawPlayer();
-            drawPlayer2();
 
-            // Update game state
-            updatePlayer();
-            updatePlayer2();
+            // Draw and update only the selected character
+            if (selectedCharacter === 'eleanor') {
+                drawPlayer();
+                updatePlayer();
+            } else if (selectedCharacter === 'william') {
+                drawPlayer2();
+                updatePlayer2();
+            }
+
             checkStarCollection();
             checkObstacleCollision();
             checkFlowerBoost();
@@ -1021,10 +1135,9 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Start the game
+        // Initialize game (but don't start until character is selected)
         init();
         gameLoop();
-        startBackgroundMusic();
     </script>
 </body>
 </html>
