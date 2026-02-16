@@ -204,6 +204,92 @@
             transform: scale(1.1);
         }
 
+        /* Mobile Touch Controls */
+        .mobile-controls {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            z-index: 500;
+            pointer-events: none;
+        }
+
+        .mobile-controls.visible {
+            display: block;
+        }
+
+        .mobile-btn {
+            position: absolute;
+            background: rgba(255, 20, 147, 0.5);
+            border: 3px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            user-select: none;
+            pointer-events: auto;
+            touch-action: none;
+        }
+
+        .mobile-btn:active {
+            background: rgba(255, 20, 147, 0.8);
+            transform: scale(0.95);
+        }
+
+        #btn-left {
+            width: 80px;
+            height: 80px;
+            bottom: 80px;
+            left: 20px;
+        }
+
+        #btn-right {
+            width: 80px;
+            height: 80px;
+            bottom: 80px;
+            left: 120px;
+        }
+
+        #btn-jump {
+            width: 90px;
+            height: 90px;
+            bottom: 75px;
+            right: 30px;
+            background: rgba(30, 144, 255, 0.5);
+        }
+
+        #btn-jump:active {
+            background: rgba(30, 144, 255, 0.8);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 32px;
+                margin-bottom: 10px;
+            }
+
+            #gameCanvas {
+                max-width: 100%;
+                height: auto;
+            }
+
+            #gameInfo {
+                font-size: 18px;
+                gap: 15px;
+                padding: 10px 20px;
+            }
+
+            #instructions {
+                font-size: 14px;
+                padding: 15px;
+            }
+        }
+
         #characterSelect {
             position: fixed;
             top: 50%;
@@ -312,7 +398,7 @@
                 <p>The Princess</p>
                 <p><strong>Controls:</strong></p>
                 <p>Arrow keys + SPACE</p>
-                <p>or 🎮 Gamepad</p>
+                <p>📱 Touch or 🎮 Gamepad</p>
             </div>
             <div class="character-card william" onclick="selectCharacter('william')">
                 <div class="character-preview">🧢</div>
@@ -320,7 +406,7 @@
                 <p>The Prince</p>
                 <p><strong>Controls:</strong></p>
                 <p>A/D + W</p>
-                <p>or 🎮 Gamepad</p>
+                <p>📱 Touch or 🎮 Gamepad</p>
             </div>
             <div class="character-card mom" onclick="selectCharacter('mom')">
                 <div class="character-preview">👩</div>
@@ -328,7 +414,7 @@
                 <p>The Queen</p>
                 <p><strong>Controls:</strong></p>
                 <p>Arrow keys + SPACE</p>
-                <p>or 🎮 Gamepad</p>
+                <p>📱 Touch or 🎮 Gamepad</p>
             </div>
             <div class="character-card dad" onclick="selectCharacter('dad')">
                 <div class="character-preview">💪</div>
@@ -336,7 +422,7 @@
                 <p>The King</p>
                 <p><strong>Controls:</strong></p>
                 <p>Arrow keys + SPACE</p>
-                <p>or 🎮 Gamepad</p>
+                <p>📱 Touch or 🎮 Gamepad</p>
             </div>
             <div class="character-card mila" onclick="selectCharacter('mila')">
                 <div class="character-preview">🐶</div>
@@ -344,7 +430,7 @@
                 <p>The Beagle</p>
                 <p><strong>Controls:</strong></p>
                 <p>Arrow keys + SPACE</p>
-                <p>or 🎮 Gamepad</p>
+                <p>📱 Touch or 🎮 Gamepad</p>
             </div>
         </div>
     </div>
@@ -363,6 +449,7 @@
         <h2>How to Play</h2>
         <p><strong>Eleanor (Pink):</strong> <span class="key">← →</span> to move, <span class="key">SPACE</span> to jump</p>
         <p><strong>William (Blue):</strong> <span class="key">A D</span> to move, <span class="key">W</span> to jump</p>
+        <p><strong>📱 Mobile:</strong> Use on-screen buttons to move and jump</p>
         <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
         <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
         <p>Jump into flowers 🌸 to launch into the sky!</p>
@@ -382,6 +469,13 @@
         <p>Final Score: <span id="finalScore">0</span></p>
         <p>Levels Completed: <span id="levelsCompleted">0</span></p>
         <button onclick="location.reload()">Play Again!</button>
+    </div>
+
+    <!-- Mobile Touch Controls -->
+    <div class="mobile-controls" id="mobileControls">
+        <div class="mobile-btn" id="btn-left">◀</div>
+        <div class="mobile-btn" id="btn-right">▶</div>
+        <div class="mobile-btn" id="btn-jump">⬆</div>
     </div>
 
     <script>
@@ -551,6 +645,7 @@
                     <p><strong>Playing as Eleanor 👑</strong></p>
                     <p>Use <span class="key">← →</span> arrow keys to move</p>
                     <p>Press <span class="key">SPACE</span> to jump</p>
+                    <p><strong>📱 Mobile:</strong> Use on-screen buttons</p>
                     <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
                     <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
                     <p>Jump into flowers 🌸 to launch into the sky!</p>
@@ -562,6 +657,7 @@
                     <p><strong>Playing as William 🧢</strong></p>
                     <p>Use <span class="key">A D</span> keys to move</p>
                     <p>Press <span class="key">W</span> to jump</p>
+                    <p><strong>📱 Mobile:</strong> Use on-screen buttons</p>
                     <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
                     <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
                     <p>Jump into flowers 🌸 to launch into the sky!</p>
@@ -573,6 +669,7 @@
                     <p><strong>Playing as Mom 👩</strong></p>
                     <p>Use <span class="key">&larr; &rarr;</span> arrow keys to move</p>
                     <p>Press <span class="key">SPACE</span> to jump</p>
+                    <p><strong>📱 Mobile:</strong> Use on-screen buttons</p>
                     <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
                     <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
                     <p>Jump into flowers 🌸 to launch into the sky!</p>
@@ -584,6 +681,7 @@
                     <p><strong>Playing as Dad 💪</strong></p>
                     <p>Use <span class="key">&larr; &rarr;</span> arrow keys to move</p>
                     <p>Press <span class="key">SPACE</span> to jump</p>
+                    <p><strong>📱 Mobile:</strong> Use on-screen buttons</p>
                     <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
                     <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
                     <p>Jump into flowers 🌸 to launch into the sky!</p>
@@ -595,6 +693,7 @@
                     <p><strong>Playing as Mila 🐶</strong></p>
                     <p>Use <span class="key">&larr; &rarr;</span> arrow keys to move</p>
                     <p>Press <span class="key">SPACE</span> to jump</p>
+                    <p><strong>📱 Mobile:</strong> Use on-screen buttons</p>
                     <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
                     <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
                     <p>Jump into flowers 🌸 to launch into the sky!</p>
@@ -716,6 +815,105 @@
             }
             keys[e.code] = false;
         });
+
+        // ===== MOBILE TOUCH CONTROLS =====
+        // Detect if device has touch support
+        function isTouchDevice() {
+            return (('ontouchstart' in window) ||
+                    (navigator.maxTouchPoints > 0) ||
+                    (navigator.msMaxTouchPoints > 0));
+        }
+
+        // Show mobile controls on touch devices
+        if (isTouchDevice()) {
+            const mobileControls = document.getElementById('mobileControls');
+            if (mobileControls) {
+                mobileControls.classList.add('visible');
+            }
+        }
+
+        // Touch event handlers for mobile controls
+        function setupMobileControls() {
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+            const btnJump = document.getElementById('btn-jump');
+
+            // Helper function to map touch to appropriate key based on selected character
+            function getMovementKeys() {
+                if (selectedCharacter === 'william') {
+                    return { left: 'KeyA', right: 'KeyD', jump: 'KeyW' };
+                } else {
+                    // Eleanor, Mom, Dad, and Mila all use arrow keys
+                    return { left: 'ArrowLeft', right: 'ArrowRight', jump: 'Space' };
+                }
+            }
+
+            // Left button
+            if (btnLeft) {
+                btnLeft.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const keyMap = getMovementKeys();
+                    keys[keyMap.left] = true;
+                }, { passive: false });
+
+                btnLeft.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    const keyMap = getMovementKeys();
+                    keys[keyMap.left] = false;
+                }, { passive: false });
+
+                btnLeft.addEventListener('touchcancel', (e) => {
+                    e.preventDefault();
+                    const keyMap = getMovementKeys();
+                    keys[keyMap.left] = false;
+                }, { passive: false });
+            }
+
+            // Right button
+            if (btnRight) {
+                btnRight.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const keyMap = getMovementKeys();
+                    keys[keyMap.right] = true;
+                }, { passive: false });
+
+                btnRight.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    const keyMap = getMovementKeys();
+                    keys[keyMap.right] = false;
+                }, { passive: false });
+
+                btnRight.addEventListener('touchcancel', (e) => {
+                    e.preventDefault();
+                    const keyMap = getMovementKeys();
+                    keys[keyMap.right] = false;
+                }, { passive: false });
+            }
+
+            // Jump button
+            if (btnJump) {
+                btnJump.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const keyMap = getMovementKeys();
+                    keys[keyMap.jump] = true;
+                }, { passive: false });
+
+                btnJump.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    const keyMap = getMovementKeys();
+                    keys[keyMap.jump] = false;
+                }, { passive: false });
+
+                btnJump.addEventListener('touchcancel', (e) => {
+                    e.preventDefault();
+                    const keyMap = getMovementKeys();
+                    keys[keyMap.jump] = false;
+                }, { passive: false });
+            }
+        }
+
+        // Initialize mobile controls
+        setupMobileControls();
 
         // ===== GAMEPAD SUPPORT =====
         let gamepadConnected = false;
