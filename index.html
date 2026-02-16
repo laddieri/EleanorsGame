@@ -985,6 +985,12 @@
             if (player2.y > canvas.height) {
                 loseLife();
             }
+
+            // Scroll the world (same as Eleanor)
+            if (player2.x > canvas.width / 2) {
+                scrollOffset += gameSpeed;
+                player2.x = canvas.width / 2;
+            }
         }
 
         // Check collision between two rectangles
