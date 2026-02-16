@@ -26,6 +26,9 @@ This is a simple but exciting adventure game where you control a character with 
 
 - Collect as many **stars** ⭐ as possible (each star is worth 10 points!)
 - Meet the cute **axolotls** scattered throughout the world (they're friendly!)
+- Jump into **flowers** 🌸 to launch high into the sky!
+  - Pink flowers shoot you straight up
+  - Orange flowers shoot you diagonally (left or right)
 - Avoid the **fire obstacles** 🔥 (they cost you a life!)
 - Don't fall off platforms or you'll lose a life
 - You have 3 lives to get the highest score possible
@@ -36,6 +39,10 @@ This is a simple but exciting adventure game where you control a character with 
 - 8-bit pixel art style graphics
 - Character with blonde hair and crown
 - Adorable animated axolotls with wiggling gills
+- Interactive bouncy flowers that launch you into the air
+  - Straight-up flowers for vertical boosts
+  - Angled flowers for directional launches
+- Cheerful 8-bit background music with sound effects
 - Side-scrolling gameplay
 - Collectible stars
 - Dangerous obstacles
