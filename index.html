@@ -1106,6 +1106,9 @@
 
         // Main game loop
         function gameLoop() {
+            // Continue the loop (must happen every frame)
+            requestAnimationFrame(gameLoop);
+
             if (!gameRunning) return;
 
             // Draw everything
@@ -1136,9 +1139,6 @@
             if (score > 100 && gameSpeed < 5) {
                 gameSpeed = 4;
             }
-
-            // Continue the loop
-            requestAnimationFrame(gameLoop);
         }
 
         // Initialize game (but don't start until character is selected)
