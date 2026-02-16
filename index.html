@@ -172,6 +172,7 @@
         <p>Use <span class="key">← →</span> arrow keys to move</p>
         <p>Press <span class="key">SPACE</span> to jump</p>
         <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
+        <p>Jump into flowers 🌸 to launch into the sky!</p>
         <p>Watch out for the fire obstacles! 🔥</p>
     </div>
 
@@ -197,7 +198,7 @@
             'G4': 392.00, 'A4': 440.00, 'B4': 493.88,
             'C5': 523.25, 'D5': 587.33, 'E5': 659.25, 'F5': 698.46,
             'G5': 783.99, 'A5': 880.00, 'B5': 987.77,
-            'C6': 1046.50, 'REST': 0
+            'C6': 1046.50, 'D6': 1174.66, 'E6': 1318.51, 'REST': 0
         };
 
         // Cheerful melody - Happy adventure theme!
@@ -290,6 +291,17 @@
             setTimeout(() => playNote(notes['G5'], 0.1, 0.08), 50);
         }
 
+        // Flower boost sound effect
+        function playFlowerBoostSound() {
+            if (!musicEnabled) return;
+            // Rapid ascending whoosh
+            playNote(notes['C5'], 0.06, 0.15);
+            setTimeout(() => playNote(notes['E5'], 0.06, 0.15), 60);
+            setTimeout(() => playNote(notes['G5'], 0.06, 0.15), 120);
+            setTimeout(() => playNote(notes['C6'], 0.06, 0.15), 180);
+            setTimeout(() => playNote(notes['E6'], 0.1, 0.15), 240);
+        }
+
         // Toggle music on/off
         document.getElementById('musicToggle').addEventListener('click', function() {
             musicEnabled = !musicEnabled;
@@ -345,6 +357,7 @@
         let stars = [];
         let obstacles = [];
         let axolotls = [];
+        let flowers = [];
 
         // Keyboard controls
         const keys = {};
@@ -404,6 +417,24 @@
                     animate: Math.random() * Math.PI * 2
                 });
             }
+
+            // Create bouncy flowers on ground and platforms
+            // Straight up flowers
+            flowers.push({ x: 800, y: 518, width: 24, height: 32, angle: 'up', color: '#FF69B4', bounceAnim: 0 });
+            flowers.push({ x: 1500, y: 518, width: 24, height: 32, angle: 'up', color: '#FF1493', bounceAnim: 0 });
+            flowers.push({ x: 2800, y: 518, width: 24, height: 32, angle: 'up', color: '#FF69B4', bounceAnim: 0 });
+            flowers.push({ x: 4200, y: 518, width: 24, height: 32, angle: 'up', color: '#FF1493', bounceAnim: 0 });
+            flowers.push({ x: 5600, y: 518, width: 24, height: 32, angle: 'up', color: '#FF69B4', bounceAnim: 0 });
+
+            // Angled flowers (shoot diagonally)
+            flowers.push({ x: 1200, y: 518, width: 24, height: 32, angle: 'right', color: '#FFA500', bounceAnim: 0 });
+            flowers.push({ x: 2200, y: 518, width: 24, height: 32, angle: 'left', color: '#FFA500', bounceAnim: 0 });
+            flowers.push({ x: 3500, y: 518, width: 24, height: 32, angle: 'right', color: '#FFA500', bounceAnim: 0 });
+            flowers.push({ x: 4800, y: 518, width: 24, height: 32, angle: 'left', color: '#FFA500', bounceAnim: 0 });
+
+            // Flowers on platforms
+            flowers.push({ x: 600, y: 468, width: 24, height: 32, angle: 'up', color: '#FF1493', bounceAnim: 0 });
+            flowers.push({ x: 2000, y: 380, width: 24, height: 32, angle: 'up', color: '#FF69B4', bounceAnim: 0 });
         }
 
         // Draw player (8-bit style character)
@@ -557,6 +588,90 @@
             });
         }
 
+        // Draw bouncy flowers (8-bit style)
+        function drawFlowers() {
+            flowers.forEach(flower => {
+                const screenX = flower.x - scrollOffset;
+                if (screenX > -50 && screenX < canvas.width + 50) {
+                    // Animate bounce
+                    flower.bounceAnim += 0.05;
+                    const bounce = Math.sin(flower.bounceAnim) * 2;
+
+                    // Stem
+                    ctx.fillStyle = '#228B22';
+                    if (flower.angle === 'right') {
+                        // Angled stem leaning right
+                        ctx.fillRect(screenX + 8, flower.y + 8, 4, 24);
+                        ctx.fillRect(screenX + 12, flower.y + 4, 4, 8);
+                    } else if (flower.angle === 'left') {
+                        // Angled stem leaning left
+                        ctx.fillRect(screenX + 12, flower.y + 8, 4, 24);
+                        ctx.fillRect(screenX + 8, flower.y + 4, 4, 8);
+                    } else {
+                        // Straight stem
+                        ctx.fillRect(screenX + 10, flower.y + 8, 4, 24);
+                    }
+
+                    // Leaves
+                    ctx.fillStyle = '#32CD32';
+                    ctx.fillRect(screenX + 4, flower.y + 16, 6, 4);
+                    ctx.fillRect(screenX + 14, flower.y + 16, 6, 4);
+
+                    // Flower petals (with bounce animation)
+                    const petalY = flower.y + bounce;
+                    ctx.fillStyle = flower.color;
+
+                    if (flower.angle === 'right') {
+                        // Petals pointing right
+                        ctx.fillRect(screenX + 12, petalY, 8, 8);
+                        ctx.fillRect(screenX + 8, petalY - 4, 8, 4);
+                        ctx.fillRect(screenX + 8, petalY + 8, 8, 4);
+                        ctx.fillRect(screenX + 16, petalY + 2, 4, 4);
+                    } else if (flower.angle === 'left') {
+                        // Petals pointing left
+                        ctx.fillRect(screenX + 4, petalY, 8, 8);
+                        ctx.fillRect(screenX + 8, petalY - 4, 8, 4);
+                        ctx.fillRect(screenX + 8, petalY + 8, 8, 4);
+                        ctx.fillRect(screenX, petalY + 2, 4, 4);
+                    } else {
+                        // Petals pointing up
+                        ctx.fillRect(screenX + 8, petalY, 8, 8);
+                        ctx.fillRect(screenX + 4, petalY + 4, 4, 8);
+                        ctx.fillRect(screenX + 16, petalY + 4, 4, 8);
+                        ctx.fillRect(screenX + 10, petalY - 4, 4, 4);
+                    }
+
+                    // Flower center
+                    ctx.fillStyle = '#FFD700';
+                    if (flower.angle === 'right') {
+                        ctx.fillRect(screenX + 12, petalY + 2, 4, 4);
+                    } else if (flower.angle === 'left') {
+                        ctx.fillRect(screenX + 8, petalY + 2, 4, 4);
+                    } else {
+                        ctx.fillRect(screenX + 10, petalY + 2, 4, 4);
+                    }
+
+                    // Draw indicator arrows when player is near
+                    if (Math.abs(player.x - screenX) < 80 && Math.abs(player.y - flower.y) < 60) {
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                        if (flower.angle === 'up') {
+                            // Up arrow
+                            ctx.fillRect(screenX + 10, flower.y - 20, 4, 8);
+                            ctx.fillRect(screenX + 8, flower.y - 18, 8, 4);
+                        } else if (flower.angle === 'right') {
+                            // Right arrow
+                            ctx.fillRect(screenX + 24, flower.y - 8, 8, 4);
+                            ctx.fillRect(screenX + 28, flower.y - 12, 4, 8);
+                        } else if (flower.angle === 'left') {
+                            // Left arrow
+                            ctx.fillRect(screenX - 8, flower.y - 8, 8, 4);
+                            ctx.fillRect(screenX - 8, flower.y - 12, 4, 8);
+                        }
+                    }
+                }
+            });
+        }
+
         // Draw background elements
         function drawBackground() {
             // Sky gradient
@@ -683,6 +798,41 @@
             });
         }
 
+        // Check flower collision and apply boost
+        function checkFlowerBoost() {
+            flowers.forEach(flower => {
+                const flowerRect = {
+                    x: flower.x - scrollOffset,
+                    y: flower.y,
+                    width: flower.width,
+                    height: flower.height
+                };
+                if (checkCollision(player, flowerRect)) {
+                    // Apply boost based on flower angle
+                    playFlowerBoostSound();
+
+                    if (flower.angle === 'up') {
+                        // Shoot straight up!
+                        player.velocityY = -20;
+                        player.jumping = true;
+                    } else if (flower.angle === 'right') {
+                        // Shoot diagonally up-right
+                        player.velocityY = -18;
+                        player.velocityX = 12;
+                        player.jumping = true;
+                    } else if (flower.angle === 'left') {
+                        // Shoot diagonally up-left
+                        player.velocityY = -18;
+                        player.velocityX = -12;
+                        player.jumping = true;
+                    }
+
+                    // Visual feedback - make flower bounce
+                    flower.bounceAnim = 0;
+                }
+            });
+        }
+
         // Lose a life
         function loseLife() {
             lives--;
@@ -715,6 +865,7 @@
             // Draw everything
             drawBackground();
             drawPlatforms();
+            drawFlowers();
             drawAxolotls();
             drawStars();
             drawObstacles();
@@ -724,6 +875,7 @@
             updatePlayer();
             checkStarCollection();
             checkObstacleCollision();
+            checkFlowerBoost();
 
             // Increase difficulty gradually
             if (score > 50 && gameSpeed < 4) {
