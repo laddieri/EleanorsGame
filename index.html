@@ -225,8 +225,9 @@
 
         .character-options {
             display: flex;
-            gap: 30px;
+            gap: 20px;
             justify-content: center;
+            flex-wrap: wrap;
             margin-top: 20px;
         }
 
@@ -237,7 +238,7 @@
             padding: 30px 20px;
             cursor: pointer;
             transition: all 0.3s ease;
-            width: 200px;
+            width: 170px;
         }
 
         .character-card:hover {
@@ -252,6 +253,24 @@
 
         .character-card.william:hover {
             box-shadow: 0 8px 16px rgba(30, 144, 255, 0.5);
+        }
+
+        .character-card.mom {
+            background: linear-gradient(to bottom, #DDA0DD, #EE82EE);
+            border-color: #8B008B;
+        }
+
+        .character-card.mom:hover {
+            box-shadow: 0 8px 16px rgba(139, 0, 139, 0.5);
+        }
+
+        .character-card.dad {
+            background: linear-gradient(to bottom, #708090, #A9A9A9);
+            border-color: #2F4F4F;
+        }
+
+        .character-card.dad:hover {
+            box-shadow: 0 8px 16px rgba(47, 79, 79, 0.5);
         }
 
         .character-card h3 {
@@ -294,10 +313,26 @@
                 <p>A/D + W</p>
                 <p>or 🎮 Gamepad</p>
             </div>
+            <div class="character-card mom" onclick="selectCharacter('mom')">
+                <div class="character-preview">👩</div>
+                <h3>Mom</h3>
+                <p>The Queen</p>
+                <p><strong>Controls:</strong></p>
+                <p>Arrow keys + SPACE</p>
+                <p>or 🎮 Gamepad</p>
+            </div>
+            <div class="character-card dad" onclick="selectCharacter('dad')">
+                <div class="character-preview">💪</div>
+                <h3>Dad</h3>
+                <p>The King</p>
+                <p><strong>Controls:</strong></p>
+                <p>Arrow keys + SPACE</p>
+                <p>or 🎮 Gamepad</p>
+            </div>
         </div>
     </div>
 
-    <h1>🌟 Eleanor & William's Adventure 🌟</h1>
+    <h1>🌟 Eleanor's Family Adventure 🌟</h1>
 
     <canvas id="gameCanvas" width="800" height="600"></canvas>
 
@@ -504,12 +539,34 @@
                     <p>Jump into flowers 🌸 to launch into the sky!</p>
                     <p>Watch out for the fire obstacles! 🔥</p>
                 `;
-            } else {
+            } else if (character === 'william') {
                 instructionsDiv.innerHTML = `
                     <h2>How to Play</h2>
                     <p><strong>Playing as William 🧢</strong></p>
                     <p>Use <span class="key">A D</span> keys to move</p>
                     <p>Press <span class="key">W</span> to jump</p>
+                    <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
+                    <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
+                    <p>Jump into flowers 🌸 to launch into the sky!</p>
+                    <p>Watch out for the fire obstacles! 🔥</p>
+                `;
+            } else if (character === 'mom') {
+                instructionsDiv.innerHTML = `
+                    <h2>How to Play</h2>
+                    <p><strong>Playing as Mom 👩</strong></p>
+                    <p>Use <span class="key">&larr; &rarr;</span> arrow keys to move</p>
+                    <p>Press <span class="key">SPACE</span> to jump</p>
+                    <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
+                    <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
+                    <p>Jump into flowers 🌸 to launch into the sky!</p>
+                    <p>Watch out for the fire obstacles! 🔥</p>
+                `;
+            } else if (character === 'dad') {
+                instructionsDiv.innerHTML = `
+                    <h2>How to Play</h2>
+                    <p><strong>Playing as Dad 💪</strong></p>
+                    <p>Use <span class="key">&larr; &rarr;</span> arrow keys to move</p>
+                    <p>Press <span class="key">SPACE</span> to jump</p>
                     <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
                     <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
                     <p>Jump into flowers 🌸 to launch into the sky!</p>
@@ -528,7 +585,15 @@
         let lives = 3;
         let scrollOffset = 0;
         let gameSpeed = 2;
-        let selectedCharacter = null;  // 'eleanor' or 'william'
+        let selectedCharacter = null;  // 'eleanor', 'william', 'mom', or 'dad'
+
+        function getActivePlayer() {
+            if (selectedCharacter === 'eleanor') return player;
+            if (selectedCharacter === 'william') return player2;
+            if (selectedCharacter === 'mom') return player3;
+            if (selectedCharacter === 'dad') return player4;
+            return player;
+        }
         let currentLevel = 1;
         let levelWidth = 5000;  // Base level width
         let flagPole = null;
@@ -559,6 +624,30 @@
             jumping: false,
             color: '#1E90FF',
             name: 'William'
+        };
+
+        const player3 = {
+            x: 100,
+            y: 400,
+            width: 34,
+            height: 36,
+            velocityY: 0,
+            velocityX: 0,
+            jumping: false,
+            color: '#8B008B',
+            name: 'Mom'
+        };
+
+        const player4 = {
+            x: 100,
+            y: 400,
+            width: 36,
+            height: 40,
+            velocityY: 0,
+            velocityX: 0,
+            jumping: false,
+            color: '#2F4F4F',
+            name: 'Dad'
         };
 
         // Game objects arrays
@@ -660,6 +749,24 @@
                     keys['KeyW'] = true;
                 } else {
                     keys['KeyW'] = false;
+                }
+            } else if (selectedCharacter === 'mom' || selectedCharacter === 'dad') {
+                // Mom and Dad use arrow keys + space
+                if (leftStickX < -deadzone || dpadLeft) {
+                    keys['ArrowLeft'] = true;
+                    keys['ArrowRight'] = false;
+                } else if (leftStickX > deadzone || dpadRight) {
+                    keys['ArrowRight'] = true;
+                    keys['ArrowLeft'] = false;
+                } else {
+                    keys['ArrowLeft'] = false;
+                    keys['ArrowRight'] = false;
+                }
+
+                if (aButton) {
+                    keys['Space'] = true;
+                } else {
+                    keys['Space'] = false;
                 }
             }
         }
@@ -828,8 +935,8 @@
             ctx.fillStyle = '#FDBCB4';
             ctx.fillRect(player2.x + 7, player2.y, 14, 7);
 
-            // Brown hair
-            ctx.fillStyle = '#8B4513';
+            // Blonde hair
+            ctx.fillStyle = '#FFE135';
             ctx.fillRect(player2.x + 6, player2.y - 1, 16, 3);
             ctx.fillRect(player2.x + 5, player2.y + 1, 4, 4);
             ctx.fillRect(player2.x + 19, player2.y + 1, 4, 4);
@@ -852,6 +959,80 @@
             ctx.fillStyle = '#4169E1';
             ctx.fillRect(player2.x + 7, player2.y - 3, 14, 2);
             ctx.fillRect(player2.x + 9, player2.y - 5, 10, 2);
+        }
+
+        // Draw Mom (8-bit style character - taller than Eleanor, brown shoulder-length hair)
+        function drawPlayer3() {
+            // Body (purple dress)
+            ctx.fillStyle = player3.color;
+            ctx.fillRect(player3.x + 9, player3.y + 9, 16, 18);
+
+            // Head (skin tone)
+            ctx.fillStyle = '#FDBCB4';
+            ctx.fillRect(player3.x + 9, player3.y, 16, 9);
+
+            // Brown shoulder-length hair
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(player3.x + 7, player3.y - 2, 20, 4);
+            ctx.fillRect(player3.x + 6, player3.y + 2, 5, 10);
+            ctx.fillRect(player3.x + 23, player3.y + 2, 5, 10);
+            ctx.fillRect(player3.x + 7, player3.y + 2, 3, 6);
+            ctx.fillRect(player3.x + 24, player3.y + 2, 3, 6);
+
+            // Eyes
+            ctx.fillStyle = '#000';
+            ctx.fillRect(player3.x + 12, player3.y + 3, 3, 3);
+            ctx.fillRect(player3.x + 19, player3.y + 3, 3, 3);
+
+            // Smile
+            ctx.fillStyle = '#FF69B4';
+            ctx.fillRect(player3.x + 13, player3.y + 7, 8, 2);
+
+            // Legs
+            ctx.fillStyle = player3.color;
+            ctx.fillRect(player3.x + 10, player3.y + 27, 6, 9);
+            ctx.fillRect(player3.x + 18, player3.y + 27, 6, 9);
+        }
+
+        // Draw Dad (8-bit style character - tallest, short brown hair, big muscles)
+        function drawPlayer4() {
+            // Body (dark teal shirt)
+            ctx.fillStyle = player4.color;
+            ctx.fillRect(player4.x + 8, player4.y + 10, 20, 18);
+
+            // Muscular arms
+            ctx.fillStyle = player4.color;
+            ctx.fillRect(player4.x + 3, player4.y + 10, 7, 14);
+            ctx.fillRect(player4.x + 26, player4.y + 10, 7, 14);
+
+            // Arm skin (forearms)
+            ctx.fillStyle = '#FDBCB4';
+            ctx.fillRect(player4.x + 3, player4.y + 20, 7, 6);
+            ctx.fillRect(player4.x + 26, player4.y + 20, 7, 6);
+
+            // Head (skin tone)
+            ctx.fillStyle = '#FDBCB4';
+            ctx.fillRect(player4.x + 10, player4.y, 16, 10);
+
+            // Short brown hair
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(player4.x + 9, player4.y - 2, 18, 4);
+            ctx.fillRect(player4.x + 9, player4.y + 2, 3, 2);
+            ctx.fillRect(player4.x + 24, player4.y + 2, 3, 2);
+
+            // Eyes
+            ctx.fillStyle = '#000';
+            ctx.fillRect(player4.x + 13, player4.y + 3, 3, 3);
+            ctx.fillRect(player4.x + 20, player4.y + 3, 3, 3);
+
+            // Smile
+            ctx.fillStyle = '#FF69B4';
+            ctx.fillRect(player4.x + 14, player4.y + 7, 8, 2);
+
+            // Legs
+            ctx.fillStyle = '#2F4F4F';
+            ctx.fillRect(player4.x + 10, player4.y + 28, 7, 12);
+            ctx.fillRect(player4.x + 19, player4.y + 28, 7, 12);
         }
 
         // Draw platforms
@@ -1026,7 +1207,7 @@
                     }
 
                     // Draw indicator arrows when player is near
-                    const activePlayer = selectedCharacter === 'eleanor' ? player : player2;
+                    const activePlayer = getActivePlayer();
                     if (activePlayer && Math.abs(activePlayer.x - screenX) < 80 && Math.abs(activePlayer.y - flower.y) < 60) {
                         ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
                         if (flower.angle === 'up') {
@@ -1091,7 +1272,7 @@
             }
 
             // Draw "FINISH" text near flag when close
-            const activePlayer = selectedCharacter === 'eleanor' ? player : player2;
+            const activePlayer = getActivePlayer();
             if (activePlayer && Math.abs(activePlayer.x - screenX) < 300) {
                 ctx.fillStyle = 'rgba(255, 215, 0, 0.8)';
                 ctx.font = 'bold 24px "Courier New"';
@@ -1238,6 +1419,120 @@
             }
         }
 
+        // Update player 3 (Mom) physics
+        function updatePlayer3() {
+            // Horizontal movement (Arrow keys)
+            if (keys['ArrowRight']) {
+                player3.velocityX = 5;
+            } else if (keys['ArrowLeft']) {
+                player3.velocityX = -5;
+            } else {
+                player3.velocityX = 0;
+            }
+
+            // Jump (Space)
+            if (keys['Space'] && !player3.jumping) {
+                player3.velocityY = -24;
+                player3.jumping = true;
+                playJumpSound();
+            }
+
+            // Apply gravity
+            player3.velocityY += 0.8;
+            player3.y += player3.velocityY;
+            player3.x += player3.velocityX;
+
+            // Keep player in bounds horizontally
+            if (player3.x < 0) player3.x = 0;
+            if (player3.x > canvas.width - player3.width) player3.x = canvas.width - player3.width;
+
+            // Check platform collisions
+            let onPlatform = false;
+            platforms.forEach(platform => {
+                if (checkCollision(player3, {
+                    x: platform.x - scrollOffset,
+                    y: platform.y,
+                    width: platform.width,
+                    height: platform.height
+                })) {
+                    if (player3.velocityY > 0) {
+                        player3.y = platform.y - player3.height;
+                        player3.velocityY = 0;
+                        player3.jumping = false;
+                        onPlatform = true;
+                    }
+                }
+            });
+
+            // Fall off the world
+            if (player3.y > canvas.height) {
+                loseLife();
+            }
+
+            // Scroll the world
+            if (player3.x > canvas.width / 2) {
+                scrollOffset += gameSpeed;
+                player3.x = canvas.width / 2;
+            }
+        }
+
+        // Update player 4 (Dad) physics
+        function updatePlayer4() {
+            // Horizontal movement (Arrow keys)
+            if (keys['ArrowRight']) {
+                player4.velocityX = 5;
+            } else if (keys['ArrowLeft']) {
+                player4.velocityX = -5;
+            } else {
+                player4.velocityX = 0;
+            }
+
+            // Jump (Space)
+            if (keys['Space'] && !player4.jumping) {
+                player4.velocityY = -26;
+                player4.jumping = true;
+                playJumpSound();
+            }
+
+            // Apply gravity
+            player4.velocityY += 0.8;
+            player4.y += player4.velocityY;
+            player4.x += player4.velocityX;
+
+            // Keep player in bounds horizontally
+            if (player4.x < 0) player4.x = 0;
+            if (player4.x > canvas.width - player4.width) player4.x = canvas.width - player4.width;
+
+            // Check platform collisions
+            let onPlatform = false;
+            platforms.forEach(platform => {
+                if (checkCollision(player4, {
+                    x: platform.x - scrollOffset,
+                    y: platform.y,
+                    width: platform.width,
+                    height: platform.height
+                })) {
+                    if (player4.velocityY > 0) {
+                        player4.y = platform.y - player4.height;
+                        player4.velocityY = 0;
+                        player4.jumping = false;
+                        onPlatform = true;
+                    }
+                }
+            });
+
+            // Fall off the world
+            if (player4.y > canvas.height) {
+                loseLife();
+            }
+
+            // Scroll the world
+            if (player4.x > canvas.width / 2) {
+                scrollOffset += gameSpeed;
+                player4.x = canvas.width / 2;
+            }
+        }
+
         // Check collision between two rectangles
         function checkCollision(rect1, rect2) {
             return rect1.x < rect2.x + rect2.width &&
@@ -1256,7 +1551,7 @@
                         width: 20,
                         height: 20
                     };
-                    const activePlayer = selectedCharacter === 'eleanor' ? player : player2;
+                    const activePlayer = getActivePlayer();
                     if (checkCollision(activePlayer, starRect)) {
                         star.collected = true;
                         score += 10;
@@ -1277,7 +1572,7 @@
                     width: obstacle.width,
                     height: obstacle.height
                 };
-                const activePlayer = selectedCharacter === 'eleanor' ? player : player2;
+                const activePlayer = getActivePlayer();
                 if (checkCollision(activePlayer, obstacleRect)) {
                     loseLife();
                     obstacle.x = -1000; // Move obstacle off screen
@@ -1295,7 +1590,7 @@
                     height: flower.height
                 };
 
-                const activePlayer = selectedCharacter === 'eleanor' ? player : player2;
+                const activePlayer = getActivePlayer();
 
                 if (checkCollision(activePlayer, flowerRect)) {
                     playFlowerBoostSound();
@@ -1321,7 +1616,7 @@
         function checkFlagReached() {
             if (reachedFlag || !flagPole) return;
 
-            const activePlayer = selectedCharacter === 'eleanor' ? player : player2;
+            const activePlayer = getActivePlayer();
             const flagRect = {
                 x: flagPole.x - scrollOffset,
                 y: flagPole.y,
@@ -1356,7 +1651,7 @@
         function playVictoryAnimation() {
             victoryAnimation++;
 
-            const activePlayer = selectedCharacter === 'eleanor' ? player : player2;
+            const activePlayer = getActivePlayer();
 
             // Make player jump in celebration
             if (victoryAnimation < 60) {
@@ -1387,19 +1682,12 @@
             document.getElementById('level').textContent = currentLevel;
 
             // Reset player position
-            if (selectedCharacter === 'eleanor') {
-                player.x = 100;
-                player.y = 400;
-                player.velocityY = 0;
-                player.velocityX = 0;
-                player.jumping = false;
-            } else {
-                player2.x = 150;
-                player2.y = 400;
-                player2.velocityY = 0;
-                player2.velocityX = 0;
-                player2.jumping = false;
-            }
+            const ap = getActivePlayer();
+            ap.x = 100;
+            ap.y = 400;
+            ap.velocityY = 0;
+            ap.velocityX = 0;
+            ap.jumping = false;
 
             // Reset scroll
             scrollOffset = 0;
@@ -1418,19 +1706,12 @@
             playDamageSound();
 
             // Reset the selected player's position
-            if (selectedCharacter === 'eleanor') {
-                player.x = 100;
-                player.y = 400;
-                player.velocityY = 0;
-                player.velocityX = 0;
-                player.jumping = false;
-            } else {
-                player2.x = 150;
-                player2.y = 400;
-                player2.velocityY = 0;
-                player2.velocityX = 0;
-                player2.jumping = false;
-            }
+            const ap = getActivePlayer();
+            ap.x = 100;
+            ap.y = 400;
+            ap.velocityY = 0;
+            ap.velocityX = 0;
+            ap.jumping = false;
 
             if (lives <= 0) {
                 gameOver();
@@ -1472,14 +1753,16 @@
             // Draw and update only the selected character
             if (selectedCharacter === 'eleanor') {
                 drawPlayer();
-                if (!reachedFlag) {
-                    updatePlayer();
-                }
+                if (!reachedFlag) updatePlayer();
             } else if (selectedCharacter === 'william') {
                 drawPlayer2();
-                if (!reachedFlag) {
-                    updatePlayer2();
-                }
+                if (!reachedFlag) updatePlayer2();
+            } else if (selectedCharacter === 'mom') {
+                drawPlayer3();
+                if (!reachedFlag) updatePlayer3();
+            } else if (selectedCharacter === 'dad') {
+                drawPlayer4();
+                if (!reachedFlag) updatePlayer4();
             }
 
             if (!reachedFlag) {
