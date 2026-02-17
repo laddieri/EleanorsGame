@@ -678,6 +678,17 @@
             setTimeout(() => playNote(notes['C6'], 0.15, 0.15), 240);
         }
 
+        // Taco / extra life sound (1-up jingle)
+        function playTacoSound() {
+            if (!musicEnabled) return;
+            playNote(notes['E5'], 0.08, 0.2);
+            setTimeout(() => playNote(notes['G5'], 0.08, 0.2), 80);
+            setTimeout(() => playNote(notes['E6'], 0.08, 0.2), 160);
+            setTimeout(() => playNote(notes['C6'], 0.08, 0.2), 240);
+            setTimeout(() => playNote(notes['D6'], 0.08, 0.2), 320);
+            setTimeout(() => playNote(notes['G6'], 0.2, 0.2), 400);
+        }
+
         // Damage/lose life sound effect
         function playDamageSound() {
             if (!musicEnabled) return;
@@ -917,6 +928,8 @@
         let obstacles = [];
         let axolotls = [];
         let flowers = [];
+        let tacos = [];
+        let skiTacos = [];
 
         // Keyboard controls
         const keys = {};
@@ -1102,6 +1115,7 @@
             obstacles = [];
             axolotls = [];
             flowers = [];
+            tacos = [];
 
             // Reset level stats
             levelStarsCollected = 0;
@@ -1190,6 +1204,16 @@
                     angle: 'up',
                     color: '#FF1493',
                     bounceAnim: 0
+                });
+            }
+
+            // Create tacos (eating one gives an extra life!)
+            const tacoCount = 4 + level;
+            for (let i = 0; i < tacoCount; i++) {
+                tacos.push({
+                    x: 400 + i * (levelWidth / tacoCount),
+                    y: 460 + Math.random() * 60,
+                    collected: false
                 });
             }
 
@@ -1468,6 +1492,69 @@
                         // Add sparkle
                         ctx.fillStyle = '#FFF';
                         ctx.fillRect(screenX + 9, star.y + 9, 2, 2);
+                    }
+                }
+            });
+        }
+
+        // Draw a pixel-art taco at (x, y)
+        function drawTacoShape(x, y) {
+            // Shell - golden yellow curved shape (8-bit U)
+            ctx.fillStyle = '#F5C518';
+            ctx.fillRect(x, y + 10, 28, 14);     // base
+            ctx.fillRect(x, y + 4, 7, 10);       // left side
+            ctx.fillRect(x + 21, y + 4, 7, 10);  // right side
+            // Darker shell outline bottom
+            ctx.fillStyle = '#C8960A';
+            ctx.fillRect(x, y + 22, 28, 2);
+            // Meat filling (brown)
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(x + 5, y + 7, 18, 7);
+            // Lettuce (bright green)
+            ctx.fillStyle = '#2ECC40';
+            ctx.fillRect(x + 3, y + 4, 7, 5);
+            ctx.fillRect(x + 18, y + 4, 7, 5);
+            // Cheese (orange)
+            ctx.fillStyle = '#FF9500';
+            ctx.fillRect(x + 7, y + 2, 14, 4);
+            // Tomato (red)
+            ctx.fillStyle = '#E02020';
+            ctx.fillRect(x + 9, y + 5, 4, 3);
+            ctx.fillRect(x + 15, y + 5, 4, 3);
+            // Highlight on shell
+            ctx.fillStyle = '#FFE87A';
+            ctx.fillRect(x + 2, y + 11, 5, 3);
+        }
+
+        // Draw tacos in level 1
+        function drawTacos() {
+            tacos.forEach(taco => {
+                if (!taco.collected) {
+                    const screenX = taco.x - scrollOffset;
+                    if (screenX > -50 && screenX < canvas.width + 50) {
+                        drawTacoShape(screenX, taco.y);
+                        // Pulsing glow ring
+                        const pulse = Math.sin(Date.now() / 250) * 3;
+                        ctx.strokeStyle = 'rgba(245,197,24,0.6)';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(screenX - 3 - pulse, taco.y - 3 - pulse, 34 + pulse*2, 30 + pulse*2);
+                        ctx.lineWidth = 1;
+                    }
+                }
+            });
+        }
+
+        // Check taco collection (level 1)
+        function checkTacoCollection() {
+            const ap = getActivePlayer();
+            tacos.forEach(taco => {
+                if (!taco.collected) {
+                    const tacoRect = { x: taco.x - scrollOffset, y: taco.y, width: 28, height: 24 };
+                    if (checkCollision(ap, tacoRect)) {
+                        taco.collected = true;
+                        lives++;
+                        document.getElementById('lives').textContent = lives;
+                        playTacoSound();
                     }
                 }
             });
@@ -2199,6 +2286,7 @@
             skiPlayerVelX = 0;
             skiObjects = [];
             skiSnowflakes = [];
+            skiTacos = [];
             skiInAir = false;
             skiAirFrames = 0;
             levelStarsCollected = 0;
@@ -2232,6 +2320,14 @@
                 const wx = 50 + Math.random() * 700;
                 const wy = 150 + i * (SKI_FINISH_DIST / 70);
                 skiSnowflakes.push({ wx, wy, size: 12, collected: false });
+            }
+            // Generate tacos (eating one gives an extra life!)
+            for (let i = 0; i < 5; i++) {
+                skiTacos.push({
+                    wx: 100 + Math.random() * 600,
+                    wy: 500 + i * (SKI_FINISH_DIST / 5),
+                    collected: false
+                });
             }
             // Yeti starts far behind, activates at 2000m
             skiYeti = { wx: 400, gap: 600, active: false };
@@ -2328,6 +2424,20 @@
                 ctx.textAlign = 'center';
                 ctx.fillText('*', sx, sy + sf.size / 3);
                 ctx.textAlign = 'left';
+            }
+
+            // Ski tacos (extra life pickups)
+            for (const taco of skiTacos) {
+                if (taco.collected) continue;
+                const { sx, sy } = skiScreenPos(taco.wx, taco.wy);
+                if (sy < -40 || sy > canvas.height + 40) continue;
+                drawTacoShape(sx - 14, sy - 12);
+                // Pulsing glow
+                const pulse = Math.sin(Date.now() / 250) * 3;
+                ctx.strokeStyle = 'rgba(245,197,24,0.7)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(sx - 17 - pulse, sy - 15 - pulse, 34 + pulse*2, 30 + pulse*2);
+                ctx.lineWidth = 1;
             }
         }
 
@@ -2504,6 +2614,18 @@
                 }
             }
 
+            // Check ski taco collection (extra life!)
+            for (const taco of skiTacos) {
+                if (taco.collected) continue;
+                const { sx, sy } = skiScreenPos(taco.wx, taco.wy);
+                if (Math.abs(ap.x - sx) < 22 && Math.abs(SKI_PLAYER_Y - sy) < 22) {
+                    taco.collected = true;
+                    lives++;
+                    document.getElementById('lives').textContent = lives;
+                    playTacoSound();
+                }
+            }
+
             // Check object collisions (skip if in air)
             if (!skiInAir) {
                 for (const obj of skiObjects) {
@@ -2565,6 +2687,7 @@
                 drawFlowers();
                 drawAxolotls();
                 drawStars();
+                drawTacos();
                 drawObstacles();
                 drawFlagPole();
 
@@ -2591,6 +2714,7 @@
 
                 if (!reachedFlag) {
                     checkStarCollection();
+                    checkTacoCollection();
                     checkObstacleCollision();
                     checkFlowerBoost();
                     checkFlagReached();
