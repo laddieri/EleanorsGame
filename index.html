@@ -858,7 +858,7 @@
         let skiYeti = null;
         let skiInAir = false;
         let skiAirFrames = 0;
-        const SKI_FINISH_DIST = 6000;
+        const SKI_FINISH_DIST = 12000;
         const SKI_PLAYER_Y = 340;
 
         // Player objects
@@ -2297,10 +2297,12 @@
             ap.x = 400;
             ap.y = SKI_PLAYER_Y;
 
-            // Generate trees scattered down the mountain
-            for (let i = 0; i < 100; i++) {
+            // Generate trees - sparse at start, dense toward end
+            for (let i = 0; i < 120; i++) {
                 const wx = 30 + Math.random() * 740;
-                const wy = 400 + Math.random() * (SKI_FINISH_DIST - 400);
+                // Power curve biases tree placement toward end of level
+                const t = Math.pow(Math.random(), 0.4);
+                const wy = 400 + t * (SKI_FINISH_DIST - 400);
                 skiObjects.push({ type: 'tree', wx, wy, r: 18 });
             }
             // Generate rocks
@@ -2583,8 +2585,8 @@
                 if (skiAirFrames <= 0) skiInAir = false;
             }
 
-            // Activate yeti after 2000m
-            if (skiYeti && !skiYeti.active && skiDistance > 2000) {
+            // Activate yeti after 4000m
+            if (skiYeti && !skiYeti.active && skiDistance > 4000) {
                 skiYeti.active = true;
                 skiYeti.wx = ap.x;
             }
