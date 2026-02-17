@@ -2364,8 +2364,8 @@
             // Ski tracks behind player
             const ap = getActivePlayer();
             ctx.fillStyle = 'rgba(160,195,220,0.5)';
-            ctx.fillRect(ap.x - 10, SKI_PLAYER_Y, 5, canvas.height - SKI_PLAYER_Y);
-            ctx.fillRect(ap.x + 5, SKI_PLAYER_Y, 5, canvas.height - SKI_PLAYER_Y);
+            ctx.fillRect(ap.x - 10, 0, 5, SKI_PLAYER_Y);
+            ctx.fillRect(ap.x + 5, 0, 5, SKI_PLAYER_Y);
 
             // Finish line banner
             const finishSY = (SKI_FINISH_DIST - skiDistance) + SKI_PLAYER_Y;
