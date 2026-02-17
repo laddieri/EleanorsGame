@@ -837,6 +837,19 @@
         let victoryAnimation = 0;
         let levelStarsCollected = 0;
 
+        // ===== SKI FREE LEVEL 2 STATE =====
+        let skiMode = false;
+        let skiDistance = 0;
+        let skiSpeed = 3;
+        let skiPlayerVelX = 0;
+        let skiObjects = [];
+        let skiSnowflakes = [];
+        let skiYeti = null;
+        let skiInAir = false;
+        let skiAirFrames = 0;
+        const SKI_FINISH_DIST = 6000;
+        const SKI_PLAYER_Y = 340;
+
         // Player objects
         const player = {
             x: 100,
@@ -1077,6 +1090,12 @@
 
         // Initialize game objects for a specific level
         function initLevel(level) {
+            skiMode = false;
+            if (level === 2) {
+                initSkiLevel();
+                return;
+            }
+
             // Clear all arrays
             platforms = [];
             stars = [];
@@ -2144,11 +2163,19 @@
 
             // Reset the selected player's position
             const ap = getActivePlayer();
-            ap.x = 100;
-            ap.y = 400;
-            ap.velocityY = 0;
-            ap.velocityX = 0;
-            ap.jumping = false;
+            if (skiMode) {
+                ap.x = 400;
+                ap.y = SKI_PLAYER_Y;
+                skiPlayerVelX = 0;
+                skiInAir = false;
+                skiAirFrames = 0;
+            } else {
+                ap.x = 100;
+                ap.y = 400;
+                ap.velocityY = 0;
+                ap.velocityX = 0;
+                ap.jumping = false;
+            }
 
             if (lives <= 0) {
                 gameOver();
@@ -2163,6 +2190,356 @@
             document.getElementById('gameOver').style.display = 'block';
         }
 
+        // ===== SKI FREE LEVEL 2 FUNCTIONS =====
+
+        function initSkiLevel() {
+            skiMode = true;
+            skiDistance = 0;
+            skiSpeed = 3;
+            skiPlayerVelX = 0;
+            skiObjects = [];
+            skiSnowflakes = [];
+            skiInAir = false;
+            skiAirFrames = 0;
+            levelStarsCollected = 0;
+            reachedFlag = false;
+            victoryAnimation = 0;
+
+            const ap = getActivePlayer();
+            ap.x = 400;
+            ap.y = SKI_PLAYER_Y;
+
+            // Generate trees scattered down the mountain
+            for (let i = 0; i < 250; i++) {
+                const wx = 30 + Math.random() * 740;
+                const wy = 400 + Math.random() * (SKI_FINISH_DIST - 400);
+                skiObjects.push({ type: 'tree', wx, wy, r: 18 });
+            }
+            // Generate rocks
+            for (let i = 0; i < 60; i++) {
+                const wx = 60 + Math.random() * 680;
+                const wy = 600 + Math.random() * (SKI_FINISH_DIST - 600);
+                skiObjects.push({ type: 'rock', wx, wy, rw: 14, rh: 10 });
+            }
+            // Generate moguls (launch player into the air)
+            for (let i = 0; i < 30; i++) {
+                const wx = 100 + Math.random() * 600;
+                const wy = 300 + Math.random() * (SKI_FINISH_DIST - 300);
+                skiObjects.push({ type: 'mogul', wx, wy, r: 16 });
+            }
+            // Generate snowflakes (collectibles)
+            for (let i = 0; i < 70; i++) {
+                const wx = 50 + Math.random() * 700;
+                const wy = 150 + i * (SKI_FINISH_DIST / 70);
+                skiSnowflakes.push({ wx, wy, size: 12, collected: false });
+            }
+            // Yeti starts far behind, activates at 2000m
+            skiYeti = { wx: 400, gap: 600, active: false };
+        }
+
+        function skiScreenPos(wx, wy) {
+            return { sx: wx, sy: (wy - skiDistance) + SKI_PLAYER_Y };
+        }
+
+        function drawSkiBackground() {
+            // White snowy gradient
+            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            grad.addColorStop(0, '#D6EEFF');
+            grad.addColorStop(1, '#FFFFFF');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Forest borders on left and right
+            ctx.fillStyle = '#1A6B1A';
+            ctx.fillRect(0, 0, 22, canvas.height);
+            ctx.fillRect(778, 0, 22, canvas.height);
+
+            // Speed lines scrolling upward
+            ctx.strokeStyle = 'rgba(180,210,235,0.45)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 9; i++) {
+                const ly = ((i * 70) - (skiDistance * 3) % 70 + 700) % canvas.height;
+                ctx.beginPath();
+                ctx.moveTo(22, ly);
+                ctx.lineTo(778, ly);
+                ctx.stroke();
+            }
+
+            // Ski tracks behind player
+            const ap = getActivePlayer();
+            ctx.fillStyle = 'rgba(160,195,220,0.5)';
+            ctx.fillRect(ap.x - 10, SKI_PLAYER_Y, 5, canvas.height - SKI_PLAYER_Y);
+            ctx.fillRect(ap.x + 5, SKI_PLAYER_Y, 5, canvas.height - SKI_PLAYER_Y);
+
+            // Finish line banner
+            const finishSY = (SKI_FINISH_DIST - skiDistance) + SKI_PLAYER_Y;
+            if (finishSY > -20 && finishSY < canvas.height + 20) {
+                ctx.fillStyle = '#FF1493';
+                ctx.fillRect(22, finishSY, 756, 8);
+                ctx.fillStyle = '#FFD700';
+                ctx.font = 'bold 22px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText('FINISH!', 400, finishSY - 8);
+                ctx.textAlign = 'left';
+            }
+        }
+
+        function drawSkiObjects() {
+            for (const obj of skiObjects) {
+                const { sx, sy } = skiScreenPos(obj.wx, obj.wy);
+                if (sy < -40 || sy > canvas.height + 40) continue;
+
+                if (obj.type === 'tree') {
+                    // Top-down pine tree: dark green circle + trunk
+                    ctx.fillStyle = '#0D5C0D';
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, obj.r, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#5C3317';
+                    ctx.fillRect(sx - 3, sy - 3, 6, 6);
+                } else if (obj.type === 'rock') {
+                    ctx.fillStyle = '#7A7A7A';
+                    ctx.beginPath();
+                    ctx.ellipse(sx, sy, obj.rw, obj.rh, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#AAAAAA';
+                    ctx.beginPath();
+                    ctx.ellipse(sx - 3, sy - 2, obj.rw * 0.4, obj.rh * 0.4, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (obj.type === 'mogul') {
+                    ctx.fillStyle = '#C8DFF0';
+                    ctx.beginPath();
+                    ctx.ellipse(sx, sy, obj.r, obj.r * 0.55, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#E8F4FF';
+                    ctx.beginPath();
+                    ctx.ellipse(sx - 3, sy - 2, obj.r * 0.4, obj.r * 0.3, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Snowflakes
+            for (const sf of skiSnowflakes) {
+                if (sf.collected) continue;
+                const { sx, sy } = skiScreenPos(sf.wx, sf.wy);
+                if (sy < -30 || sy > canvas.height + 30) continue;
+                ctx.fillStyle = '#00BFFF';
+                ctx.font = sf.size + 'px serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('*', sx, sy + sf.size / 3);
+                ctx.textAlign = 'left';
+            }
+        }
+
+        function drawSkiYeti() {
+            if (!skiYeti || !skiYeti.active) return;
+            const sy = SKI_PLAYER_Y - skiYeti.gap;
+            const sx = skiYeti.wx;
+            if (sy > canvas.height + 50) return;
+
+            // Yeti body - big white menacing creature
+            ctx.fillStyle = '#E8E8E8';
+            ctx.fillRect(sx - 18, sy - 28, 36, 32);
+            // Head
+            ctx.fillStyle = '#F0F0F0';
+            ctx.fillRect(sx - 14, sy - 46, 28, 22);
+            // Eyes (red!)
+            ctx.fillStyle = '#FF0000';
+            ctx.fillRect(sx - 8, sy - 40, 5, 5);
+            ctx.fillRect(sx + 3, sy - 40, 5, 5);
+            // Claws
+            ctx.fillStyle = '#B0B0B0';
+            ctx.fillRect(sx - 26, sy - 20, 10, 6);
+            ctx.fillRect(sx + 16, sy - 20, 10, 6);
+            // "YETI!" label
+            if (skiYeti.gap < 200) {
+                ctx.fillStyle = '#FF0000';
+                ctx.font = 'bold 12px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText('YETI!', sx, sy - 52);
+                ctx.textAlign = 'left';
+            }
+        }
+
+        function drawSkiPlayer() {
+            const ap = getActivePlayer();
+            const px = ap.x;
+            const py = SKI_PLAYER_Y;
+
+            // Lean direction based on velocity
+            const lean = Math.max(-8, Math.min(8, skiPlayerVelX * 0.6));
+
+            // Skis (two lines extending forward = upward on screen since we're going down)
+            ctx.fillStyle = '#00AAFF';
+            ctx.fillRect(px - 14 + lean, py - 22, 5, 28);
+            ctx.fillRect(px + 9 + lean, py - 22, 5, 28);
+
+            // Body shadow if in air
+            if (skiInAir) {
+                ctx.fillStyle = 'rgba(0,0,0,0.15)';
+                ctx.beginPath();
+                ctx.ellipse(px, py + 20, 18, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Skier body (top-down view, slightly overhead)
+            ctx.fillStyle = ap.color;
+            ctx.fillRect(px - 10, py - 8, 20, 18);
+
+            // Head
+            ctx.fillStyle = '#FDBCB4';
+            ctx.beginPath();
+            ctx.arc(px, py - 14, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Ski goggles
+            ctx.fillStyle = '#333';
+            ctx.fillRect(px - 7, py - 17, 5, 4);
+            ctx.fillRect(px + 2, py - 17, 5, 4);
+
+            // Poles (diagonal lines to the sides)
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(px - 10, py - 4);
+            ctx.lineTo(px - 22 + lean * 0.5, py + 16);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(px + 10, py - 4);
+            ctx.lineTo(px + 22 + lean * 0.5, py + 16);
+            ctx.stroke();
+            ctx.lineWidth = 1;
+        }
+
+        function drawSkiHUD() {
+            // Progress bar
+            const pct = Math.min(1, skiDistance / SKI_FINISH_DIST);
+            ctx.fillStyle = 'rgba(255,255,255,0.75)';
+            ctx.fillRect(22, 10, 200, 14);
+            ctx.fillStyle = '#1E90FF';
+            ctx.fillRect(22, 10, 200 * pct, 14);
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(22, 10, 200, 14);
+
+            ctx.fillStyle = '#003388';
+            ctx.font = '13px Courier New';
+            ctx.fillText('Ski Dist: ' + Math.floor(skiDistance) + 'm / ' + SKI_FINISH_DIST + 'm', 22, 38);
+            ctx.fillStyle = '#AA0000';
+            ctx.fillText('Speed: ' + skiSpeed.toFixed(1), 22, 54);
+
+            if (skiInAir) {
+                ctx.fillStyle = '#FF8C00';
+                ctx.font = 'bold 18px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText('AIR!', 400, 40);
+                ctx.textAlign = 'left';
+            }
+
+            if (skiYeti && skiYeti.active && skiYeti.gap < 250) {
+                ctx.fillStyle = '#FF0000';
+                ctx.font = 'bold 16px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText('YETI IS COMING!', 400, 60);
+                ctx.textAlign = 'left';
+            }
+        }
+
+        function updateSkiMode() {
+            if (reachedFlag) {
+                victoryAnimation++;
+                if (victoryAnimation > 90) levelComplete();
+                return;
+            }
+
+            const ap = getActivePlayer();
+
+            // Horizontal steering
+            if (keys['ArrowLeft'] || keys['KeyA']) skiPlayerVelX -= 0.6;
+            if (keys['ArrowRight'] || keys['KeyD']) skiPlayerVelX += 0.6;
+            skiPlayerVelX *= 0.85;
+            skiPlayerVelX = Math.max(-7, Math.min(7, skiPlayerVelX));
+            ap.x += skiPlayerVelX;
+            ap.x = Math.max(30, Math.min(770, ap.x));
+
+            // Advance down the mountain
+            skiDistance += skiSpeed;
+            // Gradually accelerate
+            if (skiSpeed < 8) skiSpeed += 0.004;
+
+            // Air time countdown
+            if (skiInAir) {
+                skiAirFrames--;
+                if (skiAirFrames <= 0) skiInAir = false;
+            }
+
+            // Activate yeti after 2000m
+            if (skiYeti && !skiYeti.active && skiDistance > 2000) {
+                skiYeti.active = true;
+                skiYeti.wx = ap.x;
+            }
+            // Move yeti
+            if (skiYeti && skiYeti.active) {
+                skiYeti.gap -= 0.18;
+                // Yeti steers toward player horizontally
+                const dx = ap.x - skiYeti.wx;
+                skiYeti.wx += Math.sign(dx) * Math.min(Math.abs(dx), 1.5);
+                if (skiYeti.gap <= 0) {
+                    skiYeti.gap = 450;
+                    loseLife();
+                    return;
+                }
+            }
+
+            // Check snowflake collection
+            for (const sf of skiSnowflakes) {
+                if (sf.collected) continue;
+                const { sx, sy } = skiScreenPos(sf.wx, sf.wy);
+                if (Math.abs(ap.x - sx) < 20 && Math.abs(SKI_PLAYER_Y - sy) < 20) {
+                    sf.collected = true;
+                    levelStarsCollected++;
+                    score += 10;
+                    document.getElementById('score').textContent = score;
+                    playStarSound();
+                }
+            }
+
+            // Check object collisions (skip if in air)
+            if (!skiInAir) {
+                for (const obj of skiObjects) {
+                    if (obj.hit) continue;
+                    const { sx, sy } = skiScreenPos(obj.wx, obj.wy);
+                    if (Math.abs(SKI_PLAYER_Y - sy) > 30) continue;
+
+                    if (obj.type === 'tree') {
+                        if (Math.abs(ap.x - sx) < obj.r - 4) {
+                            obj.hit = true;
+                            loseLife();
+                            return;
+                        }
+                    } else if (obj.type === 'rock') {
+                        if (Math.abs(ap.x - sx) < obj.rw + 2) {
+                            obj.hit = true;
+                            loseLife();
+                            return;
+                        }
+                    } else if (obj.type === 'mogul') {
+                        if (Math.abs(ap.x - sx) < obj.r) {
+                            skiInAir = true;
+                            skiAirFrames = 55;
+                            playJumpSound();
+                        }
+                    }
+                }
+            }
+
+            // Reached finish
+            if (skiDistance >= SKI_FINISH_DIST) {
+                reachedFlag = true;
+                playVictorySound();
+            }
+        }
+
         // Main game loop
         function gameLoop() {
             // Continue the loop (must happen every frame)
@@ -2173,43 +2550,51 @@
             // Poll gamepad input
             updateGamepadInput();
 
-            // Draw everything
-            drawBackground();
-            drawPlatforms();
-            drawFlowers();
-            drawAxolotls();
-            drawStars();
-            drawObstacles();
-            drawFlagPole();
+            if (skiMode) {
+                // ===== SKI FREE LEVEL 2 =====
+                drawSkiBackground();
+                drawSkiObjects();
+                drawSkiYeti();
+                drawSkiPlayer();
+                drawSkiHUD();
+                updateSkiMode();
+            } else {
+                // ===== NORMAL SIDE-SCROLLER =====
+                drawBackground();
+                drawPlatforms();
+                drawFlowers();
+                drawAxolotls();
+                drawStars();
+                drawObstacles();
+                drawFlagPole();
 
-            // If reached flag, play victory animation
-            if (reachedFlag) {
-                playVictoryAnimation();
-            }
+                if (reachedFlag) {
+                    playVictoryAnimation();
+                }
 
-            // Draw and update only the selected character
-            if (selectedCharacter === 'eleanor') {
-                drawPlayer();
-                if (!reachedFlag) updatePlayer();
-            } else if (selectedCharacter === 'william') {
-                drawPlayer2();
-                if (!reachedFlag) updatePlayer2();
-            } else if (selectedCharacter === 'mom') {
-                drawPlayer3();
-                if (!reachedFlag) updatePlayer3();
-            } else if (selectedCharacter === 'dad') {
-                drawPlayer4();
-                if (!reachedFlag) updatePlayer4();
-            } else if (selectedCharacter === 'mila') {
-                drawPlayer5();
-                if (!reachedFlag) updatePlayer5();
-            }
+                if (selectedCharacter === 'eleanor') {
+                    drawPlayer();
+                    if (!reachedFlag) updatePlayer();
+                } else if (selectedCharacter === 'william') {
+                    drawPlayer2();
+                    if (!reachedFlag) updatePlayer2();
+                } else if (selectedCharacter === 'mom') {
+                    drawPlayer3();
+                    if (!reachedFlag) updatePlayer3();
+                } else if (selectedCharacter === 'dad') {
+                    drawPlayer4();
+                    if (!reachedFlag) updatePlayer4();
+                } else if (selectedCharacter === 'mila') {
+                    drawPlayer5();
+                    if (!reachedFlag) updatePlayer5();
+                }
 
-            if (!reachedFlag) {
-                checkStarCollection();
-                checkObstacleCollision();
-                checkFlowerBoost();
-                checkFlagReached();
+                if (!reachedFlag) {
+                    checkStarCollection();
+                    checkObstacleCollision();
+                    checkFlowerBoost();
+                    checkFlagReached();
+                }
             }
         }
 
