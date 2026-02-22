@@ -913,6 +913,8 @@
         let skiDistance = 0;
         let skiSpeed = 3;
         let skiPlayerVelX = 0;
+        let skiPlayerVelY = 0;
+        let skiPlayerY = 340;
         let skiObjects = [];
         let skiSnowflakes = [];
         let skiYeti = null;
@@ -2555,6 +2557,8 @@
                 ap.x = 400;
                 ap.y = SKI_PLAYER_Y;
                 skiPlayerVelX = 0;
+                skiPlayerVelY = 0;
+                skiPlayerY = 340;
                 skiInAir = false;
                 skiAirFrames = 0;
             } else {
@@ -2585,6 +2589,8 @@
             skiDistance = 0;
             skiSpeed = 3;
             skiPlayerVelX = 0;
+            skiPlayerVelY = 0;
+            skiPlayerY = 340;
             skiObjects = [];
             skiSnowflakes = [];
             skiTacos = [];
@@ -2669,8 +2675,8 @@
             // Ski tracks behind player
             const ap = getActivePlayer();
             ctx.fillStyle = 'rgba(160,195,220,0.5)';
-            ctx.fillRect(ap.x - 10, 0, 5, SKI_PLAYER_Y);
-            ctx.fillRect(ap.x + 5, 0, 5, SKI_PLAYER_Y);
+            ctx.fillRect(ap.x - 10, 0, 5, skiPlayerY);
+            ctx.fillRect(ap.x + 5, 0, 5, skiPlayerY);
 
             // Finish line banner
             const finishSY = (SKI_FINISH_DIST - skiDistance) + SKI_PLAYER_Y;
@@ -2748,7 +2754,7 @@
 
         function drawSkiYeti() {
             if (!skiYeti || !skiYeti.active) return;
-            const sy = SKI_PLAYER_Y - skiYeti.gap;
+            const sy = skiPlayerY - skiYeti.gap;
             const sx = skiYeti.wx;
             if (sy > canvas.height + 50) return;
 
@@ -2779,7 +2785,7 @@
         function drawSkiPlayer() {
             const ap = getActivePlayer();
             const px = ap.x;
-            const py = SKI_PLAYER_Y;
+            const py = skiPlayerY;
 
             // Lean direction based on velocity
             const lean = Math.max(-8, Math.min(8, skiPlayerVelX * 0.6));
@@ -2877,8 +2883,16 @@
             ap.x += skiPlayerVelX;
             ap.x = Math.max(30, Math.min(770, ap.x));
 
-            // Manual jump (Space or Up arrow) - lets player hop over rocks but NOT trees
-            const jumpKey = keys['Space'] || keys['ArrowUp'] || keys['KeyW'];
+            // Vertical movement (Up/Down arrows or W/S) within the scrolling screen
+            if (keys['ArrowUp'] || keys['KeyW']) skiPlayerVelY -= 0.6;
+            if (keys['ArrowDown'] || keys['KeyS']) skiPlayerVelY += 0.6;
+            skiPlayerVelY *= 0.85;
+            skiPlayerVelY = Math.max(-6, Math.min(6, skiPlayerVelY));
+            skiPlayerY += skiPlayerVelY;
+            skiPlayerY = Math.max(80, Math.min(520, skiPlayerY));
+
+            // Manual jump (Space) - lets player hop over rocks but NOT trees
+            const jumpKey = keys['Space'];
             if (jumpKey && !skiJumpPressed && !skiInAir) {
                 skiInAir = true;
                 skiAirFrames = 38;
@@ -2924,7 +2938,7 @@
             for (const sf of skiSnowflakes) {
                 if (sf.collected) continue;
                 const { sx, sy } = skiScreenPos(sf.wx, sf.wy);
-                if (Math.abs(ap.x - sx) < 20 && Math.abs(SKI_PLAYER_Y - sy) < 20) {
+                if (Math.abs(ap.x - sx) < 20 && Math.abs(skiPlayerY - sy) < 20) {
                     sf.collected = true;
                     levelStarsCollected++;
                     score += 10;
@@ -2937,7 +2951,7 @@
             for (const taco of skiTacos) {
                 if (taco.collected) continue;
                 const { sx, sy } = skiScreenPos(taco.wx, taco.wy);
-                if (Math.abs(ap.x - sx) < 22 && Math.abs(SKI_PLAYER_Y - sy) < 22) {
+                if (Math.abs(ap.x - sx) < 22 && Math.abs(skiPlayerY - sy) < 22) {
                     taco.collected = true;
                     lives++;
                     document.getElementById('lives').textContent = lives;
@@ -2949,7 +2963,7 @@
             for (const obj of skiObjects) {
                 if (obj.hit) continue;
                 const { sx, sy } = skiScreenPos(obj.wx, obj.wy);
-                if (Math.abs(SKI_PLAYER_Y - sy) > 30) continue;
+                if (Math.abs(skiPlayerY - sy) > 30) continue;
 
                 if (obj.type === 'tree') {
                     // Trees can never be jumped over
