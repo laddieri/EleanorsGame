@@ -540,6 +540,15 @@
             box-shadow: 0 8px 16px rgba(245, 127, 23, 0.5);
         }
 
+        .character-card.rickyfish {
+            background: linear-gradient(to bottom, #FF8C00, #FFA07A);
+            border-color: #FF4500;
+        }
+
+        .character-card.rickyfish:hover {
+            box-shadow: 0 8px 16px rgba(255, 69, 0, 0.5);
+        }
+
         .character-card h3 {
             font-size: 28px;
             margin-bottom: 10px;
@@ -616,6 +625,14 @@
                 <div class="character-preview">🐝</div>
                 <h3>Bee</h3>
                 <p>The Bumblebee</p>
+                <p><strong>Controls:</strong></p>
+                <p>Arrow keys + SPACE</p>
+                <p>📱 Touch or 🎮 Gamepad</p>
+            </div>
+            <div class="character-card rickyfish" onclick="selectCharacter('rickyfish')">
+                <div class="character-preview">🐡</div>
+                <h3>Ricky Fish</h3>
+                <p>The Clownfish</p>
                 <p><strong>Controls:</strong></p>
                 <p>Arrow keys + SPACE</p>
                 <p>📱 Touch or 🎮 Gamepad</p>
@@ -923,6 +940,18 @@
                     <p>Jump into flowers 🌸 to launch into the sky!</p>
                     <p>Watch out for the fire obstacles! 🔥</p>
                 `;
+            } else if (character === 'rickyfish') {
+                instructionsDiv.innerHTML = `
+                    <h2>How to Play</h2>
+                    <p><strong>Playing as Ricky Fish 🐡</strong></p>
+                    <p>Use <span class="key">&larr; &rarr;</span> arrow keys to move</p>
+                    <p>Press <span class="key">SPACE</span> to jump</p>
+                    <p><strong>📱 Mobile:</strong> Use on-screen buttons</p>
+                    <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
+                    <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
+                    <p>Jump into flowers 🌸 to launch into the sky!</p>
+                    <p>Watch out for the fire obstacles! 🔥</p>
+                `;
             }
 
             // Start the game
@@ -936,7 +965,7 @@
         let lives = 3;
         let scrollOffset = 0;
         let gameSpeed = 2;
-        let selectedCharacter = null;  // 'eleanor', 'william', 'mom', 'dad', 'mila', 'harry', or 'bee'
+        let selectedCharacter = null;  // 'eleanor', 'william', 'mom', 'dad', 'mila', 'harry', 'bee', or 'rickyfish'
 
         function getActivePlayer() {
             if (selectedCharacter === 'eleanor') return player;
@@ -946,6 +975,7 @@
             if (selectedCharacter === 'mila') return player5;
             if (selectedCharacter === 'harry') return player6;
             if (selectedCharacter === 'bee') return player7;
+            if (selectedCharacter === 'rickyfish') return player8;
             return player;
         }
         let currentLevel = 1;
@@ -1055,6 +1085,18 @@
             jumping: false,
             color: '#FFD700',
             name: 'Bee'
+        };
+
+        const player8 = {
+            x: 100,
+            y: 400,
+            width: 36,
+            height: 36,
+            velocityY: 0,
+            velocityX: 0,
+            jumping: false,
+            color: '#FF6600',
+            name: 'Ricky Fish'
         };
 
         // Game objects arrays
@@ -1738,6 +1780,61 @@
             ctx.fillStyle = '#222';
             ctx.fillRect(x + 10, y + 19, 4, 4);
             ctx.fillRect(x + 11, y + 23, 2, 2);
+        }
+
+        // Draw Ricky Fish (very round clownfish, faces right)
+        function drawPlayer8() {
+            const x = player8.x;
+            const y = player8.y;
+
+            // Tail fin (left side, fan of three lobes)
+            ctx.fillStyle = '#FF4400';
+            ctx.fillRect(x - 5, y + 6,  7, 5);   // top lobe
+            ctx.fillRect(x - 5, y + 25, 7, 5);   // bottom lobe
+            ctx.fillRect(x - 3, y + 14, 5, 8);   // middle lobe
+
+            // Main round body (orange circle)
+            ctx.fillStyle = '#FF6600';
+            ctx.beginPath();
+            ctx.arc(x + 18, y + 18, 16, 0, Math.PI * 2);
+            ctx.fill();
+
+            // White stripe 1 (near tail)
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(x + 6,  y + 4,  5, 28);
+            // White stripe 2 (middle)
+            ctx.fillRect(x + 16, y + 3,  4, 30);
+
+            // Black outlines on stripes
+            ctx.fillStyle = '#111';
+            ctx.fillRect(x + 5,  y + 6,  1, 24);
+            ctx.fillRect(x + 11, y + 6,  1, 24);
+            ctx.fillRect(x + 15, y + 5,  1, 26);
+            ctx.fillRect(x + 20, y + 5,  1, 26);
+
+            // Dorsal fin (top center)
+            ctx.fillStyle = '#FF5500';
+            ctx.fillRect(x + 11, y + 2,  3, 5);
+            ctx.fillRect(x + 14, y,      5, 7);
+            ctx.fillRect(x + 19, y + 2,  3, 5);
+
+            // Pectoral fin (lower body, right of center)
+            ctx.fillStyle = '#FF5500';
+            ctx.fillRect(x + 19, y + 28, 8, 4);
+            ctx.fillRect(x + 21, y + 32, 5, 3);
+
+            // Eye (big round, on the right/head side)
+            ctx.fillStyle = '#111';
+            ctx.beginPath();
+            ctx.arc(x + 27, y + 14, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(x + 25, y + 11, 3, 3);
+
+            // Mouth (small smile)
+            ctx.fillStyle = '#CC2200';
+            ctx.fillRect(x + 32, y + 18, 4, 3);
+            ctx.fillRect(x + 33, y + 21, 2, 2);
         }
 
         // Draw platforms
@@ -2488,6 +2585,56 @@
             }
         }
 
+        // Update Ricky Fish physics - floaty, bubbly jumps
+        function updatePlayer8() {
+            if (keys['ArrowRight']) {
+                player8.velocityX = 5;
+            } else if (keys['ArrowLeft']) {
+                player8.velocityX = -5;
+            } else {
+                player8.velocityX = 0;
+            }
+
+            if (keys['Space'] && !player8.jumping) {
+                player8.velocityY = -22;
+                player8.jumping = true;
+                playJumpSound();
+            }
+
+            player8.velocityY += 0.8;
+            player8.y += player8.velocityY;
+            player8.x += player8.velocityX;
+
+            if (player8.x < 0) player8.x = 0;
+            if (player8.x > canvas.width - player8.width) player8.x = canvas.width - player8.width;
+
+            let onPlatform = false;
+            platforms.forEach(platform => {
+                if (checkCollision(player8, {
+                    x: platform.x - scrollOffset,
+                    y: platform.y,
+                    width: platform.width,
+                    height: platform.height
+                })) {
+                    if (player8.velocityY > 0) {
+                        player8.y = platform.y - player8.height;
+                        player8.velocityY = 0;
+                        player8.jumping = false;
+                        onPlatform = true;
+                    }
+                }
+            });
+
+            if (player8.y > canvas.height) {
+                loseLife();
+            }
+
+            if (player8.x > canvas.width / 2) {
+                scrollOffset += player8.x - canvas.width / 2;
+                player8.x = canvas.width / 2;
+            }
+        }
+
         // Check collision between two rectangles
         function checkCollision(rect1, rect2) {
             return rect1.x < rect2.x + rect2.width &&
@@ -2896,48 +3043,54 @@
             const ap = getActivePlayer();
             const px = ap.x;
             const py = skiPlayerY;
-
-            // Lean direction based on velocity
             const lean = Math.max(-8, Math.min(8, skiPlayerVelX * 0.6));
 
-            // Skis (two lines extending forward = upward on screen since we're going down)
-            ctx.fillStyle = '#00AAFF';
-            ctx.fillRect(px - 14 + lean, py - 22, 5, 28);
-            ctx.fillRect(px + 9 + lean, py - 22, 5, 28);
-
-            // Body shadow if in air
+            // Air shadow
             if (skiInAir) {
                 ctx.fillStyle = 'rgba(0,0,0,0.15)';
                 ctx.beginPath();
-                ctx.ellipse(px, py + 20, 18, 8, 0, 0, Math.PI * 2);
+                ctx.ellipse(px, py + 14, 22, 8, 0, 0, Math.PI * 2);
                 ctx.fill();
             }
 
-            // Skier body (top-down view, slightly overhead)
-            ctx.fillStyle = ap.color;
-            ctx.fillRect(px - 10, py - 8, 20, 18);
+            // Skis drawn first so character feet appear on top
+            // Front ski
+            ctx.fillStyle = '#00AAFF';
+            ctx.fillRect(px - 26 + lean, py + 1, 52, 5);
+            // Back ski (darker, slightly offset)
+            ctx.fillStyle = '#0077CC';
+            ctx.fillRect(px - 23 + lean, py + 7, 46, 5);
 
-            // Head
-            ctx.fillStyle = '#FDBCB4';
-            ctx.beginPath();
-            ctx.arc(px, py - 14, 10, 0, Math.PI * 2);
-            ctx.fill();
+            // Temporarily reposition the player object so the existing
+            // draw function renders centered at the ski position.
+            const origX = ap.x;
+            const origY = ap.y;
+            ap.x = Math.round(px - ap.width / 2 + lean * 0.4);
+            ap.y = py - ap.height;
 
-            // Ski goggles
-            ctx.fillStyle = '#333';
-            ctx.fillRect(px - 7, py - 17, 5, 4);
-            ctx.fillRect(px + 2, py - 17, 5, 4);
+            if (selectedCharacter === 'eleanor')   drawPlayer();
+            else if (selectedCharacter === 'william') drawPlayer2();
+            else if (selectedCharacter === 'mom')     drawPlayer3();
+            else if (selectedCharacter === 'dad')     drawPlayer4();
+            else if (selectedCharacter === 'mila')    drawPlayer5();
+            else if (selectedCharacter === 'harry')   drawPlayer6();
+            else if (selectedCharacter === 'bee')     drawPlayer7();
+            else if (selectedCharacter === 'rickyfish') drawPlayer8();
 
-            // Poles (diagonal lines to the sides)
+            ap.x = origX;
+            ap.y = origY;
+
+            // Ski poles (drawn on top of character)
+            const poleTopY = py - Math.round(ap.height * 0.6);
             ctx.strokeStyle = '#888';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(px - 10, py - 4);
-            ctx.lineTo(px - 22 + lean * 0.5, py + 16);
+            ctx.moveTo(px - 14 + lean, poleTopY);
+            ctx.lineTo(px - 28 + lean, py + 10);
             ctx.stroke();
             ctx.beginPath();
-            ctx.moveTo(px + 10, py - 4);
-            ctx.lineTo(px + 22 + lean * 0.5, py + 16);
+            ctx.moveTo(px + 14 + lean, poleTopY);
+            ctx.lineTo(px + 28 + lean, py + 10);
             ctx.stroke();
             ctx.lineWidth = 1;
         }
@@ -3161,6 +3314,9 @@
                 } else if (selectedCharacter === 'bee') {
                     drawPlayer7();
                     if (!reachedFlag) updatePlayer7();
+                } else if (selectedCharacter === 'rickyfish') {
+                    drawPlayer8();
+                    if (!reachedFlag) updatePlayer8();
                 }
 
                 if (!reachedFlag) {
