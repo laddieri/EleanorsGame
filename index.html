@@ -477,6 +477,24 @@
             box-shadow: 0 8px 16px rgba(139, 69, 19, 0.5);
         }
 
+        .character-card.harry {
+            background: linear-gradient(to bottom, #A9A9A9, #D3D3D3);
+            border-color: #696969;
+        }
+
+        .character-card.harry:hover {
+            box-shadow: 0 8px 16px rgba(105, 105, 105, 0.5);
+        }
+
+        .character-card.bee {
+            background: linear-gradient(to bottom, #FFD700, #FFF176);
+            border-color: #F57F17;
+        }
+
+        .character-card.bee:hover {
+            box-shadow: 0 8px 16px rgba(245, 127, 23, 0.5);
+        }
+
         .character-card h3 {
             font-size: 28px;
             margin-bottom: 10px;
@@ -537,6 +555,22 @@
                 <div class="character-preview">🐶</div>
                 <h3>Mila</h3>
                 <p>The Beagle</p>
+                <p><strong>Controls:</strong></p>
+                <p>Arrow keys + SPACE</p>
+                <p>📱 Touch or 🎮 Gamepad</p>
+            </div>
+            <div class="character-card harry" onclick="selectCharacter('harry')">
+                <div class="character-preview">🐘</div>
+                <h3>Harry</h3>
+                <p>The Elephant</p>
+                <p><strong>Controls:</strong></p>
+                <p>Arrow keys + SPACE</p>
+                <p>📱 Touch or 🎮 Gamepad</p>
+            </div>
+            <div class="character-card bee" onclick="selectCharacter('bee')">
+                <div class="character-preview">🐝</div>
+                <h3>Bee</h3>
+                <p>The Bumblebee</p>
                 <p><strong>Controls:</strong></p>
                 <p>Arrow keys + SPACE</p>
                 <p>📱 Touch or 🎮 Gamepad</p>
@@ -818,6 +852,30 @@
                     <p>Jump into flowers 🌸 to launch into the sky!</p>
                     <p>Watch out for the fire obstacles! 🔥</p>
                 `;
+            } else if (character === 'harry') {
+                instructionsDiv.innerHTML = `
+                    <h2>How to Play</h2>
+                    <p><strong>Playing as Harry 🐘</strong></p>
+                    <p>Use <span class="key">&larr; &rarr;</span> arrow keys to move</p>
+                    <p>Press <span class="key">SPACE</span> to jump</p>
+                    <p><strong>📱 Mobile:</strong> Use on-screen buttons</p>
+                    <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
+                    <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
+                    <p>Jump into flowers 🌸 to launch into the sky!</p>
+                    <p>Watch out for the fire obstacles! 🔥</p>
+                `;
+            } else if (character === 'bee') {
+                instructionsDiv.innerHTML = `
+                    <h2>How to Play</h2>
+                    <p><strong>Playing as Bee 🐝</strong></p>
+                    <p>Use <span class="key">&larr; &rarr;</span> arrow keys to move</p>
+                    <p>Press <span class="key">SPACE</span> to jump</p>
+                    <p><strong>📱 Mobile:</strong> Use on-screen buttons</p>
+                    <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
+                    <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
+                    <p>Jump into flowers 🌸 to launch into the sky!</p>
+                    <p>Watch out for the fire obstacles! 🔥</p>
+                `;
             }
 
             // Start the game
@@ -831,7 +889,7 @@
         let lives = 3;
         let scrollOffset = 0;
         let gameSpeed = 2;
-        let selectedCharacter = null;  // 'eleanor', 'william', 'mom', or 'dad'
+        let selectedCharacter = null;  // 'eleanor', 'william', 'mom', 'dad', 'mila', 'harry', or 'bee'
 
         function getActivePlayer() {
             if (selectedCharacter === 'eleanor') return player;
@@ -839,6 +897,8 @@
             if (selectedCharacter === 'mom') return player3;
             if (selectedCharacter === 'dad') return player4;
             if (selectedCharacter === 'mila') return player5;
+            if (selectedCharacter === 'harry') return player6;
+            if (selectedCharacter === 'bee') return player7;
             return player;
         }
         let currentLevel = 1;
@@ -922,6 +982,30 @@
             jumping: false,
             color: '#D2691E',
             name: 'Mila'
+        };
+
+        const player6 = {
+            x: 100,
+            y: 400,
+            width: 44,
+            height: 44,
+            velocityY: 0,
+            velocityX: 0,
+            jumping: false,
+            color: '#808080',
+            name: 'Harry'
+        };
+
+        const player7 = {
+            x: 100,
+            y: 400,
+            width: 24,
+            height: 24,
+            velocityY: 0,
+            velocityX: 0,
+            jumping: false,
+            color: '#FFD700',
+            name: 'Bee'
         };
 
         // Game objects arrays
@@ -1458,6 +1542,107 @@
             ctx.fillRect(player5.x + 10, player5.y + 24, 4, 4);
             ctx.fillRect(player5.x + 18, player5.y + 24, 4, 4);
             ctx.fillRect(player5.x + 26, player5.y + 24, 4, 4);
+        }
+
+        // Draw player 6 (Harry the Elephant)
+        function drawPlayer6() {
+            const x = player6.x;
+            const y = player6.y;
+
+            // Body (large gray oval-ish rectangle)
+            ctx.fillStyle = '#808080';
+            ctx.fillRect(x + 4, y + 14, 36, 26);
+
+            // Head (gray, slightly lighter)
+            ctx.fillStyle = '#909090';
+            ctx.fillRect(x + 10, y + 2, 28, 22);
+
+            // Trunk (gray, hanging down from head)
+            ctx.fillStyle = '#808080';
+            ctx.fillRect(x + 30, y + 20, 6, 18);
+            ctx.fillRect(x + 26, y + 34, 10, 4);
+
+            // Big ears (lighter gray, wide flaps on the sides)
+            ctx.fillStyle = '#A9A9A9';
+            ctx.fillRect(x, y + 4, 12, 18);
+            ctx.fillRect(x + 32, y + 4, 12, 18);
+
+            // Ear inner detail (slightly pink)
+            ctx.fillStyle = '#D08080';
+            ctx.fillRect(x + 2, y + 7, 7, 12);
+            ctx.fillRect(x + 34, y + 7, 7, 12);
+
+            // Eyes (dark)
+            ctx.fillStyle = '#222';
+            ctx.fillRect(x + 14, y + 7, 4, 4);
+            ctx.fillRect(x + 26, y + 7, 4, 4);
+
+            // Eye sparkles
+            ctx.fillStyle = '#FFF';
+            ctx.fillRect(x + 15, y + 7, 2, 2);
+            ctx.fillRect(x + 27, y + 7, 2, 2);
+
+            // Tusks (ivory/white)
+            ctx.fillStyle = '#FFFFF0';
+            ctx.fillRect(x + 16, y + 22, 5, 4);
+            ctx.fillRect(x + 24, y + 22, 5, 4);
+
+            // Legs (4 stubby legs)
+            ctx.fillStyle = '#707070';
+            ctx.fillRect(x + 6, y + 36, 8, 8);
+            ctx.fillRect(x + 16, y + 36, 8, 8);
+            ctx.fillRect(x + 26, y + 36, 8, 8);
+
+            // Tail (tiny)
+            ctx.fillStyle = '#808080';
+            ctx.fillRect(x + 2, y + 18, 3, 8);
+            ctx.fillRect(x, y + 24, 3, 4);
+        }
+
+        // Draw player 7 (Bee the Bumblebee)
+        function drawPlayer7() {
+            const x = player7.x;
+            const y = player7.y;
+
+            // Wings (translucent light blue - drawn behind body)
+            ctx.fillStyle = 'rgba(173, 216, 230, 0.7)';
+            ctx.fillRect(x + 4, y, 7, 8);
+            ctx.fillRect(x + 13, y, 7, 8);
+
+            // Body (yellow)
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(x + 5, y + 6, 14, 14);
+
+            // Black stripes
+            ctx.fillStyle = '#222';
+            ctx.fillRect(x + 5, y + 9, 14, 3);
+            ctx.fillRect(x + 5, y + 15, 14, 3);
+
+            // Head (yellow)
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(x + 7, y + 2, 10, 8);
+
+            // Eyes (black)
+            ctx.fillStyle = '#222';
+            ctx.fillRect(x + 8, y + 3, 3, 3);
+            ctx.fillRect(x + 14, y + 3, 3, 3);
+
+            // Eye sparkles
+            ctx.fillStyle = '#FFF';
+            ctx.fillRect(x + 9, y + 3, 1, 1);
+            ctx.fillRect(x + 15, y + 3, 1, 1);
+
+            // Antennae
+            ctx.fillStyle = '#222';
+            ctx.fillRect(x + 9, y - 3, 2, 4);
+            ctx.fillRect(x + 14, y - 3, 2, 4);
+            ctx.fillRect(x + 8, y - 4, 3, 2);
+            ctx.fillRect(x + 14, y - 4, 3, 2);
+
+            // Stinger (black, pointed at bottom)
+            ctx.fillStyle = '#222';
+            ctx.fillRect(x + 10, y + 19, 4, 4);
+            ctx.fillRect(x + 11, y + 23, 2, 2);
         }
 
         // Draw platforms
@@ -2075,6 +2260,120 @@
             if (player5.x > canvas.width / 2) {
                 scrollOffset += player5.x - canvas.width / 2;
                 player5.x = canvas.width / 2;
+            }
+        }
+
+        // Update player 6 (Harry the Elephant) physics
+        function updatePlayer6() {
+            // Horizontal movement - elephants are powerful but slow
+            if (keys['ArrowRight']) {
+                player6.velocityX = 4;
+            } else if (keys['ArrowLeft']) {
+                player6.velocityX = -4;
+            } else {
+                player6.velocityX = 0;
+            }
+
+            // Jump (Space) - elephants are heavy, lower jump
+            if (keys['Space'] && !player6.jumping) {
+                player6.velocityY = -20;
+                player6.jumping = true;
+                playJumpSound();
+            }
+
+            // Apply gravity
+            player6.velocityY += 0.8;
+            player6.y += player6.velocityY;
+            player6.x += player6.velocityX;
+
+            // Keep player in bounds horizontally
+            if (player6.x < 0) player6.x = 0;
+            if (player6.x > canvas.width - player6.width) player6.x = canvas.width - player6.width;
+
+            // Check platform collisions
+            let onPlatform = false;
+            platforms.forEach(platform => {
+                if (checkCollision(player6, {
+                    x: platform.x - scrollOffset,
+                    y: platform.y,
+                    width: platform.width,
+                    height: platform.height
+                })) {
+                    if (player6.velocityY > 0) {
+                        player6.y = platform.y - player6.height;
+                        player6.velocityY = 0;
+                        player6.jumping = false;
+                        onPlatform = true;
+                    }
+                }
+            });
+
+            // Fall off the world
+            if (player6.y > canvas.height) {
+                loseLife();
+            }
+
+            // Scroll the world
+            if (player6.x > canvas.width / 2) {
+                scrollOffset += player6.x - canvas.width / 2;
+                player6.x = canvas.width / 2;
+            }
+        }
+
+        // Update player 7 (Bee the Bumblebee) physics
+        function updatePlayer7() {
+            // Horizontal movement - bees are quick!
+            if (keys['ArrowRight']) {
+                player7.velocityX = 6;
+            } else if (keys['ArrowLeft']) {
+                player7.velocityX = -6;
+            } else {
+                player7.velocityX = 0;
+            }
+
+            // Jump (Space) - bees flutter high!
+            if (keys['Space'] && !player7.jumping) {
+                player7.velocityY = -28;
+                player7.jumping = true;
+                playJumpSound();
+            }
+
+            // Apply gravity
+            player7.velocityY += 0.8;
+            player7.y += player7.velocityY;
+            player7.x += player7.velocityX;
+
+            // Keep player in bounds horizontally
+            if (player7.x < 0) player7.x = 0;
+            if (player7.x > canvas.width - player7.width) player7.x = canvas.width - player7.width;
+
+            // Check platform collisions
+            let onPlatform = false;
+            platforms.forEach(platform => {
+                if (checkCollision(player7, {
+                    x: platform.x - scrollOffset,
+                    y: platform.y,
+                    width: platform.width,
+                    height: platform.height
+                })) {
+                    if (player7.velocityY > 0) {
+                        player7.y = platform.y - player7.height;
+                        player7.velocityY = 0;
+                        player7.jumping = false;
+                        onPlatform = true;
+                    }
+                }
+            });
+
+            // Fall off the world
+            if (player7.y > canvas.height) {
+                loseLife();
+            }
+
+            // Scroll the world
+            if (player7.x > canvas.width / 2) {
+                scrollOffset += player7.x - canvas.width / 2;
+                player7.x = canvas.width / 2;
             }
         }
 
@@ -2732,6 +3031,12 @@
                 } else if (selectedCharacter === 'mila') {
                     drawPlayer5();
                     if (!reachedFlag) updatePlayer5();
+                } else if (selectedCharacter === 'harry') {
+                    drawPlayer6();
+                    if (!reachedFlag) updatePlayer6();
+                } else if (selectedCharacter === 'bee') {
+                    drawPlayer7();
+                    if (!reachedFlag) updatePlayer7();
                 }
 
                 if (!reachedFlag) {
