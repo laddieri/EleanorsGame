@@ -1192,7 +1192,7 @@
         // Initialize game objects for a specific level
         function initLevel(level) {
             skiMode = false;
-            if (level === 2) {
+            if (level % 2 === 0) {
                 initSkiLevel();
                 return;
             }
@@ -1964,13 +1964,29 @@
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Clouds
+            // Clouds with smiley faces
             ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
             for (let i = 0; i < 5; i++) {
                 const cloudX = (i * 250 - scrollOffset * 0.3) % (canvas.width + 200) - 100;
-                ctx.fillRect(cloudX, 50 + i * 40, 60, 20);
-                ctx.fillRect(cloudX + 20, 40 + i * 40, 60, 20);
-                ctx.fillRect(cloudX + 40, 50 + i * 40, 60, 20);
+                const cloudY = i * 40;
+                ctx.fillRect(cloudX, 50 + cloudY, 60, 20);
+                ctx.fillRect(cloudX + 20, 40 + cloudY, 60, 20);
+                ctx.fillRect(cloudX + 40, 50 + cloudY, 60, 20);
+                // Smiley face
+                ctx.fillStyle = '#555';
+                ctx.beginPath();
+                ctx.arc(cloudX + 40, 51 + cloudY, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(cloudX + 60, 51 + cloudY, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#555';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(cloudX + 50, 55 + cloudY, 8, 0, Math.PI);
+                ctx.stroke();
+                ctx.lineWidth = 1;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
             }
 
             // Sun
