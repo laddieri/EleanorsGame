@@ -1199,6 +1199,7 @@
         // ===== GAMEPAD SUPPORT =====
         let gamepadConnected = false;
         let gamepadIndex = null;
+        let gamepadMenuButtonPressed = false; // edge-detection for menu navigation
 
         // Listen for gamepad connection
         window.addEventListener("gamepadconnected", (e) => {
@@ -1264,6 +1265,19 @@
                 keys['Space'] = true;
             } else {
                 keys['Space'] = false;
+            }
+
+            // Menu navigation: A (button 0) or Start (button 9) confirm screens
+            const menuButton = gamepad.buttons[0]?.pressed || gamepad.buttons[9]?.pressed;
+            if (menuButton && !gamepadMenuButtonPressed) {
+                gamepadMenuButtonPressed = true;
+                if (document.getElementById('levelComplete').style.display === 'block') {
+                    nextLevel();
+                } else if (document.getElementById('gameOver').style.display === 'block') {
+                    location.reload();
+                }
+            } else if (!menuButton) {
+                gamepadMenuButtonPressed = false;
             }
         }
 
@@ -3098,10 +3112,10 @@
             // Continue the loop (must happen every frame)
             requestAnimationFrame(gameLoop);
 
-            if (!gameRunning) return;
-
-            // Poll gamepad input
+            // Poll gamepad every frame so menu navigation works on level-complete/game-over screens
             updateGamepadInput();
+
+            if (!gameRunning) return;
 
             if (skiMode) {
                 // ===== SKI FREE LEVEL 2 =====
