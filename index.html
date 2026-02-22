@@ -269,6 +269,37 @@
             background: rgba(30, 144, 255, 0.8);
         }
 
+        #btn-up {
+            width: 70px;
+            height: 70px;
+            bottom: 160px;
+            left: 75px;
+            background: rgba(100, 200, 100, 0.5);
+            display: none;
+        }
+
+        #btn-up:active {
+            background: rgba(100, 200, 100, 0.8);
+        }
+
+        #btn-down {
+            width: 70px;
+            height: 70px;
+            bottom: 5px;
+            left: 75px;
+            background: rgba(100, 200, 100, 0.5);
+            display: none;
+        }
+
+        #btn-down:active {
+            background: rgba(100, 200, 100, 0.8);
+        }
+
+        .mobile-controls.ski-mode #btn-up,
+        .mobile-controls.ski-mode #btn-down {
+            display: flex;
+        }
+
         @media (max-width: 768px) {
             body {
                 min-height: 100vh;
@@ -376,6 +407,20 @@
                 height: 80px;
                 bottom: 55px;
                 right: 20px;
+            }
+
+            #btn-up {
+                width: 60px;
+                height: 60px;
+                bottom: 135px;
+                left: 57px;
+            }
+
+            #btn-down {
+                width: 60px;
+                height: 60px;
+                bottom: 5px;
+                left: 57px;
             }
 
             /* Make modals more mobile-friendly */
@@ -618,6 +663,8 @@
         <div class="mobile-btn" id="btn-left">◀</div>
         <div class="mobile-btn" id="btn-right">▶</div>
         <div class="mobile-btn" id="btn-jump">⬆</div>
+        <div class="mobile-btn" id="btn-up">▲</div>
+        <div class="mobile-btn" id="btn-down">▼</div>
     </div>
 
     <script>
@@ -1059,6 +1106,8 @@
             const btnLeft = document.getElementById('btn-left');
             const btnRight = document.getElementById('btn-right');
             const btnJump = document.getElementById('btn-jump');
+            const btnUp = document.getElementById('btn-up');
+            const btnDown = document.getElementById('btn-down');
 
             // Helper function to map touch to appropriate key based on selected character
             function getMovementKeys() {
@@ -1128,6 +1177,20 @@
                     keys[keyMap.jump] = false;
                 }, { passive: false });
             }
+
+            // Up button (skiing vertical movement)
+            if (btnUp) {
+                btnUp.addEventListener('touchstart', (e) => { e.preventDefault(); keys['ArrowUp'] = true; }, { passive: false });
+                btnUp.addEventListener('touchend', (e) => { e.preventDefault(); keys['ArrowUp'] = false; }, { passive: false });
+                btnUp.addEventListener('touchcancel', (e) => { e.preventDefault(); keys['ArrowUp'] = false; }, { passive: false });
+            }
+
+            // Down button (skiing vertical movement)
+            if (btnDown) {
+                btnDown.addEventListener('touchstart', (e) => { e.preventDefault(); keys['ArrowDown'] = true; }, { passive: false });
+                btnDown.addEventListener('touchend', (e) => { e.preventDefault(); keys['ArrowDown'] = false; }, { passive: false });
+                btnDown.addEventListener('touchcancel', (e) => { e.preventDefault(); keys['ArrowDown'] = false; }, { passive: false });
+            }
         }
 
         // Initialize mobile controls
@@ -1164,8 +1227,11 @@
 
             // Left stick or D-pad for movement
             const leftStickX = gamepad.axes[0]; // Left stick horizontal (-1 to 1)
+            const leftStickY = gamepad.axes[1]; // Left stick vertical (-1 to 1)
             const dpadLeft = gamepad.buttons[14]?.pressed;
             const dpadRight = gamepad.buttons[15]?.pressed;
+            const dpadUp = gamepad.buttons[12]?.pressed;
+            const dpadDown = gamepad.buttons[13]?.pressed;
 
             // A button (button 0) for jumping
             const aButton = gamepad.buttons[0]?.pressed;
@@ -1182,6 +1248,18 @@
                 keys['ArrowRight'] = false;
             }
 
+            // Vertical axis (skiing)
+            if (leftStickY < -deadzone || dpadUp) {
+                keys['ArrowUp'] = true;
+                keys['ArrowDown'] = false;
+            } else if (leftStickY > deadzone || dpadDown) {
+                keys['ArrowDown'] = true;
+                keys['ArrowUp'] = false;
+            } else {
+                keys['ArrowUp'] = false;
+                keys['ArrowDown'] = false;
+            }
+
             if (aButton) {
                 keys['Space'] = true;
             } else {
@@ -1192,7 +1270,8 @@
         // Initialize game objects for a specific level
         function initLevel(level) {
             skiMode = false;
-            if (level === 2) {
+            document.getElementById('mobileControls').classList.remove('ski-mode');
+            if (level % 2 === 0) {
                 initSkiLevel();
                 return;
             }
@@ -1964,13 +2043,29 @@
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Clouds
+            // Clouds with smiley faces
             ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
             for (let i = 0; i < 5; i++) {
                 const cloudX = (i * 250 - scrollOffset * 0.3) % (canvas.width + 200) - 100;
-                ctx.fillRect(cloudX, 50 + i * 40, 60, 20);
-                ctx.fillRect(cloudX + 20, 40 + i * 40, 60, 20);
-                ctx.fillRect(cloudX + 40, 50 + i * 40, 60, 20);
+                const cloudY = i * 40;
+                ctx.fillRect(cloudX, 50 + cloudY, 60, 20);
+                ctx.fillRect(cloudX + 20, 40 + cloudY, 60, 20);
+                ctx.fillRect(cloudX + 40, 50 + cloudY, 60, 20);
+                // Smiley face
+                ctx.fillStyle = '#555';
+                ctx.beginPath();
+                ctx.arc(cloudX + 40, 51 + cloudY, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(cloudX + 60, 51 + cloudY, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#555';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(cloudX + 50, 55 + cloudY, 8, 0, Math.PI);
+                ctx.stroke();
+                ctx.lineWidth = 1;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
             }
 
             // Sun
@@ -2586,6 +2681,7 @@
 
         function initSkiLevel() {
             skiMode = true;
+            document.getElementById('mobileControls').classList.add('ski-mode');
             skiDistance = 0;
             skiSpeed = 3;
             skiPlayerVelX = 0;
