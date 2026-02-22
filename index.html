@@ -1843,7 +1843,7 @@
 
             // Scroll the world
             if (player.x > canvas.width / 2) {
-                scrollOffset += gameSpeed;
+                scrollOffset += player.x - canvas.width / 2;
                 player.x = canvas.width / 2;
             }
         }
@@ -1900,7 +1900,7 @@
 
             // Scroll the world (same as Eleanor)
             if (player2.x > canvas.width / 2) {
-                scrollOffset += gameSpeed;
+                scrollOffset += player2.x - canvas.width / 2;
                 player2.x = canvas.width / 2;
             }
         }
@@ -1957,7 +1957,7 @@
 
             // Scroll the world
             if (player3.x > canvas.width / 2) {
-                scrollOffset += gameSpeed;
+                scrollOffset += player3.x - canvas.width / 2;
                 player3.x = canvas.width / 2;
             }
         }
@@ -2014,7 +2014,7 @@
 
             // Scroll the world
             if (player4.x > canvas.width / 2) {
-                scrollOffset += gameSpeed;
+                scrollOffset += player4.x - canvas.width / 2;
                 player4.x = canvas.width / 2;
             }
         }
@@ -2071,7 +2071,7 @@
 
             // Scroll the world
             if (player5.x > canvas.width / 2) {
-                scrollOffset += gameSpeed;
+                scrollOffset += player5.x - canvas.width / 2;
                 player5.x = canvas.width / 2;
             }
         }
