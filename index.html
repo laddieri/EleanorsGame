@@ -858,6 +858,8 @@
         let skiYeti = null;
         let skiInAir = false;
         let skiAirFrames = 0;
+        let skiManualJump = false;  // true when player manually jumped (vs mogul launch)
+        let skiJumpPressed = false; // prevents holding space to keep jumping
         const SKI_FINISH_DIST = 12000;
         const SKI_PLAYER_Y = 340;
 
@@ -2289,6 +2291,8 @@
             skiTacos = [];
             skiInAir = false;
             skiAirFrames = 0;
+            skiManualJump = false;
+            skiJumpPressed = false;
             levelStarsCollected = 0;
             reachedFlag = false;
             victoryAnimation = 0;
@@ -2544,7 +2548,7 @@
                 ctx.fillStyle = '#FF8C00';
                 ctx.font = 'bold 18px Courier New';
                 ctx.textAlign = 'center';
-                ctx.fillText('AIR!', 400, 40);
+                ctx.fillText(skiManualJump ? 'JUMP!' : 'AIR!', 400, 40);
                 ctx.textAlign = 'left';
             }
 
@@ -2574,6 +2578,17 @@
             ap.x += skiPlayerVelX;
             ap.x = Math.max(30, Math.min(770, ap.x));
 
+            // Manual jump (Space or Up arrow) - lets player hop over rocks but NOT trees
+            const jumpKey = keys['Space'] || keys['ArrowUp'] || keys['KeyW'];
+            if (jumpKey && !skiJumpPressed && !skiInAir) {
+                skiInAir = true;
+                skiAirFrames = 38;
+                skiManualJump = true;
+                skiJumpPressed = true;
+                playJumpSound();
+            }
+            if (!jumpKey) skiJumpPressed = false;
+
             // Advance down the mountain
             skiDistance += skiSpeed;
             // Gradually accelerate
@@ -2582,7 +2597,10 @@
             // Air time countdown
             if (skiInAir) {
                 skiAirFrames--;
-                if (skiAirFrames <= 0) skiInAir = false;
+                if (skiAirFrames <= 0) {
+                    skiInAir = false;
+                    skiManualJump = false;
+                }
             }
 
             // Activate yeti after 4000m
@@ -2628,31 +2646,33 @@
                 }
             }
 
-            // Check object collisions (skip if in air)
-            if (!skiInAir) {
-                for (const obj of skiObjects) {
-                    if (obj.hit) continue;
-                    const { sx, sy } = skiScreenPos(obj.wx, obj.wy);
-                    if (Math.abs(SKI_PLAYER_Y - sy) > 30) continue;
+            // Check object collisions
+            for (const obj of skiObjects) {
+                if (obj.hit) continue;
+                const { sx, sy } = skiScreenPos(obj.wx, obj.wy);
+                if (Math.abs(SKI_PLAYER_Y - sy) > 30) continue;
 
-                    if (obj.type === 'tree') {
-                        if (Math.abs(ap.x - sx) < obj.r - 4) {
-                            obj.hit = true;
-                            loseLife();
-                            return;
-                        }
-                    } else if (obj.type === 'rock') {
-                        if (Math.abs(ap.x - sx) < obj.rw + 2) {
-                            obj.hit = true;
-                            loseLife();
-                            return;
-                        }
-                    } else if (obj.type === 'mogul') {
-                        if (Math.abs(ap.x - sx) < obj.r) {
-                            skiInAir = true;
-                            skiAirFrames = 55;
-                            playJumpSound();
-                        }
+                if (obj.type === 'tree') {
+                    // Trees can never be jumped over
+                    if (Math.abs(ap.x - sx) < obj.r - 4) {
+                        obj.hit = true;
+                        loseLife();
+                        return;
+                    }
+                } else if (obj.type === 'rock') {
+                    // Rocks can be jumped over (skip when in air)
+                    if (!skiInAir && Math.abs(ap.x - sx) < obj.rw + 2) {
+                        obj.hit = true;
+                        loseLife();
+                        return;
+                    }
+                } else if (obj.type === 'mogul') {
+                    // Moguls launch player into the air (only when not already airborne)
+                    if (!skiInAir && Math.abs(ap.x - sx) < obj.r) {
+                        skiInAir = true;
+                        skiAirFrames = 55;
+                        skiManualJump = false;
+                        playJumpSound();
                     }
                 }
             }
