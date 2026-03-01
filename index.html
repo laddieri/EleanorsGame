@@ -206,6 +206,60 @@
             transform: scale(1.1);
         }
 
+        #fullscreenToggle {
+            position: fixed;
+            top: 20px;
+            right: 90px;
+            background: #4169E1;
+            color: white;
+            border: none;
+            font-size: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        #fullscreenToggle:hover {
+            background: #27408B;
+            transform: scale(1.1);
+        }
+
+        /* Fullscreen wrapper */
+        #gameWrapper {
+            line-height: 0;
+        }
+
+        #gameWrapper:fullscreen,
+        #gameWrapper:-webkit-full-screen,
+        #gameWrapper:-moz-full-screen {
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        #gameWrapper:fullscreen #gameCanvas,
+        #gameWrapper:-webkit-full-screen #gameCanvas,
+        #gameWrapper:-moz-full-screen #gameCanvas {
+            /* Scale to fill screen while keeping 800:600 (4:3) ratio */
+            width: min(100vw, calc(100vh * 800 / 600));
+            height: min(100vh, calc(100vw * 600 / 800));
+            max-width: none;
+            border: none;
+            box-shadow: none;
+        }
+
         /* Mobile Touch Controls */
         .mobile-controls {
             display: none;
@@ -569,6 +623,7 @@
 </head>
 <body>
     <button id="musicToggle" title="Toggle Music">🔊</button>
+    <button id="fullscreenToggle" title="Toggle Fullscreen" onclick="toggleFullscreen()">⛶</button>
 
     <div id="characterSelect">
         <h2>Choose Your Character!</h2>
@@ -642,7 +697,9 @@
 
     <h1>🌟 Eleanor's Family Adventure 🌟</h1>
 
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="gameWrapper">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+    </div>
 
     <div id="gameInfo">
         <div class="level-display">🏆 Level: <span id="level">1</span></div>
@@ -3332,6 +3389,40 @@
         // Initialize game (but don't start until character is selected)
         initLevel(currentLevel);
         gameLoop();
+
+        // ===== FULLSCREEN =====
+        const gameWrapper = document.getElementById('gameWrapper');
+        const fullscreenBtn = document.getElementById('fullscreenToggle');
+
+        function toggleFullscreen() {
+            const requestFS = gameWrapper.requestFullscreen
+                || gameWrapper.webkitRequestFullscreen
+                || gameWrapper.mozRequestFullScreen;
+            const exitFS = document.exitFullscreen
+                || document.webkitExitFullscreen
+                || document.mozCancelFullScreen;
+            const fullscreenEl = document.fullscreenElement
+                || document.webkitFullscreenElement
+                || document.mozFullScreenElement;
+
+            if (!fullscreenEl) {
+                requestFS.call(gameWrapper).catch(() => {});
+            } else {
+                exitFS.call(document);
+            }
+        }
+
+        function onFullscreenChange() {
+            const fullscreenEl = document.fullscreenElement
+                || document.webkitFullscreenElement
+                || document.mozFullScreenElement;
+            fullscreenBtn.textContent = fullscreenEl ? '✕' : '⛶';
+            fullscreenBtn.title = fullscreenEl ? 'Exit Fullscreen' : 'Toggle Fullscreen';
+        }
+
+        document.addEventListener('fullscreenchange', onFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+        document.addEventListener('mozfullscreenchange', onFullscreenChange);
     </script>
 </body>
 </html>
