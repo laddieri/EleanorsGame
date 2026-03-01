@@ -3305,8 +3305,10 @@
                 }
             }
 
-            // Reached finish
-            if (skiDistance >= SKI_FINISH_DIST) {
+            // Reached finish — trigger when the finish line banner reaches
+            // the player's actual screen Y position (not the fixed centre).
+            const finishLineScreenY = (SKI_FINISH_DIST - skiDistance) + SKI_PLAYER_Y;
+            if (finishLineScreenY <= skiPlayerY) {
                 reachedFlag = true;
                 playVictorySound();
             }
