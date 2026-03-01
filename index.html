@@ -27,8 +27,8 @@
         h1 {
             color: #FF1493;
             text-shadow: 3px 3px 0px #FFB6C1, 6px 6px 0px #FFC0CB;
-            font-size: 48px;
-            margin-bottom: 20px;
+            font-size: 30px;
+            margin-bottom: 6px;
             letter-spacing: 2px;
         }
 
@@ -39,17 +39,20 @@
             image-rendering: pixelated;
             display: block;
             max-width: 100%;
+            max-height: calc(100vh - 90px);
+            width: auto;
+            aspect-ratio: 800 / 600;
         }
 
         #gameInfo {
             background: white;
-            padding: 15px 30px;
+            padding: 8px 24px;
             border-radius: 10px;
-            margin-top: 20px;
+            margin-top: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             display: flex;
-            gap: 30px;
-            font-size: 24px;
+            gap: 24px;
+            font-size: 20px;
             font-weight: bold;
         }
 
@@ -64,13 +67,7 @@
         }
 
         #instructions {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            max-width: 800px;
-            text-align: center;
+            display: none;
         }
 
         #instructions h2 {
@@ -178,6 +175,73 @@
         .level-display {
             color: #1E90FF;
             text-shadow: 2px 2px 0px #0066CC;
+        }
+
+        #pauseMenu {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 36px 48px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+            text-align: center;
+            z-index: 1000;
+            min-width: 280px;
+        }
+
+        #pauseMenu h2 {
+            color: #1E90FF;
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 0px #0066CC;
+        }
+
+        #pauseMenu p {
+            font-size: 18px;
+            color: #555;
+            margin: 6px 0;
+        }
+
+        .pause-hint {
+            font-size: 13px !important;
+            color: #999 !important;
+            margin-top: 14px !important;
+        }
+
+        .pause-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .pause-buttons button {
+            background: #1E90FF;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            transition: background 0.15s, transform 0.1s;
+        }
+
+        .pause-buttons button:hover {
+            background: #0066CC;
+            transform: scale(1.04);
+        }
+
+        #charSelectBtn {
+            background: #FF1493 !important;
+        }
+
+        #charSelectBtn:hover {
+            background: #C71585 !important;
         }
 
         #musicToggle {
@@ -347,8 +411,9 @@
 
             #gameCanvas {
                 width: 100vw !important;
-                height: auto !important;
-                max-width: 100vw;
+                max-width: 100vw !important;
+                max-height: none !important;
+                aspect-ratio: 800 / 600;
                 border: 4px solid #8B4513;
                 margin: 0 !important;
             }
@@ -483,35 +548,38 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: white;
-            padding: 40px;
+            padding: 20px 28px;
             border-radius: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             text-align: center;
             z-index: 1000;
+            max-height: 92vh;
+            overflow-y: auto;
+            max-width: calc(100vw - 24px);
         }
 
         #characterSelect h2 {
             color: #FF1493;
-            font-size: 36px;
-            margin-bottom: 20px;
+            font-size: 26px;
+            margin-bottom: 10px;
         }
 
         .character-options {
             display: flex;
-            gap: 20px;
+            gap: 10px;
             justify-content: center;
             flex-wrap: wrap;
-            margin-top: 20px;
+            margin-top: 10px;
         }
 
         .character-card {
             background: linear-gradient(to bottom, #FFB6C1, #FFC0CB);
-            border: 4px solid #FF1493;
-            border-radius: 15px;
-            padding: 30px 20px;
+            border: 3px solid #FF1493;
+            border-radius: 12px;
+            padding: 10px 8px;
             cursor: pointer;
             transition: all 0.3s ease;
-            width: 170px;
+            width: 120px;
         }
 
         .character-card:hover {
@@ -592,20 +660,20 @@
         }
 
         .character-card h3 {
-            font-size: 28px;
-            margin-bottom: 10px;
+            font-size: 18px;
+            margin-bottom: 4px;
             color: #333;
         }
 
         .character-card p {
-            font-size: 16px;
+            font-size: 11px;
             color: #666;
-            margin: 5px 0;
+            margin: 2px 0;
         }
 
         .character-preview {
-            font-size: 48px;
-            margin: 15px 0;
+            font-size: 32px;
+            margin: 6px 0;
         }
     </style>
 </head>
@@ -710,6 +778,16 @@
             <p>Final Score: <span id="finalScore">0</span></p>
             <p>Levels Completed: <span id="levelsCompleted">0</span></p>
             <button onclick="location.reload()">Play Again!</button>
+        </div>
+
+        <div id="pauseMenu">
+            <h2>⏸ Paused</h2>
+            <p>Level <span id="pauseLevel">1</span></p>
+            <div class="pause-buttons">
+                <button onclick="togglePause()">▶ Resume</button>
+                <button id="charSelectBtn" onclick="goToCharacterSelect()">👤 Change Character</button>
+            </div>
+            <p class="pause-hint">Press <strong>Enter</strong> or <strong>Start</strong> to resume</p>
         </div>
 
         <!-- Mobile Touch Controls -->
@@ -1027,6 +1105,7 @@
 
         // Game state
         let gameRunning = false;  // Start as false until character is selected
+        let paused = false;
         let score = 0;
         let lives = 3;
         let scrollOffset = 0;
@@ -1211,6 +1290,12 @@
             // Prevent default browser behavior for game keys
             if (['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
                 e.preventDefault();
+            }
+            // Enter toggles pause menu
+            if (e.code === 'Enter') {
+                e.preventDefault();
+                togglePause();
+                return;
             }
             keys[e.code] = true;
         });
@@ -1406,13 +1491,19 @@
             }
 
             // Menu navigation: A (button 0) or Start (button 9) confirm screens
-            const menuButton = gamepad.buttons[0]?.pressed || gamepad.buttons[9]?.pressed;
+            const startButton = gamepad.buttons[9]?.pressed;
+            const aButton0 = gamepad.buttons[0]?.pressed;
+            const menuButton = aButton0 || startButton;
             if (menuButton && !gamepadMenuButtonPressed) {
                 gamepadMenuButtonPressed = true;
                 if (document.getElementById('levelComplete').style.display === 'block') {
                     nextLevel();
                 } else if (document.getElementById('gameOver').style.display === 'block') {
                     location.reload();
+                } else if (document.getElementById('pauseMenu').style.display === 'block') {
+                    togglePause(); // resume
+                } else if (startButton && gameRunning) {
+                    togglePause(); // open pause
                 }
             } else if (!menuButton) {
                 gamepadMenuButtonPressed = false;
@@ -1634,8 +1725,8 @@
 
         // Draw Mom (8-bit style character - taller than Eleanor, brown shoulder-length hair)
         function drawPlayer3() {
-            // Body (purple dress)
-            ctx.fillStyle = player3.color;
+            // Body (maroon shirt)
+            ctx.fillStyle = '#8B0000';
             ctx.fillRect(player3.x + 9, player3.y + 9, 16, 18);
 
             // Head (skin tone)
@@ -1659,8 +1750,8 @@
             ctx.fillStyle = '#FF69B4';
             ctx.fillRect(player3.x + 13, player3.y + 7, 8, 2);
 
-            // Legs
-            ctx.fillStyle = player3.color;
+            // Legs (black pants)
+            ctx.fillStyle = '#1A1A1A';
             ctx.fillRect(player3.x + 10, player3.y + 27, 6, 9);
             ctx.fillRect(player3.x + 18, player3.y + 27, 6, 9);
         }
@@ -3009,6 +3100,51 @@
             document.getElementById('levelComplete').style.display = 'block';
         }
 
+        // Toggle pause menu
+        function togglePause() {
+            if (!gameRunning && !paused) return; // not in a game yet
+            // Don't allow pause if another overlay is open
+            const levelCompleteOpen = document.getElementById('levelComplete').style.display === 'block';
+            const gameOverOpen = document.getElementById('gameOver').style.display === 'block';
+            const charSelectOpen = document.getElementById('characterSelect').style.display !== 'none';
+            if (levelCompleteOpen || gameOverOpen || charSelectOpen) return;
+
+            paused = !paused;
+            const menu = document.getElementById('pauseMenu');
+            if (paused) {
+                document.getElementById('pauseLevel').textContent = currentLevel;
+                menu.style.display = 'block';
+            } else {
+                menu.style.display = 'none';
+            }
+        }
+
+        // Return to character selection screen
+        function goToCharacterSelect() {
+            paused = false;
+            gameRunning = false;
+            document.getElementById('pauseMenu').style.display = 'none';
+            document.getElementById('levelComplete').style.display = 'none';
+            document.getElementById('gameOver').style.display = 'none';
+
+            // Reset game state for a fresh start
+            currentLevel = 1;
+            score = 0;
+            lives = 3;
+            scrollOffset = 0;
+            selectedCharacter = null;
+            document.getElementById('score').textContent = 0;
+            document.getElementById('lives').textContent = 3;
+            document.getElementById('level').textContent = 1;
+
+            // Reset all player positions
+            [player, player2, player3, player4, player5, player6, player7, player8, player9].forEach(p => {
+                p.x = 100; p.y = 400; p.velocityX = 0; p.velocityY = 0; p.jumping = false;
+            });
+
+            document.getElementById('characterSelect').style.display = 'block';
+        }
+
         // Start next level
         function nextLevel() {
             document.getElementById('levelComplete').style.display = 'none';
@@ -4001,6 +4137,7 @@
             updateGamepadInput();
 
             if (!gameRunning) return;
+            if (paused) return;
 
             if (bikeMode) {
                 // ===== BIKE LEVEL 3 =====
