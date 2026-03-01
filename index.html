@@ -1515,12 +1515,14 @@
             skiMode = false;
             bikeMode = false;
             document.getElementById('mobileControls').classList.remove('ski-mode');
-            if (level === 3) {
-                initBikeLevel();
+            // Rotate: walk (1,4,7…) → ski (2,5,8…) → bike (3,6,9…)
+            const type = (level - 1) % 3; // 0=walk, 1=ski, 2=bike
+            if (type === 1) {
+                initSkiLevel();
                 return;
             }
-            if (level % 2 === 0) {
-                initSkiLevel();
+            if (type === 2) {
+                initBikeLevel();
                 return;
             }
 
