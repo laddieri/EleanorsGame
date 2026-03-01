@@ -583,6 +583,15 @@
             box-shadow: 0 8px 16px rgba(255, 69, 0, 0.5);
         }
 
+        .character-card.greenfroggy {
+            background: linear-gradient(to bottom, #5DD35D, #A8E6A8);
+            border-color: #228B22;
+        }
+
+        .character-card.greenfroggy:hover {
+            box-shadow: 0 8px 16px rgba(34, 139, 34, 0.5);
+        }
+
         .character-card h3 {
             font-size: 28px;
             margin-bottom: 10px;
@@ -605,80 +614,113 @@
     <button id="musicToggle" title="Toggle Music">🔊</button>
     <button id="fullscreenToggle" title="Toggle Fullscreen" onclick="toggleFullscreen()">⛶</button>
 
-    <div id="characterSelect">
-        <h2>Choose Your Character!</h2>
-        <div class="character-options">
-            <div class="character-card eleanor" onclick="selectCharacter('eleanor')">
-                <div class="character-preview">👑</div>
-                <h3>Eleanor</h3>
-                <p>The Princess</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-            <div class="character-card william" onclick="selectCharacter('william')">
-                <div class="character-preview">🧢</div>
-                <h3>William</h3>
-                <p>The Prince</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-            <div class="character-card mom" onclick="selectCharacter('mom')">
-                <div class="character-preview">👩</div>
-                <h3>Mom</h3>
-                <p>The Queen</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-            <div class="character-card dad" onclick="selectCharacter('dad')">
-                <div class="character-preview">💪</div>
-                <h3>Dad</h3>
-                <p>The King</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-            <div class="character-card mila" onclick="selectCharacter('mila')">
-                <div class="character-preview">🐶</div>
-                <h3>Mila</h3>
-                <p>The Beagle</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-            <div class="character-card harry" onclick="selectCharacter('harry')">
-                <div class="character-preview">🐘</div>
-                <h3>Harry</h3>
-                <p>The Elephant</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-            <div class="character-card bee" onclick="selectCharacter('bee')">
-                <div class="character-preview">🐝</div>
-                <h3>Bee</h3>
-                <p>The Bumblebee</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-            <div class="character-card rickyfish" onclick="selectCharacter('rickyfish')">
-                <div class="character-preview">🐡</div>
-                <h3>Ricky Fish</h3>
-                <p>The Clownfish</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-        </div>
-    </div>
-
     <h1>🌟 Eleanor's Family Adventure 🌟</h1>
 
     <div id="gameWrapper">
+        <!-- All overlays live inside gameWrapper so they appear in fullscreen -->
+        <div id="characterSelect">
+            <h2>Choose Your Character!</h2>
+            <div class="character-options">
+                <div class="character-card eleanor" onclick="selectCharacter('eleanor')">
+                    <div class="character-preview">👑</div>
+                    <h3>Eleanor</h3>
+                    <p>The Princess</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card william" onclick="selectCharacter('william')">
+                    <div class="character-preview">🧢</div>
+                    <h3>William</h3>
+                    <p>The Prince</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card mom" onclick="selectCharacter('mom')">
+                    <div class="character-preview">👩</div>
+                    <h3>Mom</h3>
+                    <p>The Queen</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card dad" onclick="selectCharacter('dad')">
+                    <div class="character-preview">💪</div>
+                    <h3>Dad</h3>
+                    <p>The King</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card mila" onclick="selectCharacter('mila')">
+                    <div class="character-preview">🐶</div>
+                    <h3>Mila</h3>
+                    <p>The Beagle</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card harry" onclick="selectCharacter('harry')">
+                    <div class="character-preview">🐘</div>
+                    <h3>Harry</h3>
+                    <p>The Elephant</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card bee" onclick="selectCharacter('bee')">
+                    <div class="character-preview">🐝</div>
+                    <h3>Bee</h3>
+                    <p>The Bumblebee</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card rickyfish" onclick="selectCharacter('rickyfish')">
+                    <div class="character-preview">🐡</div>
+                    <h3>Ricky Fish</h3>
+                    <p>The Clownfish</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card greenfroggy" onclick="selectCharacter('greenfroggy')">
+                    <div class="character-preview">🐸</div>
+                    <h3>Green Froggy</h3>
+                    <p>The Squishmallow</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+            </div>
+        </div>
+
         <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+        <div id="levelComplete">
+            <h2>🎉 Level Complete! 🎉</h2>
+            <p>Level <span id="completedLevel">1</span> Cleared!</p>
+            <p>Stars Collected: <span id="levelStars">0</span></p>
+            <p>Total Score: <span id="levelScore">0</span></p>
+            <button onclick="nextLevel()">Next Level ➡️</button>
+        </div>
+
+        <div id="gameOver">
+            <h2>Game Over!</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <p>Levels Completed: <span id="levelsCompleted">0</span></p>
+            <button onclick="location.reload()">Play Again!</button>
+        </div>
+
+        <!-- Mobile Touch Controls -->
+        <div class="mobile-controls" id="mobileControls">
+            <div class="mobile-btn" id="btn-left">◀</div>
+            <div class="mobile-btn" id="btn-right">▶</div>
+            <div class="mobile-btn" id="btn-jump">⬆</div>
+            <div class="mobile-btn" id="btn-up">▲</div>
+            <div class="mobile-btn" id="btn-down">▼</div>
+        </div>
     </div>
 
     <div id="gameInfo">
@@ -695,30 +737,6 @@
         <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
         <p>Jump into flowers 🌸 to launch into the sky!</p>
         <p>Watch out for the fire obstacles! 🔥</p>
-    </div>
-
-    <div id="levelComplete">
-        <h2>🎉 Level Complete! 🎉</h2>
-        <p>Level <span id="completedLevel">1</span> Cleared!</p>
-        <p>Stars Collected: <span id="levelStars">0</span></p>
-        <p>Total Score: <span id="levelScore">0</span></p>
-        <button onclick="nextLevel()">Next Level ➡️</button>
-    </div>
-
-    <div id="gameOver">
-        <h2>Game Over!</h2>
-        <p>Final Score: <span id="finalScore">0</span></p>
-        <p>Levels Completed: <span id="levelsCompleted">0</span></p>
-        <button onclick="location.reload()">Play Again!</button>
-    </div>
-
-    <!-- Mobile Touch Controls -->
-    <div class="mobile-controls" id="mobileControls">
-        <div class="mobile-btn" id="btn-left">◀</div>
-        <div class="mobile-btn" id="btn-right">▶</div>
-        <div class="mobile-btn" id="btn-jump">⬆</div>
-        <div class="mobile-btn" id="btn-up">▲</div>
-        <div class="mobile-btn" id="btn-down">▼</div>
     </div>
 
     <script>
@@ -989,6 +1007,18 @@
                     <p>Jump into flowers 🌸 to launch into the sky!</p>
                     <p>Watch out for the fire obstacles! 🔥</p>
                 `;
+            } else if (character === 'greenfroggy') {
+                instructionsDiv.innerHTML = `
+                    <h2>How to Play</h2>
+                    <p><strong>Playing as Green Froggy 🐸</strong></p>
+                    <p>Use <span class="key">&larr; &rarr;</span> arrow keys to move</p>
+                    <p>Press <span class="key">SPACE</span> to jump</p>
+                    <p><strong>📱 Mobile:</strong> Use on-screen buttons</p>
+                    <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
+                    <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
+                    <p>Jump into flowers 🌸 to launch into the sky!</p>
+                    <p>Watch out for the fire obstacles! 🔥</p>
+                `;
             }
 
             // Start the game
@@ -1013,6 +1043,7 @@
             if (selectedCharacter === 'harry') return player6;
             if (selectedCharacter === 'bee') return player7;
             if (selectedCharacter === 'rickyfish') return player8;
+            if (selectedCharacter === 'greenfroggy') return player9;
             return player;
         }
         let currentLevel = 1;
@@ -1134,6 +1165,18 @@
             jumping: false,
             color: '#FF6600',
             name: 'Ricky Fish'
+        };
+
+        const player9 = {
+            x: 100,
+            y: 400,
+            width: 60,
+            height: 60,
+            velocityY: 0,
+            velocityX: 0,
+            jumping: false,
+            color: '#5DD35D',
+            name: 'Green Froggy'
         };
 
         // Game objects arrays
@@ -1872,6 +1915,87 @@
             ctx.fillStyle = '#CC2200';
             ctx.fillRect(x + 40, y + 21, 5, 3);
             ctx.fillRect(x + 41, y + 24, 3, 2);
+        }
+
+        // Draw Green Froggy — very fat, round squishmallow frog
+        function drawPlayer9() {
+            const x = player9.x;
+            const y = player9.y;
+
+            // ── Main squishy body (dominant feature — huge circle) ──
+            ctx.fillStyle = '#5DD35D';
+            ctx.beginPath();
+            ctx.arc(x + 30, y + 34, 28, 0, Math.PI * 2);
+            ctx.fill();
+
+            // ── Soft cream belly ──
+            ctx.fillStyle = '#D4F5C8';
+            ctx.beginPath();
+            ctx.ellipse(x + 30, y + 41, 19, 16, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // ── Big round eyes sitting on top of head ──
+            // Left eye white
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(x + 14, y + 13, 11, 0, Math.PI * 2);
+            ctx.fill();
+            // Right eye white
+            ctx.beginPath();
+            ctx.arc(x + 46, y + 13, 11, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Left pupil
+            ctx.fillStyle = '#111111';
+            ctx.beginPath();
+            ctx.arc(x + 15, y + 14, 6, 0, Math.PI * 2);
+            ctx.fill();
+            // Right pupil
+            ctx.beginPath();
+            ctx.arc(x + 47, y + 14, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Eye shine highlights
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(x + 12, y + 11, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + 44, y + 11, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // ── Wide happy smile (arc) ──
+            ctx.strokeStyle = '#228B22';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(x + 30, y + 40, 13, 0.15 * Math.PI, 0.85 * Math.PI);
+            ctx.stroke();
+            ctx.lineWidth = 1;
+
+            // ── Nostrils ──
+            ctx.fillStyle = '#228B22';
+            ctx.beginPath();
+            ctx.arc(x + 25, y + 26, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + 35, y + 26, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // ── Tiny stubby feet (barely-there squishmallow limbs) ──
+            ctx.fillStyle = '#4BB84B';
+            ctx.beginPath();
+            ctx.ellipse(x + 14, y + 61, 11, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(x + 46, y + 61, 11, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // ── Soft sheen highlight (plush toy look) ──
+            ctx.fillStyle = 'rgba(210, 255, 210, 0.30)';
+            ctx.beginPath();
+            ctx.arc(x + 21, y + 21, 12, 0, Math.PI * 2);
+            ctx.fill();
         }
 
         // Draw platforms
@@ -2672,6 +2796,56 @@
             }
         }
 
+        // Update Green Froggy physics - big and bouncy, powerful jumps
+        function updatePlayer9() {
+            if (keys['ArrowRight']) {
+                player9.velocityX = 4;
+            } else if (keys['ArrowLeft']) {
+                player9.velocityX = -4;
+            } else {
+                player9.velocityX = 0;
+            }
+
+            if (keys['Space'] && !player9.jumping) {
+                player9.velocityY = -20;
+                player9.jumping = true;
+                playJumpSound();
+            }
+
+            player9.velocityY += 0.85;
+            player9.y += player9.velocityY;
+            player9.x += player9.velocityX;
+
+            if (player9.x < 0) player9.x = 0;
+            if (player9.x > canvas.width - player9.width) player9.x = canvas.width - player9.width;
+
+            let onPlatform = false;
+            platforms.forEach(platform => {
+                if (checkCollision(player9, {
+                    x: platform.x - scrollOffset,
+                    y: platform.y,
+                    width: platform.width,
+                    height: platform.height
+                })) {
+                    if (player9.velocityY > 0) {
+                        player9.y = platform.y - player9.height;
+                        player9.velocityY = 0;
+                        player9.jumping = false;
+                        onPlatform = true;
+                    }
+                }
+            });
+
+            if (player9.y > canvas.height) {
+                loseLife();
+            }
+
+            if (player9.x > canvas.width / 2) {
+                scrollOffset += player9.x - canvas.width / 2;
+                player9.x = canvas.width / 2;
+            }
+        }
+
         // Check collision between two rectangles
         function checkCollision(rect1, rect2) {
             return rect1.x < rect2.x + rect2.width &&
@@ -3128,6 +3302,7 @@
             else if (selectedCharacter === 'harry')   drawPlayer6();
             else if (selectedCharacter === 'bee')     drawPlayer7();
             else if (selectedCharacter === 'rickyfish') drawPlayer8();
+            else if (selectedCharacter === 'greenfroggy') drawPlayer9();
 
             ap.x = origX;
             ap.y = origY;
@@ -3371,6 +3546,9 @@
                 } else if (selectedCharacter === 'rickyfish') {
                     drawPlayer8();
                     if (!reachedFlag) updatePlayer8();
+                } else if (selectedCharacter === 'greenfroggy') {
+                    drawPlayer9();
+                    if (!reachedFlag) updatePlayer9();
                 }
 
                 if (!reachedFlag) {
