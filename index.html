@@ -614,88 +614,113 @@
     <button id="musicToggle" title="Toggle Music">🔊</button>
     <button id="fullscreenToggle" title="Toggle Fullscreen" onclick="toggleFullscreen()">⛶</button>
 
-    <div id="characterSelect">
-        <h2>Choose Your Character!</h2>
-        <div class="character-options">
-            <div class="character-card eleanor" onclick="selectCharacter('eleanor')">
-                <div class="character-preview">👑</div>
-                <h3>Eleanor</h3>
-                <p>The Princess</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-            <div class="character-card william" onclick="selectCharacter('william')">
-                <div class="character-preview">🧢</div>
-                <h3>William</h3>
-                <p>The Prince</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-            <div class="character-card mom" onclick="selectCharacter('mom')">
-                <div class="character-preview">👩</div>
-                <h3>Mom</h3>
-                <p>The Queen</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-            <div class="character-card dad" onclick="selectCharacter('dad')">
-                <div class="character-preview">💪</div>
-                <h3>Dad</h3>
-                <p>The King</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-            <div class="character-card mila" onclick="selectCharacter('mila')">
-                <div class="character-preview">🐶</div>
-                <h3>Mila</h3>
-                <p>The Beagle</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-            <div class="character-card harry" onclick="selectCharacter('harry')">
-                <div class="character-preview">🐘</div>
-                <h3>Harry</h3>
-                <p>The Elephant</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-            <div class="character-card bee" onclick="selectCharacter('bee')">
-                <div class="character-preview">🐝</div>
-                <h3>Bee</h3>
-                <p>The Bumblebee</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-            <div class="character-card rickyfish" onclick="selectCharacter('rickyfish')">
-                <div class="character-preview">🐡</div>
-                <h3>Ricky Fish</h3>
-                <p>The Clownfish</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-            <div class="character-card greenfroggy" onclick="selectCharacter('greenfroggy')">
-                <div class="character-preview">🐸</div>
-                <h3>Green Froggy</h3>
-                <p>The Squishmallow</p>
-                <p><strong>Controls:</strong></p>
-                <p>Arrow keys + SPACE</p>
-                <p>📱 Touch or 🎮 Gamepad</p>
-            </div>
-        </div>
-    </div>
-
     <h1>🌟 Eleanor's Family Adventure 🌟</h1>
 
     <div id="gameWrapper">
+        <!-- All overlays live inside gameWrapper so they appear in fullscreen -->
+        <div id="characterSelect">
+            <h2>Choose Your Character!</h2>
+            <div class="character-options">
+                <div class="character-card eleanor" onclick="selectCharacter('eleanor')">
+                    <div class="character-preview">👑</div>
+                    <h3>Eleanor</h3>
+                    <p>The Princess</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card william" onclick="selectCharacter('william')">
+                    <div class="character-preview">🧢</div>
+                    <h3>William</h3>
+                    <p>The Prince</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card mom" onclick="selectCharacter('mom')">
+                    <div class="character-preview">👩</div>
+                    <h3>Mom</h3>
+                    <p>The Queen</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card dad" onclick="selectCharacter('dad')">
+                    <div class="character-preview">💪</div>
+                    <h3>Dad</h3>
+                    <p>The King</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card mila" onclick="selectCharacter('mila')">
+                    <div class="character-preview">🐶</div>
+                    <h3>Mila</h3>
+                    <p>The Beagle</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card harry" onclick="selectCharacter('harry')">
+                    <div class="character-preview">🐘</div>
+                    <h3>Harry</h3>
+                    <p>The Elephant</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card bee" onclick="selectCharacter('bee')">
+                    <div class="character-preview">🐝</div>
+                    <h3>Bee</h3>
+                    <p>The Bumblebee</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card rickyfish" onclick="selectCharacter('rickyfish')">
+                    <div class="character-preview">🐡</div>
+                    <h3>Ricky Fish</h3>
+                    <p>The Clownfish</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card greenfroggy" onclick="selectCharacter('greenfroggy')">
+                    <div class="character-preview">🐸</div>
+                    <h3>Green Froggy</h3>
+                    <p>The Squishmallow</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+            </div>
+        </div>
+
         <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+        <div id="levelComplete">
+            <h2>🎉 Level Complete! 🎉</h2>
+            <p>Level <span id="completedLevel">1</span> Cleared!</p>
+            <p>Stars Collected: <span id="levelStars">0</span></p>
+            <p>Total Score: <span id="levelScore">0</span></p>
+            <button onclick="nextLevel()">Next Level ➡️</button>
+        </div>
+
+        <div id="gameOver">
+            <h2>Game Over!</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <p>Levels Completed: <span id="levelsCompleted">0</span></p>
+            <button onclick="location.reload()">Play Again!</button>
+        </div>
+
+        <!-- Mobile Touch Controls -->
+        <div class="mobile-controls" id="mobileControls">
+            <div class="mobile-btn" id="btn-left">◀</div>
+            <div class="mobile-btn" id="btn-right">▶</div>
+            <div class="mobile-btn" id="btn-jump">⬆</div>
+            <div class="mobile-btn" id="btn-up">▲</div>
+            <div class="mobile-btn" id="btn-down">▼</div>
+        </div>
     </div>
 
     <div id="gameInfo">
@@ -712,30 +737,6 @@
         <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
         <p>Jump into flowers 🌸 to launch into the sky!</p>
         <p>Watch out for the fire obstacles! 🔥</p>
-    </div>
-
-    <div id="levelComplete">
-        <h2>🎉 Level Complete! 🎉</h2>
-        <p>Level <span id="completedLevel">1</span> Cleared!</p>
-        <p>Stars Collected: <span id="levelStars">0</span></p>
-        <p>Total Score: <span id="levelScore">0</span></p>
-        <button onclick="nextLevel()">Next Level ➡️</button>
-    </div>
-
-    <div id="gameOver">
-        <h2>Game Over!</h2>
-        <p>Final Score: <span id="finalScore">0</span></p>
-        <p>Levels Completed: <span id="levelsCompleted">0</span></p>
-        <button onclick="location.reload()">Play Again!</button>
-    </div>
-
-    <!-- Mobile Touch Controls -->
-    <div class="mobile-controls" id="mobileControls">
-        <div class="mobile-btn" id="btn-left">◀</div>
-        <div class="mobile-btn" id="btn-right">▶</div>
-        <div class="mobile-btn" id="btn-jump">⬆</div>
-        <div class="mobile-btn" id="btn-up">▲</div>
-        <div class="mobile-btn" id="btn-down">▼</div>
     </div>
 
     <script>
