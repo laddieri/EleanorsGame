@@ -1052,6 +1052,23 @@
         let victoryAnimation = 0;
         let levelStarsCollected = 0;
 
+        // ===== BIKE LEVEL 3 STATE =====
+        let bikeMode = false;
+        let bikeScrollX = 0;       // How far the world has scrolled left
+        let bikeSpeed = 5;         // Pixels per frame the world moves
+        let bikeVelY = 0;          // Player vertical velocity
+        let bikePlayerScreenY = 0; // Player top Y on screen
+        let bikeGroundSegments = []; // [{worldX, width}] flat road sections
+        let bikeRamps = [];          // [{worldX, width, riseHeight, launchVel}]
+        let bikeGaps = [];           // [{worldX, width}] void sections
+        let bikeStars = [];          // [{worldX, y, collected}]
+        let bikeTacos = [];          // [{worldX, collected}]
+        let bikeFlagWorldX = 0;
+        let bikeJumpPressed = false;
+        let bikeWheelAnim = 0;
+        const BIKE_GROUND_Y = 520;   // Y where ground surface is
+        const BIKE_PLAYER_SCREEN_X = 200; // Fixed screen X of the player
+
         // ===== SKI FREE LEVEL 2 STATE =====
         let skiMode = false;
         let skiDistance = 0;
@@ -1405,7 +1422,12 @@
         // Initialize game objects for a specific level
         function initLevel(level) {
             skiMode = false;
+            bikeMode = false;
             document.getElementById('mobileControls').classList.remove('ski-mode');
+            if (level === 3) {
+                initBikeLevel();
+                return;
+            }
             if (level % 2 === 0) {
                 initSkiLevel();
                 return;
@@ -3019,7 +3041,13 @@
 
             // Reset the selected player's position
             const ap = getActivePlayer();
-            if (skiMode) {
+            if (bikeMode) {
+                bikePlayerScreenY = BIKE_GROUND_Y - ap.height;
+                bikeVelY = 0;
+                bikeJumpPressed = false;
+                ap.x = BIKE_PLAYER_SCREEN_X - Math.floor(ap.width / 2);
+                ap.y = bikePlayerScreenY;
+            } else if (skiMode) {
                 ap.x = 400;
                 ap.y = SKI_PLAYER_Y;
                 skiPlayerVelX = 0;
@@ -3046,6 +3074,482 @@
             document.getElementById('finalScore').textContent = score;
             document.getElementById('levelsCompleted').textContent = currentLevel - 1;
             document.getElementById('gameOver').style.display = 'block';
+        }
+
+        // ===== BIKE LEVEL 3 FUNCTIONS =====
+
+        function initBikeLevel() {
+            bikeMode = true;
+            bikeScrollX = 0;
+            bikeSpeed = 5;
+            bikeVelY = 0;
+            bikeGroundSegments = [];
+            bikeRamps = [];
+            bikeGaps = [];
+            bikeStars = [];
+            bikeTacos = [];
+            bikeJumpPressed = false;
+            bikeWheelAnim = 0;
+            levelStarsCollected = 0;
+            reachedFlag = false;
+            victoryAnimation = 0;
+
+            const ap = getActivePlayer();
+            ap.x = BIKE_PLAYER_SCREEN_X;
+            ap.y = BIKE_GROUND_Y - ap.height;
+            bikePlayerScreenY = ap.y;
+
+            // --- Level layout (all in world coordinates) ---
+            // Format: flat ground sections, ramps before each gap, gaps.
+            // The ramp immediately precedes each gap.
+
+            // Section 1: safe start
+            bikeGroundSegments.push({ worldX: -500, width: 1300 });
+
+            // Gap 1 (easy)
+            bikeRamps.push({ worldX: 720, width: 180, riseHeight: 70, launchVel: 13 });
+            bikeGaps.push({ worldX: 900, width: 170 });
+            bikeGroundSegments.push({ worldX: 1070, width: 700 });
+
+            // Gap 2
+            bikeRamps.push({ worldX: 1650, width: 200, riseHeight: 85, launchVel: 14 });
+            bikeGaps.push({ worldX: 1850, width: 210 });
+            bikeGroundSegments.push({ worldX: 2060, width: 650 });
+
+            // Gap 3 (wider)
+            bikeRamps.push({ worldX: 2590, width: 220, riseHeight: 95, launchVel: 15 });
+            bikeGaps.push({ worldX: 2810, width: 260 });
+            bikeGroundSegments.push({ worldX: 3070, width: 600 });
+
+            // Gap 4
+            bikeRamps.push({ worldX: 3550, width: 210, riseHeight: 90, launchVel: 14 });
+            bikeGaps.push({ worldX: 3760, width: 230 });
+            bikeGroundSegments.push({ worldX: 3990, width: 620 });
+
+            // Gap 5
+            bikeRamps.push({ worldX: 4490, width: 200, riseHeight: 80, launchVel: 13 });
+            bikeGaps.push({ worldX: 4690, width: 200 });
+            bikeGroundSegments.push({ worldX: 4890, width: 600 });
+
+            // Gap 6 (hardest)
+            bikeRamps.push({ worldX: 5370, width: 230, riseHeight: 100, launchVel: 16 });
+            bikeGaps.push({ worldX: 5600, width: 290 });
+
+            // Final stretch with flag
+            bikeGroundSegments.push({ worldX: 5890, width: 1000 });
+            bikeFlagWorldX = 6600;
+
+            // Stars scattered along the level
+            const starPositions = [
+                200, 400, 600,
+                1150, 1350, 1550,
+                2100, 2300, 2500,
+                3100, 3300, 3500,
+                4050, 4250, 4450,
+                4950, 5150, 5350,
+                5950, 6150, 6350
+            ];
+            for (let i = 0; i < starPositions.length; i++) {
+                bikeStars.push({
+                    worldX: starPositions[i],
+                    y: 450 - (i % 3) * 30,
+                    collected: false
+                });
+            }
+
+            // Tacos (extra life)
+            bikeTacos.push({ worldX: 1200, collected: false });
+            bikeTacos.push({ worldX: 2800, collected: false }); // mid-air over gap 3 (bonus)
+            bikeTacos.push({ worldX: 3800, collected: false });
+            bikeTacos.push({ worldX: 5100, collected: false });
+        }
+
+        // Get the ground surface Y (in screen coords) at the player's current world X.
+        // Returns null if over a gap (no ground).
+        function bikeGetSurfaceY(worldX) {
+            // Check ramps
+            for (const ramp of bikeRamps) {
+                if (worldX >= ramp.worldX && worldX <= ramp.worldX + ramp.width) {
+                    const t = (worldX - ramp.worldX) / ramp.width;
+                    return BIKE_GROUND_Y - t * ramp.riseHeight;
+                }
+            }
+            // Check flat ground
+            for (const seg of bikeGroundSegments) {
+                if (worldX >= seg.worldX && worldX <= seg.worldX + seg.width) {
+                    return BIKE_GROUND_Y;
+                }
+            }
+            return null; // over a gap
+        }
+
+        function drawBikeBackground() {
+            // Sky — warm sunset gradient for a city road feel
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            skyGrad.addColorStop(0, '#87CEEB');
+            skyGrad.addColorStop(0.6, '#B0E0FF');
+            skyGrad.addColorStop(1, '#C8C8C8');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Distant city silhouette (static, parallax-lite: scrolls at 10% speed)
+            ctx.fillStyle = '#8899AA';
+            const buildingData = [
+                { bx: 0, bw: 60, bh: 120 }, { bx: 70, bw: 80, bh: 160 },
+                { bx: 160, bw: 50, bh: 100 }, { bx: 220, bw: 70, bh: 180 },
+                { bx: 300, bw: 90, bh: 140 }, { bx: 400, bw: 60, bh: 200 },
+                { bx: 470, bw: 80, bh: 130 }, { bx: 560, bw: 70, bh: 170 },
+                { bx: 640, bw: 50, bh: 110 }, { bx: 700, bw: 90, bh: 150 },
+            ];
+            const parallax = (bikeScrollX * 0.1) % 800;
+            for (const b of buildingData) {
+                const bx = (b.bx - parallax + 800 * 2) % 800;
+                ctx.fillRect(bx, BIKE_GROUND_Y - 60 - b.bh, b.bw, b.bh);
+            }
+
+            // Road surface (below ground segments / ramps)
+            ctx.fillStyle = '#555566';
+            ctx.fillRect(0, BIKE_GROUND_Y, canvas.width, canvas.height - BIKE_GROUND_Y);
+
+            // Road center dashes
+            ctx.fillStyle = '#FFFF00';
+            const dashLen = 40, dashGap = 30;
+            const totalPeriod = dashLen + dashGap;
+            const dashOffset = bikeScrollX % totalPeriod;
+            for (let dx = -dashOffset; dx < canvas.width; dx += totalPeriod) {
+                ctx.fillRect(dx, BIKE_GROUND_Y + 20, dashLen, 6);
+            }
+        }
+
+        function drawBikeGround() {
+            const ap = getActivePlayer();
+
+            // Draw each ground segment on screen
+            for (const seg of bikeGroundSegments) {
+                const sx = seg.worldX - bikeScrollX;
+                const ex = sx + seg.width;
+                if (ex < 0 || sx > canvas.width) continue;
+                // Draw top edge of ground (road surface color)
+                ctx.fillStyle = '#44BB44';
+                ctx.fillRect(Math.max(0, sx), BIKE_GROUND_Y, Math.min(ex, canvas.width) - Math.max(0, sx), 8);
+            }
+
+            // Draw ramps
+            for (const ramp of bikeRamps) {
+                const sx = ramp.worldX - bikeScrollX;
+                const ex = sx + ramp.width;
+                if (ex < 0 || sx > canvas.width) continue;
+
+                // Ramp: rises from BIKE_GROUND_Y at sx to BIKE_GROUND_Y - riseHeight at ex
+                ctx.fillStyle = '#CC8833';
+                ctx.beginPath();
+                ctx.moveTo(Math.max(0, sx), BIKE_GROUND_Y);
+                ctx.lineTo(ex, BIKE_GROUND_Y);
+                ctx.lineTo(ex, BIKE_GROUND_Y - ramp.riseHeight);
+                ctx.lineTo(Math.max(0, sx), BIKE_GROUND_Y);
+                ctx.fill();
+
+                // Ramp stripes (8-bit chevrons)
+                ctx.fillStyle = '#FFAA22';
+                const stripes = 4;
+                for (let i = 0; i < stripes; i++) {
+                    const t0 = i / stripes;
+                    const t1 = (i + 0.5) / stripes;
+                    const x0 = sx + t0 * ramp.width;
+                    const x1 = sx + t1 * ramp.width;
+                    const y0 = BIKE_GROUND_Y - t0 * ramp.riseHeight;
+                    const y1 = BIKE_GROUND_Y - t1 * ramp.riseHeight;
+                    ctx.beginPath();
+                    ctx.moveTo(x0, BIKE_GROUND_Y);
+                    ctx.lineTo(x1, BIKE_GROUND_Y);
+                    ctx.lineTo(x1, y1);
+                    ctx.lineTo(x0, y0);
+                    ctx.fill();
+                }
+
+                // Arrow at ramp top
+                ctx.fillStyle = '#FF4400';
+                ctx.font = 'bold 18px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText('▲', ex - 10, BIKE_GROUND_Y - ramp.riseHeight - 8);
+                ctx.textAlign = 'left';
+            }
+
+            // Draw gap void (dark abyss)
+            for (const gap of bikeGaps) {
+                const sx = gap.worldX - bikeScrollX;
+                const ex = sx + gap.width;
+                if (ex < 0 || sx > canvas.width) continue;
+                const cx1 = Math.max(0, sx);
+                const cx2 = Math.min(canvas.width, ex);
+                // Void
+                ctx.fillStyle = '#111122';
+                ctx.fillRect(cx1, BIKE_GROUND_Y, cx2 - cx1, canvas.height - BIKE_GROUND_Y);
+                // Danger stripes at edges
+                ctx.fillStyle = '#FF2200';
+                ctx.fillRect(cx1, BIKE_GROUND_Y, 6, 40);
+                ctx.fillRect(cx2 - 6, BIKE_GROUND_Y, 6, 40);
+            }
+        }
+
+        function drawBikeStars() {
+            for (const star of bikeStars) {
+                if (star.collected) continue;
+                const sx = star.worldX - bikeScrollX;
+                if (sx < -30 || sx > canvas.width + 30) continue;
+                // 8-bit star
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(sx + 8, star.y, 8, 4);
+                ctx.fillRect(sx + 4, star.y + 4, 16, 4);
+                ctx.fillRect(sx, star.y + 8, 24, 4);
+                ctx.fillRect(sx + 4, star.y + 12, 16, 4);
+                ctx.fillRect(sx + 8, star.y + 16, 8, 4);
+            }
+        }
+
+        function drawBikeTacos() {
+            for (const taco of bikeTacos) {
+                if (taco.collected) continue;
+                const sx = taco.worldX - bikeScrollX;
+                if (sx < -40 || sx > canvas.width + 40) continue;
+                drawTacoShape(sx - 14, 460);
+                const pulse = Math.sin(Date.now() / 250) * 3;
+                ctx.strokeStyle = 'rgba(245,197,24,0.7)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(sx - 17 - pulse, 457 - pulse, 34 + pulse * 2, 30 + pulse * 2);
+                ctx.lineWidth = 1;
+            }
+        }
+
+        function drawBikeFlag() {
+            const sx = bikeFlagWorldX - bikeScrollX;
+            if (sx < -100 || sx > canvas.width + 100) return;
+            const flagY = BIKE_GROUND_Y - 150;
+
+            // Pole
+            ctx.fillStyle = '#888888';
+            ctx.fillRect(sx, flagY, 8, 150);
+
+            // Flag wave
+            const wave = reachedFlag ? 0 : Math.sin(Date.now() / 200) * 5;
+            ctx.fillStyle = reachedFlag ? '#FFD700' : '#FF1493';
+            ctx.beginPath();
+            ctx.moveTo(sx + 8, flagY);
+            ctx.lineTo(sx + 68 + wave, flagY + 15);
+            ctx.lineTo(sx + 8, flagY + 40);
+            ctx.closePath();
+            ctx.fill();
+
+            // FINISH text
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 10px Courier New';
+            ctx.textAlign = 'center';
+            ctx.fillText('FINISH', sx + 38, flagY + 22);
+            ctx.textAlign = 'left';
+
+            // Checkered base
+            for (let i = 0; i < 4; i++) {
+                ctx.fillStyle = i % 2 === 0 ? '#000000' : '#FFFFFF';
+                ctx.fillRect(sx - 16 + i * 12, BIKE_GROUND_Y - 10, 12, 10);
+            }
+        }
+
+        function drawBikePlayer() {
+            const ap = getActivePlayer();
+
+            // Draw bike below/around player
+            const px = BIKE_PLAYER_SCREEN_X;
+            const py = bikePlayerScreenY;
+            const ph = ap.height;
+
+            bikeWheelAnim += 0.15;
+
+            // Bike frame
+            ctx.fillStyle = '#CC2200';
+            // Top tube
+            ctx.fillRect(px - 10, py + ph - 10, 36, 5);
+            // Down tube
+            ctx.fillStyle = '#AA1100';
+            ctx.fillRect(px - 4, py + ph - 10, 8, 14);
+            // Seat stay
+            ctx.fillRect(px + 16, py + ph - 12, 6, 18);
+
+            // Wheels
+            const wheelY = py + ph + 6;
+            const drawWheel = (wx) => {
+                // Tire
+                ctx.strokeStyle = '#222222';
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.arc(wx, wheelY, 12, 0, Math.PI * 2);
+                ctx.stroke();
+                // Spokes
+                ctx.strokeStyle = '#888888';
+                ctx.lineWidth = 1.5;
+                for (let s = 0; s < 4; s++) {
+                    const angle = bikeWheelAnim + s * Math.PI / 2;
+                    ctx.beginPath();
+                    ctx.moveTo(wx, wheelY);
+                    ctx.lineTo(wx + Math.cos(angle) * 11, wheelY + Math.sin(angle) * 11);
+                    ctx.stroke();
+                }
+                // Hub
+                ctx.fillStyle = '#AAAAAA';
+                ctx.beginPath();
+                ctx.arc(wx, wheelY, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.lineWidth = 1;
+            };
+            drawWheel(px - 4);
+            drawWheel(px + 22);
+
+            // Handlebars
+            ctx.fillStyle = '#555555';
+            ctx.fillRect(px - 12, py + ph - 18, 14, 4);
+
+            // Draw the character sitting on the bike (repositioned)
+            const origX = ap.x;
+            const origY = ap.y;
+            ap.x = BIKE_PLAYER_SCREEN_X - Math.floor(ap.width / 2);
+            ap.y = bikePlayerScreenY;
+
+            if (selectedCharacter === 'eleanor')   drawPlayer();
+            else if (selectedCharacter === 'william') drawPlayer2();
+            else if (selectedCharacter === 'mom')     drawPlayer3();
+            else if (selectedCharacter === 'dad')     drawPlayer4();
+            else if (selectedCharacter === 'mila')    drawPlayer5();
+            else if (selectedCharacter === 'harry')   drawPlayer6();
+            else if (selectedCharacter === 'bee')     drawPlayer7();
+            else if (selectedCharacter === 'rickyfish') drawPlayer8();
+            else if (selectedCharacter === 'greenfroggy') drawPlayer9();
+
+            ap.x = origX;
+            ap.y = origY;
+        }
+
+        function drawBikeHUD() {
+            // Progress bar
+            const totalDist = bikeFlagWorldX;
+            const pct = Math.min(1, bikeScrollX / totalDist);
+            ctx.fillStyle = 'rgba(255,255,255,0.75)';
+            ctx.fillRect(22, 10, 200, 14);
+            ctx.fillStyle = '#CC2200';
+            ctx.fillRect(22, 10, 200 * pct, 14);
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(22, 10, 200, 14);
+            ctx.fillStyle = '#003388';
+            ctx.font = '13px Courier New';
+            ctx.fillText('Distance: ' + Math.floor(bikeScrollX) + ' / ' + totalDist, 22, 38);
+        }
+
+        function updateBikeMode() {
+            if (reachedFlag) {
+                victoryAnimation++;
+                if (victoryAnimation > 90) levelComplete();
+                return;
+            }
+
+            const ap = getActivePlayer();
+
+            // Auto-scroll world (bike moves forward automatically)
+            bikeScrollX += bikeSpeed;
+            // Gently accelerate
+            if (bikeSpeed < 9) bikeSpeed += 0.003;
+
+            // Player world X
+            const playerWorldX = BIKE_PLAYER_SCREEN_X + bikeScrollX;
+
+            // Get surface under player
+            const surfaceY = bikeGetSurfaceY(playerWorldX);
+
+            // Jump input
+            const jumpKey = keys['Space'] || keys['ArrowUp'] || keys['KeyW'];
+            if (jumpKey && !bikeJumpPressed && surfaceY !== null && bikePlayerScreenY + ap.height >= surfaceY - 2) {
+                bikeVelY = -16;
+                bikeJumpPressed = true;
+                playJumpSound();
+            }
+            if (!jumpKey) bikeJumpPressed = false;
+
+            // Apply gravity
+            bikeVelY += 0.7;
+            bikePlayerScreenY += bikeVelY;
+
+            // Ground / ramp collision
+            if (surfaceY !== null) {
+                const feetY = bikePlayerScreenY + ap.height;
+                if (feetY >= surfaceY) {
+                    bikePlayerScreenY = surfaceY - ap.height;
+                    // Ramp launch: when transitioning off a ramp tip, give extra upward boost
+                    if (bikeVelY > 0) {
+                        // Check if we just passed ramp end (next frame will be gap)
+                        const nextWorldX = playerWorldX + bikeSpeed + 10;
+                        const nextSurface = bikeGetSurfaceY(nextWorldX);
+                        if (nextSurface === null) {
+                            // Find the ramp we're on to get launch velocity
+                            for (const ramp of bikeRamps) {
+                                if (playerWorldX >= ramp.worldX && playerWorldX <= ramp.worldX + ramp.width) {
+                                    bikeVelY = -ramp.launchVel;
+                                    playJumpSound();
+                                    break;
+                                }
+                            }
+                        } else {
+                            bikeVelY = 0;
+                        }
+                    }
+                }
+            }
+
+            // Fell into a gap
+            if (bikePlayerScreenY > canvas.height + 30) {
+                bikeScrollX = Math.max(0, bikeScrollX - 300); // Respawn a bit back
+                bikePlayerScreenY = BIKE_GROUND_Y - ap.height;
+                bikeVelY = 0;
+                bikeJumpPressed = false;
+                loseLife();
+                return;
+            }
+
+            // Update player object position so draw functions work correctly
+            ap.x = BIKE_PLAYER_SCREEN_X - Math.floor(ap.width / 2);
+            ap.y = bikePlayerScreenY;
+
+            // Collect stars
+            for (const star of bikeStars) {
+                if (star.collected) continue;
+                const sx = star.worldX - bikeScrollX;
+                const sy = star.y;
+                if (Math.abs(BIKE_PLAYER_SCREEN_X - sx) < 28 &&
+                    Math.abs(bikePlayerScreenY + ap.height / 2 - sy) < 28) {
+                    star.collected = true;
+                    levelStarsCollected++;
+                    score += 10;
+                    document.getElementById('score').textContent = score;
+                    playStarSound();
+                }
+            }
+
+            // Collect tacos
+            for (const taco of bikeTacos) {
+                if (taco.collected) continue;
+                const sx = taco.worldX - bikeScrollX;
+                if (Math.abs(BIKE_PLAYER_SCREEN_X - sx) < 28 &&
+                    Math.abs(bikePlayerScreenY - 472) < 40) {
+                    taco.collected = true;
+                    lives++;
+                    document.getElementById('lives').textContent = lives;
+                    playTacoSound();
+                }
+            }
+
+            // Check flag
+            const flagScreenX = bikeFlagWorldX - bikeScrollX;
+            if (flagScreenX <= BIKE_PLAYER_SCREEN_X + 40 && !reachedFlag) {
+                reachedFlag = true;
+                playVictorySound();
+            }
         }
 
         // ===== SKI FREE LEVEL 2 FUNCTIONS =====
@@ -3498,7 +4002,17 @@
 
             if (!gameRunning) return;
 
-            if (skiMode) {
+            if (bikeMode) {
+                // ===== BIKE LEVEL 3 =====
+                drawBikeBackground();
+                drawBikeGround();
+                drawBikeStars();
+                drawBikeTacos();
+                drawBikeFlag();
+                drawBikePlayer();
+                drawBikeHUD();
+                updateBikeMode();
+            } else if (skiMode) {
                 // ===== SKI FREE LEVEL 2 =====
                 drawSkiBackground();
                 drawSkiObjects();
