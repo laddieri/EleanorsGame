@@ -1255,6 +1255,21 @@
         const SKI_FINISH_DIST = 12000;
         const SKI_PLAYER_Y = 340;
 
+        // ===== SPACE FLOATING LEVEL STATE =====
+        let spaceMode = false;
+        let spaceScrollX = 0;
+        let spaceSpeed = 1.5;
+        let spaceVelY = 0;
+        let spacePlayerScreenY = 0;
+        let spaceAsteroids = [];
+        let spaceBgStars = [];
+        let spaceCollectibles = [];
+        let spacePlanets = [];
+        let spaceStation = null;
+        let spaceInvincible = 0;  // invincibility frames after hit
+        const SPACE_FINISH_DIST = 8000;
+        const SPACE_PLAYER_SCREEN_X = 150;
+
         // Player objects
         const player = {
             x: 100,
@@ -1640,15 +1655,20 @@
         function initLevel(level) {
             skiMode = false;
             bikeMode = false;
+            spaceMode = false;
             document.getElementById('mobileControls').classList.remove('ski-mode');
-            // Rotate: walk (1,4,7…) → ski (2,5,8…) → bike (3,6,9…)
-            const type = (level - 1) % 3; // 0=walk, 1=ski, 2=bike
+            // Rotate: walk (1,5,9…) → ski (2,6,10…) → bike (3,7,11…) → space (4,8,12…)
+            const type = (level - 1) % 4; // 0=walk, 1=ski, 2=bike, 3=space
             if (type === 1) {
                 initSkiLevel();
                 return;
             }
             if (type === 2) {
                 initBikeLevel();
+                return;
+            }
+            if (type === 3) {
+                initSpaceLevel();
                 return;
             }
 
@@ -4648,6 +4668,408 @@
             }
         }
 
+        // ===== SPACE FLOATING LEVEL =====
+
+        function initSpaceLevel() {
+            spaceMode = true;
+            spaceScrollX = 0;
+            spaceSpeed = 1.5;
+            spaceVelY = 0;
+            spacePlayerScreenY = canvas.height / 2;
+            spaceAsteroids = [];
+            spaceBgStars = [];
+            spaceCollectibles = [];
+            spacePlanets = [];
+            spaceStation = null;
+            spaceInvincible = 0;
+            reachedFlag = false;
+            victoryAnimation = 0;
+            levelStarsCollected = 0;
+            stars = [];
+            tacos = [];
+
+            // Background twinkling stars (screen-space with slow parallax)
+            for (let i = 0; i < 150; i++) {
+                spaceBgStars.push({
+                    x: Math.random() * 800,
+                    y: Math.random() * 600,
+                    size: Math.random() * 2 + 0.5,
+                    twinkle: Math.random() * Math.PI * 2,
+                    parallax: 0.05 + Math.random() * 0.15
+                });
+            }
+
+            // Colorful background planets
+            const planetColors = ['#FF6B6B', '#FFD93D', '#6BCB77', '#4D96FF', '#C77DFF', '#FF9F1C'];
+            const hasRing = [false, true, false, true, false, true];
+            for (let i = 0; i < 6; i++) {
+                spacePlanets.push({
+                    worldX: 500 + i * 1400,
+                    y: 60 + Math.random() * 450,
+                    radius: 28 + Math.random() * 42,
+                    color: planetColors[i],
+                    ring: hasRing[i],
+                    parallax: 0.18
+                });
+            }
+
+            // Asteroids scattered through the level
+            const astCount = 45;
+            for (let i = 0; i < astCount; i++) {
+                spaceAsteroids.push({
+                    worldX: 600 + i * (SPACE_FINISH_DIST / astCount),
+                    y: 55 + Math.random() * 490,
+                    radius: 13 + Math.random() * 22,
+                    wobblePhase: Math.random() * Math.PI * 2,
+                    wobbleAmp: 8 + Math.random() * 22,
+                    wobbleSpeed: 0.018 + Math.random() * 0.022,
+                    color: Math.random() < 0.5 ? '#8B7355' : '#6E6E6E'
+                });
+            }
+
+            // Collectible stars
+            for (let i = 0; i < 35; i++) {
+                spaceCollectibles.push({
+                    worldX: 350 + i * (SPACE_FINISH_DIST / 35),
+                    y: 80 + Math.random() * 440,
+                    collected: false,
+                    twinkle: Math.random() * Math.PI * 2
+                });
+            }
+
+            // Space station at the end
+            spaceStation = { worldX: SPACE_FINISH_DIST - 150 };
+
+            const ap = getActivePlayer();
+            ap.x = SPACE_PLAYER_SCREEN_X;
+            ap.y = spacePlayerScreenY;
+        }
+
+        function drawSpaceBackground() {
+            // Deep space
+            ctx.fillStyle = '#00000F';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Nebula glow
+            const neb1 = ctx.createRadialGradient(250, 200, 0, 250, 200, 280);
+            neb1.addColorStop(0, 'rgba(80, 0, 130, 0.18)');
+            neb1.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = neb1;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const neb2 = ctx.createRadialGradient(580, 400, 0, 580, 400, 220);
+            neb2.addColorStop(0, 'rgba(0, 50, 120, 0.15)');
+            neb2.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = neb2;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Twinkling background stars
+            spaceBgStars.forEach(star => {
+                star.twinkle += 0.04;
+                const alpha = 0.3 + Math.sin(star.twinkle) * 0.7;
+                const sx = ((star.x - spaceScrollX * star.parallax) % canvas.width + canvas.width) % canvas.width;
+                ctx.globalAlpha = Math.max(0, alpha);
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(sx, star.y, star.size, star.size);
+            });
+            ctx.globalAlpha = 1;
+
+            // Planets
+            spacePlanets.forEach(planet => {
+                const screenX = planet.worldX - spaceScrollX * planet.parallax;
+                if (screenX < -planet.radius - 60 || screenX > canvas.width + planet.radius + 60) return;
+
+                ctx.fillStyle = planet.color;
+                ctx.beginPath();
+                ctx.arc(screenX, planet.y, planet.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Shading gradient
+                const shade = ctx.createRadialGradient(
+                    screenX - planet.radius * 0.3, planet.y - planet.radius * 0.3, 0,
+                    screenX, planet.y, planet.radius
+                );
+                shade.addColorStop(0, 'rgba(255,255,255,0.22)');
+                shade.addColorStop(1, 'rgba(0,0,0,0.45)');
+                ctx.fillStyle = shade;
+                ctx.beginPath();
+                ctx.arc(screenX, planet.y, planet.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Ring
+                if (planet.ring) {
+                    ctx.strokeStyle = 'rgba(210, 185, 110, 0.55)';
+                    ctx.lineWidth = 6;
+                    ctx.beginPath();
+                    ctx.ellipse(screenX, planet.y, planet.radius * 1.85, planet.radius * 0.38, 0.3, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            });
+        }
+
+        function drawSpaceObjects() {
+            // Collectible stars
+            spaceCollectibles.forEach(c => {
+                if (c.collected) return;
+                const sx = c.worldX - spaceScrollX;
+                if (sx < -30 || sx > canvas.width + 30) return;
+                c.twinkle += 0.08;
+                ctx.globalAlpha = 0.7 + Math.sin(c.twinkle) * 0.3;
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(sx + 8, c.y, 4, 20);
+                ctx.fillRect(sx, c.y + 8, 20, 4);
+                ctx.fillRect(sx + 4, c.y + 4, 12, 12);
+                ctx.globalAlpha = 1;
+            });
+
+            // Asteroids
+            spaceAsteroids.forEach(ast => {
+                const sx = ast.worldX - spaceScrollX;
+                const sy = ast.y + Math.sin(ast.wobblePhase) * ast.wobbleAmp;
+                if (sx < -ast.radius - 50 || sx > canvas.width + ast.radius + 50) return;
+
+                ctx.fillStyle = ast.color;
+                ctx.beginPath();
+                ctx.arc(sx, sy, ast.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Craters
+                ctx.fillStyle = 'rgba(0,0,0,0.28)';
+                ctx.beginPath();
+                ctx.arc(sx - ast.radius * 0.28, sy - ast.radius * 0.22, ast.radius * 0.28, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(sx + ast.radius * 0.32, sy + ast.radius * 0.18, ast.radius * 0.18, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Highlight
+                ctx.fillStyle = 'rgba(255,255,255,0.14)';
+                ctx.beginPath();
+                ctx.arc(sx - ast.radius * 0.32, sy - ast.radius * 0.32, ast.radius * 0.28, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Space station
+            if (spaceStation) {
+                const sx = spaceStation.worldX - spaceScrollX;
+                const sy = canvas.height / 2 - 55;
+                if (sx > -220 && sx < canvas.width + 220) {
+                    // Main hull
+                    ctx.fillStyle = '#C8C8C8';
+                    ctx.fillRect(sx, sy + 30, 90, 45);
+
+                    // Solar panel left
+                    ctx.fillStyle = '#1E90FF';
+                    ctx.fillRect(sx - 55, sy + 42, 55, 22);
+                    ctx.fillStyle = '#0060AA';
+                    for (let i = 0; i < 5; i++) ctx.fillRect(sx - 55 + i * 11, sy + 42, 9, 22);
+
+                    // Solar panel right
+                    ctx.fillStyle = '#1E90FF';
+                    ctx.fillRect(sx + 90, sy + 42, 55, 22);
+                    ctx.fillStyle = '#0060AA';
+                    for (let i = 0; i < 5; i++) ctx.fillRect(sx + 90 + i * 11, sy + 42, 9, 22);
+
+                    // Dome
+                    ctx.fillStyle = '#DDDDDD';
+                    ctx.beginPath();
+                    ctx.arc(sx + 45, sy + 30, 22, Math.PI, 0);
+                    ctx.fill();
+
+                    // Dome window
+                    ctx.fillStyle = '#87CEEB';
+                    ctx.beginPath();
+                    ctx.arc(sx + 45, sy + 30, 13, Math.PI, 0);
+                    ctx.fill();
+
+                    // Blinking lights
+                    const blink = (Date.now() % 700) < 350;
+                    ctx.fillStyle = blink ? '#FF2200' : '#550000';
+                    ctx.fillRect(sx - 3, sy + 46, 7, 7);
+                    ctx.fillStyle = blink ? '#550000' : '#FF2200';
+                    ctx.fillRect(sx + 86, sy + 46, 7, 7);
+
+                    // Finish label
+                    ctx.fillStyle = '#FFD700';
+                    ctx.font = 'bold 14px "Courier New"';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('FINISH! 🚀', sx + 45, sy + 18);
+                    ctx.textAlign = 'left';
+                }
+            }
+        }
+
+        function drawSpacePlayer() {
+            const ap = getActivePlayer();
+            ap.x = SPACE_PLAYER_SCREEN_X;
+            ap.y = spacePlayerScreenY;
+
+            // Flicker when invincible
+            if (spaceInvincible > 0 && Math.floor(spaceInvincible / 4) % 2 === 0) return;
+
+            // Draw the character sprite
+            if (selectedCharacter === 'eleanor')       drawPlayer();
+            else if (selectedCharacter === 'william')  drawPlayer2();
+            else if (selectedCharacter === 'mom')      drawPlayer3();
+            else if (selectedCharacter === 'dad')      drawPlayer4();
+            else if (selectedCharacter === 'mila')     drawPlayer5();
+            else if (selectedCharacter === 'harry')    drawPlayer6();
+            else if (selectedCharacter === 'bee')      drawPlayer7();
+            else if (selectedCharacter === 'rickyfish') drawPlayer8();
+            else if (selectedCharacter === 'greenfroggy') drawPlayer9();
+            else if (selectedCharacter === 'gramparob') drawPlayer10();
+            else if (selectedCharacter === 'grammab')  drawPlayer11();
+            else if (selectedCharacter === 'auntjenni') drawPlayer12();
+
+            // Space helmet bubble over head
+            const helmetCx = ap.x + ap.width / 2;
+            const helmetCy = ap.y + ap.height * 0.2;
+            const helmetR = Math.min(ap.width * 0.55, 16) + 3;
+
+            ctx.globalAlpha = 0.22;
+            ctx.fillStyle = '#AEE4FF';
+            ctx.beginPath();
+            ctx.arc(helmetCx, helmetCy, helmetR, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+
+            ctx.strokeStyle = '#BBBBCC';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(helmetCx, helmetCy, helmetR, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Visor shine
+            ctx.globalAlpha = 0.45;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(helmetCx - helmetR * 0.28, helmetCy - helmetR * 0.28, helmetR * 0.22, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+
+            // Thrust particles when moving up
+            if ((keys['Space'] || keys['ArrowUp'] || keys['KeyW']) && !reachedFlag) {
+                ctx.fillStyle = '#FF8800';
+                for (let i = 0; i < 3; i++) {
+                    ctx.globalAlpha = 0.4 + Math.random() * 0.4;
+                    ctx.fillRect(
+                        ap.x + ap.width * 0.2 + Math.random() * ap.width * 0.6,
+                        ap.y + ap.height + Math.random() * 10,
+                        3, 4 + Math.random() * 6
+                    );
+                }
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function drawSpaceHUD() {
+            const pct = Math.min(1, spaceScrollX / (SPACE_FINISH_DIST - 300));
+            ctx.fillStyle = 'rgba(0, 0, 30, 0.7)';
+            ctx.fillRect(20, 8, 204, 16);
+            ctx.fillStyle = '#4D96FF';
+            ctx.fillRect(22, 10, 200 * pct, 12);
+            ctx.strokeStyle = '#8888FF';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(22, 10, 200, 12);
+
+            ctx.fillStyle = '#CCDDFF';
+            ctx.font = '12px "Courier New"';
+            ctx.fillText('SPACE STATION: ' + Math.round(pct * 100) + '%', 22, 36);
+
+            // Control hint (fades out after a few seconds)
+            if (spaceScrollX < 400) {
+                ctx.globalAlpha = Math.max(0, 1 - spaceScrollX / 300);
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = '13px "Courier New"';
+                ctx.textAlign = 'center';
+                ctx.fillText('SPACE / UP to float up   DOWN to drift down', canvas.width / 2, canvas.height - 24);
+                ctx.textAlign = 'left';
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function updateSpaceMode() {
+            if (reachedFlag) {
+                victoryAnimation++;
+                if (victoryAnimation > 90) levelComplete();
+                return;
+            }
+
+            // Auto-scroll world
+            spaceScrollX += spaceSpeed;
+            if (spaceSpeed < 4) spaceSpeed += 0.001;
+
+            // Thrust controls
+            const thrustUp = keys['Space'] || keys['ArrowUp'] || keys['KeyW'];
+            const thrustDown = keys['ArrowDown'] || keys['KeyS'];
+            if (thrustUp)   spaceVelY -= 0.4;
+            if (thrustDown) spaceVelY += 0.3;
+
+            // Weak gravity + drag
+            spaceVelY += 0.09;
+            spaceVelY *= 0.98;
+            spaceVelY = Math.max(-6, Math.min(6, spaceVelY));
+
+            spacePlayerScreenY += spaceVelY;
+
+            // Soft boundary bounce
+            if (spacePlayerScreenY < 20) {
+                spacePlayerScreenY = 20;
+                spaceVelY = Math.abs(spaceVelY) * 0.4;
+            }
+            if (spacePlayerScreenY > canvas.height - 60) {
+                spacePlayerScreenY = canvas.height - 60;
+                spaceVelY = -Math.abs(spaceVelY) * 0.4;
+            }
+
+            // Tick invincibility frames
+            if (spaceInvincible > 0) spaceInvincible--;
+
+            const ap = getActivePlayer();
+            ap.x = SPACE_PLAYER_SCREEN_X;
+            ap.y = spacePlayerScreenY;
+
+            // Asteroid collision
+            if (spaceInvincible === 0) {
+                spaceAsteroids.forEach(ast => {
+                    const sx = ast.worldX - spaceScrollX;
+                    const sy = ast.y + Math.sin(ast.wobblePhase) * ast.wobbleAmp;
+                    const pcx = ap.x + ap.width / 2;
+                    const pcy = ap.y + ap.height / 2;
+                    const dist = Math.sqrt((pcx - sx) ** 2 + (pcy - sy) ** 2);
+                    if (dist < ast.radius + Math.min(ap.width, ap.height) / 2 - 4) {
+                        spaceInvincible = 90;
+                        loseLife();
+                    }
+                });
+            }
+
+            // Update asteroid wobble
+            spaceAsteroids.forEach(ast => { ast.wobblePhase += ast.wobbleSpeed; });
+
+            // Collectible star collection
+            spaceCollectibles.forEach(c => {
+                if (c.collected) return;
+                const sx = c.worldX - spaceScrollX;
+                if (checkCollision(ap, { x: sx, y: c.y, width: 20, height: 20 })) {
+                    c.collected = true;
+                    score += 10;
+                    levelStarsCollected++;
+                    document.getElementById('score').textContent = score;
+                    playStarSound();
+                }
+            });
+
+            // Reach the space station
+            if (spaceStation) {
+                const stationSx = spaceStation.worldX - spaceScrollX;
+                if (stationSx <= SPACE_PLAYER_SCREEN_X + ap.width + 10) {
+                    reachedFlag = true;
+                    playVictorySound();
+                }
+            }
+        }
+
         // Main game loop
         function gameLoop() {
             // Continue the loop (must happen every frame)
@@ -4659,7 +5081,14 @@
             if (!gameRunning) return;
             if (paused) return;
 
-            if (bikeMode) {
+            if (spaceMode) {
+                // ===== SPACE FLOATING LEVEL =====
+                drawSpaceBackground();
+                drawSpaceObjects();
+                drawSpacePlayer();
+                drawSpaceHUD();
+                updateSpaceMode();
+            } else if (bikeMode) {
                 // ===== BIKE LEVEL 3 =====
                 drawBikeBackground();
                 drawBikeGround();
