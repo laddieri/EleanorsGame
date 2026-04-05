@@ -659,6 +659,33 @@
             box-shadow: 0 8px 16px rgba(34, 139, 34, 0.5);
         }
 
+        .character-card.gramparob {
+            background: linear-gradient(to bottom, #C4A35A, #E8D5A3);
+            border-color: #5C4100;
+        }
+
+        .character-card.gramparob:hover {
+            box-shadow: 0 8px 16px rgba(92, 65, 0, 0.5);
+        }
+
+        .character-card.grammab {
+            background: linear-gradient(to bottom, #FFE135, #FFF5A0);
+            border-color: #C8A800;
+        }
+
+        .character-card.grammab:hover {
+            box-shadow: 0 8px 16px rgba(200, 168, 0, 0.5);
+        }
+
+        .character-card.auntjenni {
+            background: linear-gradient(to bottom, #9B59B6, #D7A8E8);
+            border-color: #6A0DAD;
+        }
+
+        .character-card.auntjenni:hover {
+            box-shadow: 0 8px 16px rgba(106, 13, 173, 0.5);
+        }
+
         .character-card h3 {
             font-size: 18px;
             margin-bottom: 4px;
@@ -756,6 +783,30 @@
                     <div class="character-preview">🐸</div>
                     <h3>Green Froggy</h3>
                     <p>The Squishmallow</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card gramparob" onclick="selectCharacter('gramparob')">
+                    <div class="character-preview">👴</div>
+                    <h3>Grampa Rob</h3>
+                    <p>Very Strong</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card grammab" onclick="selectCharacter('grammab')">
+                    <div class="character-preview">👵</div>
+                    <h3>Gramma B</h3>
+                    <p>Wise &amp; Loving</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>Arrow keys + SPACE</p>
+                    <p>📱 Touch or 🎮 Gamepad</p>
+                </div>
+                <div class="character-card auntjenni" onclick="selectCharacter('auntjenni')">
+                    <div class="character-preview">💜</div>
+                    <h3>Aunt Jenni</h3>
+                    <p>Cool &amp; Fun</p>
                     <p><strong>Controls:</strong></p>
                     <p>Arrow keys + SPACE</p>
                     <p>📱 Touch or 🎮 Gamepad</p>
@@ -1096,6 +1147,42 @@
                     <p>Jump into flowers 🌸 to launch into the sky!</p>
                     <p>Watch out for the fire obstacles! 🔥</p>
                 `;
+            } else if (character === 'gramparob') {
+                instructionsDiv.innerHTML = `
+                    <h2>How to Play</h2>
+                    <p><strong>Playing as Grampa Rob 👴</strong></p>
+                    <p>Use <span class="key">&larr; &rarr;</span> arrow keys to move</p>
+                    <p>Press <span class="key">SPACE</span> to jump</p>
+                    <p><strong>📱 Mobile:</strong> Use on-screen buttons</p>
+                    <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
+                    <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
+                    <p>Jump into flowers 🌸 to launch into the sky!</p>
+                    <p>Watch out for the fire obstacles! 🔥</p>
+                `;
+            } else if (character === 'grammab') {
+                instructionsDiv.innerHTML = `
+                    <h2>How to Play</h2>
+                    <p><strong>Playing as Gramma B 👵</strong></p>
+                    <p>Use <span class="key">&larr; &rarr;</span> arrow keys to move</p>
+                    <p>Press <span class="key">SPACE</span> to jump</p>
+                    <p><strong>📱 Mobile:</strong> Use on-screen buttons</p>
+                    <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
+                    <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
+                    <p>Jump into flowers 🌸 to launch into the sky!</p>
+                    <p>Watch out for the fire obstacles! 🔥</p>
+                `;
+            } else if (character === 'auntjenni') {
+                instructionsDiv.innerHTML = `
+                    <h2>How to Play</h2>
+                    <p><strong>Playing as Aunt Jenni 💜</strong></p>
+                    <p>Use <span class="key">&larr; &rarr;</span> arrow keys to move</p>
+                    <p>Press <span class="key">SPACE</span> to jump</p>
+                    <p><strong>📱 Mobile:</strong> Use on-screen buttons</p>
+                    <p><strong>🎮 Gamepad:</strong> Left stick/D-pad to move, <span class="key">A button</span> to jump</p>
+                    <p>Collect stars ⭐ and say hi to the friendly axolotls!</p>
+                    <p>Jump into flowers 🌸 to launch into the sky!</p>
+                    <p>Watch out for the fire obstacles! 🔥</p>
+                `;
             }
 
             // Start the game
@@ -1122,6 +1209,9 @@
             if (selectedCharacter === 'bee') return player7;
             if (selectedCharacter === 'rickyfish') return player8;
             if (selectedCharacter === 'greenfroggy') return player9;
+            if (selectedCharacter === 'gramparob') return player10;
+            if (selectedCharacter === 'grammab') return player11;
+            if (selectedCharacter === 'auntjenni') return player12;
             return player;
         }
         let currentLevel = 1;
@@ -1272,6 +1362,42 @@
             jumping: false,
             color: '#5DD35D',
             name: 'Green Froggy'
+        };
+
+        const player10 = {
+            x: 100,
+            y: 400,
+            width: 38,
+            height: 42,
+            velocityY: 0,
+            velocityX: 0,
+            jumping: false,
+            color: '#5C4033',
+            name: 'Grampa Rob'
+        };
+
+        const player11 = {
+            x: 100,
+            y: 400,
+            width: 34,
+            height: 36,
+            velocityY: 0,
+            velocityX: 0,
+            jumping: false,
+            color: '#C0A0C8',
+            name: 'Gramma B'
+        };
+
+        const player12 = {
+            x: 100,
+            y: 400,
+            width: 32,
+            height: 36,
+            velocityY: 0,
+            velocityX: 0,
+            jumping: false,
+            color: '#8B008B',
+            name: 'Aunt Jenni'
         };
 
         // Game objects arrays
@@ -2110,6 +2236,146 @@
             ctx.beginPath();
             ctx.arc(x + 21, y + 21, 12, 0, Math.PI * 2);
             ctx.fill();
+        }
+
+        // Draw Grampa Rob (8-bit style - very strong, grey hair, big mustache)
+        function drawPlayer10() {
+            const x = player10.x;
+            const y = player10.y;
+
+            // Body (tan/brown shirt - wide and strong)
+            ctx.fillStyle = '#7B5B3A';
+            ctx.fillRect(x + 7, y + 12, 24, 18);
+
+            // Extra-wide muscular arms
+            ctx.fillStyle = '#7B5B3A';
+            ctx.fillRect(x + 1, y + 12, 8, 16);
+            ctx.fillRect(x + 29, y + 12, 8, 16);
+
+            // Forearms (skin)
+            ctx.fillStyle = '#FDBCB4';
+            ctx.fillRect(x + 1, y + 22, 8, 8);
+            ctx.fillRect(x + 29, y + 22, 8, 8);
+
+            // Head (skin tone)
+            ctx.fillStyle = '#FDBCB4';
+            ctx.fillRect(x + 10, y + 2, 18, 10);
+
+            // Grey hair (short, on top)
+            ctx.fillStyle = '#A0A0A0';
+            ctx.fillRect(x + 9, y, 20, 4);
+            ctx.fillRect(x + 9, y + 4, 3, 3);
+            ctx.fillRect(x + 26, y + 4, 3, 3);
+
+            // Eyes
+            ctx.fillStyle = '#000';
+            ctx.fillRect(x + 14, y + 5, 3, 3);
+            ctx.fillRect(x + 21, y + 5, 3, 3);
+
+            // Mustache (dark grey, big and bushy)
+            ctx.fillStyle = '#555555';
+            ctx.fillRect(x + 12, y + 9, 14, 3);
+            ctx.fillRect(x + 11, y + 10, 3, 2);
+            ctx.fillRect(x + 24, y + 10, 3, 2);
+
+            // Legs (dark pants)
+            ctx.fillStyle = '#2A2A2A';
+            ctx.fillRect(x + 10, y + 30, 8, 12);
+            ctx.fillRect(x + 20, y + 30, 8, 12);
+        }
+
+        // Draw Gramma B (8-bit style - blonde hair like Eleanor, warm colours)
+        function drawPlayer11() {
+            const x = player11.x;
+            const y = player11.y;
+
+            // Body (soft lavender top)
+            ctx.fillStyle = '#C0A0C8';
+            ctx.fillRect(x + 9, y + 9, 16, 18);
+
+            // Arms
+            ctx.fillStyle = '#C0A0C8';
+            ctx.fillRect(x + 4, y + 10, 7, 12);
+            ctx.fillRect(x + 23, y + 10, 7, 12);
+
+            // Arm skin
+            ctx.fillStyle = '#FDBCB4';
+            ctx.fillRect(x + 4, y + 18, 7, 5);
+            ctx.fillRect(x + 23, y + 18, 7, 5);
+
+            // Head (skin tone)
+            ctx.fillStyle = '#FDBCB4';
+            ctx.fillRect(x + 9, y + 1, 16, 8);
+
+            // Blonde hair (same golden yellow as Eleanor)
+            ctx.fillStyle = '#FFE135';
+            ctx.fillRect(x + 7, y - 1, 20, 4);
+            ctx.fillRect(x + 6, y + 3, 5, 8);
+            ctx.fillRect(x + 23, y + 3, 5, 8);
+            ctx.fillRect(x + 7, y + 3, 3, 5);
+            ctx.fillRect(x + 24, y + 3, 3, 5);
+            // Bun on top
+            ctx.fillRect(x + 13, y - 4, 8, 5);
+
+            // Eyes
+            ctx.fillStyle = '#000';
+            ctx.fillRect(x + 12, y + 3, 3, 3);
+            ctx.fillRect(x + 19, y + 3, 3, 3);
+
+            // Smile
+            ctx.fillStyle = '#FF69B4';
+            ctx.fillRect(x + 13, y + 7, 8, 2);
+
+            // Legs (light blue pants)
+            ctx.fillStyle = '#5577AA';
+            ctx.fillRect(x + 10, y + 27, 6, 9);
+            ctx.fillRect(x + 18, y + 27, 6, 9);
+        }
+
+        // Draw Aunt Jenni (8-bit style - dark brown hair, purple shirt)
+        function drawPlayer12() {
+            const x = player12.x;
+            const y = player12.y;
+
+            // Body (purple shirt)
+            ctx.fillStyle = '#8B008B';
+            ctx.fillRect(x + 8, y + 9, 16, 18);
+
+            // Arms
+            ctx.fillStyle = '#8B008B';
+            ctx.fillRect(x + 3, y + 10, 7, 12);
+            ctx.fillRect(x + 22, y + 10, 7, 12);
+
+            // Arm skin
+            ctx.fillStyle = '#FDBCB4';
+            ctx.fillRect(x + 3, y + 18, 7, 5);
+            ctx.fillRect(x + 22, y + 18, 7, 5);
+
+            // Head (skin tone)
+            ctx.fillStyle = '#FDBCB4';
+            ctx.fillRect(x + 9, y + 1, 14, 8);
+
+            // Dark brown hair (shoulder length)
+            ctx.fillStyle = '#3D1C00';
+            ctx.fillRect(x + 7, y - 1, 18, 4);
+            ctx.fillRect(x + 6, y + 3, 5, 10);
+            ctx.fillRect(x + 21, y + 3, 5, 10);
+            ctx.fillRect(x + 7, y + 3, 3, 6);
+            ctx.fillRect(x + 22, y + 3, 3, 6);
+
+            // Eyes
+            ctx.fillStyle = '#000';
+            ctx.fillRect(x + 12, y + 3, 3, 3);
+            ctx.fillRect(x + 18, y + 3, 3, 3);
+
+            // Smile
+            ctx.fillStyle = '#FF69B4';
+            ctx.fillRect(x + 13, y + 7, 7, 2);
+
+            // Legs (dark jeans)
+            ctx.fillStyle = '#1A1A4A';
+            ctx.fillRect(x + 10, y + 27, 6, 9);
+            ctx.fillRect(x + 17, y + 27, 6, 9);
         }
 
         // Draw platforms
@@ -2960,6 +3226,144 @@
             }
         }
 
+        // Update Grampa Rob physics - very strong, high jump
+        function updatePlayer10() {
+            if (keys['ArrowRight']) {
+                player10.velocityX = 5;
+            } else if (keys['ArrowLeft']) {
+                player10.velocityX = -5;
+            } else {
+                player10.velocityX = 0;
+            }
+
+            if (keys['Space'] && !player10.jumping) {
+                player10.velocityY = -27;
+                player10.jumping = true;
+                playJumpSound();
+            }
+
+            player10.velocityY += 0.8;
+            player10.y += player10.velocityY;
+            player10.x += player10.velocityX;
+
+            if (player10.x < 0) player10.x = 0;
+            if (player10.x > canvas.width - player10.width) player10.x = canvas.width - player10.width;
+
+            platforms.forEach(platform => {
+                if (checkCollision(player10, {
+                    x: platform.x - scrollOffset,
+                    y: platform.y,
+                    width: platform.width,
+                    height: platform.height
+                })) {
+                    if (player10.velocityY > 0) {
+                        player10.y = platform.y - player10.height;
+                        player10.velocityY = 0;
+                        player10.jumping = false;
+                    }
+                }
+            });
+
+            if (player10.y > canvas.height) loseLife();
+
+            if (player10.x > canvas.width / 2) {
+                scrollOffset += player10.x - canvas.width / 2;
+                player10.x = canvas.width / 2;
+            }
+        }
+
+        // Update Gramma B physics - balanced
+        function updatePlayer11() {
+            if (keys['ArrowRight']) {
+                player11.velocityX = 5;
+            } else if (keys['ArrowLeft']) {
+                player11.velocityX = -5;
+            } else {
+                player11.velocityX = 0;
+            }
+
+            if (keys['Space'] && !player11.jumping) {
+                player11.velocityY = -24;
+                player11.jumping = true;
+                playJumpSound();
+            }
+
+            player11.velocityY += 0.8;
+            player11.y += player11.velocityY;
+            player11.x += player11.velocityX;
+
+            if (player11.x < 0) player11.x = 0;
+            if (player11.x > canvas.width - player11.width) player11.x = canvas.width - player11.width;
+
+            platforms.forEach(platform => {
+                if (checkCollision(player11, {
+                    x: platform.x - scrollOffset,
+                    y: platform.y,
+                    width: platform.width,
+                    height: platform.height
+                })) {
+                    if (player11.velocityY > 0) {
+                        player11.y = platform.y - player11.height;
+                        player11.velocityY = 0;
+                        player11.jumping = false;
+                    }
+                }
+            });
+
+            if (player11.y > canvas.height) loseLife();
+
+            if (player11.x > canvas.width / 2) {
+                scrollOffset += player11.x - canvas.width / 2;
+                player11.x = canvas.width / 2;
+            }
+        }
+
+        // Update Aunt Jenni physics - balanced
+        function updatePlayer12() {
+            if (keys['ArrowRight']) {
+                player12.velocityX = 5;
+            } else if (keys['ArrowLeft']) {
+                player12.velocityX = -5;
+            } else {
+                player12.velocityX = 0;
+            }
+
+            if (keys['Space'] && !player12.jumping) {
+                player12.velocityY = -24;
+                player12.jumping = true;
+                playJumpSound();
+            }
+
+            player12.velocityY += 0.8;
+            player12.y += player12.velocityY;
+            player12.x += player12.velocityX;
+
+            if (player12.x < 0) player12.x = 0;
+            if (player12.x > canvas.width - player12.width) player12.x = canvas.width - player12.width;
+
+            platforms.forEach(platform => {
+                if (checkCollision(player12, {
+                    x: platform.x - scrollOffset,
+                    y: platform.y,
+                    width: platform.width,
+                    height: platform.height
+                })) {
+                    if (player12.velocityY > 0) {
+                        player12.y = platform.y - player12.height;
+                        player12.velocityY = 0;
+                        player12.jumping = false;
+                    }
+                }
+            });
+
+            if (player12.y > canvas.height) loseLife();
+
+            if (player12.x > canvas.width / 2) {
+                scrollOffset += player12.x - canvas.width / 2;
+                player12.x = canvas.width / 2;
+            }
+        }
+
         // Check collision between two rectangles
         function checkCollision(rect1, rect2) {
             return rect1.x < rect2.x + rect2.width &&
@@ -3560,6 +3964,9 @@
             else if (selectedCharacter === 'bee')     drawPlayer7();
             else if (selectedCharacter === 'rickyfish') drawPlayer8();
             else if (selectedCharacter === 'greenfroggy') drawPlayer9();
+            else if (selectedCharacter === 'gramparob') drawPlayer10();
+            else if (selectedCharacter === 'grammab') drawPlayer11();
+            else if (selectedCharacter === 'auntjenni') drawPlayer12();
 
             ap.x = origX;
             ap.y = origY;
@@ -3944,6 +4351,9 @@
             else if (selectedCharacter === 'bee')     drawPlayer7();
             else if (selectedCharacter === 'rickyfish') drawPlayer8();
             else if (selectedCharacter === 'greenfroggy') drawPlayer9();
+            else if (selectedCharacter === 'gramparob') drawPlayer10();
+            else if (selectedCharacter === 'grammab') drawPlayer11();
+            else if (selectedCharacter === 'auntjenni') drawPlayer12();
 
             ap.x = origX;
             ap.y = origY;
@@ -4201,6 +4611,15 @@
                 } else if (selectedCharacter === 'greenfroggy') {
                     drawPlayer9();
                     if (!reachedFlag) updatePlayer9();
+                } else if (selectedCharacter === 'gramparob') {
+                    drawPlayer10();
+                    if (!reachedFlag) updatePlayer10();
+                } else if (selectedCharacter === 'grammab') {
+                    drawPlayer11();
+                    if (!reachedFlag) updatePlayer11();
+                } else if (selectedCharacter === 'auntjenni') {
+                    drawPlayer12();
+                    if (!reachedFlag) updatePlayer12();
                 }
 
                 if (!reachedFlag) {
