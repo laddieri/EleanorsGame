@@ -887,37 +887,102 @@
             'G6': 1567.98, 'A6': 1760.00, 'REST': 0
         };
 
-        // Cheerful melody - Happy adventure theme!
-        const melody = [
-            { note: 'C5', duration: 0.2 },
-            { note: 'E5', duration: 0.2 },
-            { note: 'G5', duration: 0.2 },
-            { note: 'C6', duration: 0.3 },
-            { note: 'G5', duration: 0.1 },
-            { note: 'E5', duration: 0.2 },
+        // ── Melodies for each level type ──────────────────────────────
+        const melodies = {
 
-            { note: 'D5', duration: 0.2 },
-            { note: 'F5', duration: 0.2 },
-            { note: 'A5', duration: 0.2 },
-            { note: 'G5', duration: 0.4 },
+            // Walk: bright, cheerful adventure tune — C major, square wave
+            walk: {
+                tempo: 250, type: 'square', volume: 0.05,
+                notes: [
+                    { note: 'C5', duration: 0.2 }, { note: 'E5', duration: 0.2 },
+                    { note: 'G5', duration: 0.2 }, { note: 'C6', duration: 0.3 },
+                    { note: 'G5', duration: 0.1 }, { note: 'E5', duration: 0.2 },
+                    { note: 'D5', duration: 0.2 }, { note: 'F5', duration: 0.2 },
+                    { note: 'A5', duration: 0.2 }, { note: 'G5', duration: 0.4 },
+                    { note: 'E5', duration: 0.2 }, { note: 'G5', duration: 0.2 },
+                    { note: 'C6', duration: 0.2 }, { note: 'B5', duration: 0.2 },
+                    { note: 'A5', duration: 0.2 }, { note: 'G5', duration: 0.2 },
+                    { note: 'F5', duration: 0.2 }, { note: 'A5', duration: 0.2 },
+                    { note: 'G5', duration: 0.2 }, { note: 'E5', duration: 0.2 },
+                    { note: 'D5', duration: 0.2 }, { note: 'E5', duration: 0.2 },
+                    { note: 'C5', duration: 0.4 }, { note: 'REST', duration: 0.2 }
+                ]
+            },
 
-            { note: 'E5', duration: 0.2 },
-            { note: 'G5', duration: 0.2 },
-            { note: 'C6', duration: 0.2 },
-            { note: 'B5', duration: 0.2 },
-            { note: 'A5', duration: 0.2 },
-            { note: 'G5', duration: 0.2 },
+            // Ski: fast, tense downhill chase — A minor, sawtooth wave
+            ski: {
+                tempo: 145, type: 'sawtooth', volume: 0.04,
+                notes: [
+                    { note: 'A5', duration: 0.1 }, { note: 'C6', duration: 0.1 },
+                    { note: 'E6', duration: 0.1 }, { note: 'A6', duration: 0.15 },
+                    { note: 'G6', duration: 0.1 }, { note: 'E6', duration: 0.1 },
+                    { note: 'C6', duration: 0.1 }, { note: 'A5', duration: 0.1 },
+                    { note: 'G5', duration: 0.1 }, { note: 'B5', duration: 0.1 },
+                    { note: 'D6', duration: 0.1 }, { note: 'G6', duration: 0.15 },
+                    { note: 'E6', duration: 0.1 }, { note: 'D6', duration: 0.1 },
+                    { note: 'B5', duration: 0.1 }, { note: 'G5', duration: 0.1 },
+                    { note: 'E5', duration: 0.1 }, { note: 'A5', duration: 0.1 },
+                    { note: 'C6', duration: 0.1 }, { note: 'B5', duration: 0.1 },
+                    { note: 'A5', duration: 0.1 }, { note: 'G5', duration: 0.1 },
+                    { note: 'E5', duration: 0.1 }, { note: 'REST', duration: 0.1 },
+                    { note: 'A5', duration: 0.1 }, { note: 'E6', duration: 0.15 },
+                    { note: 'D6', duration: 0.1 }, { note: 'C6', duration: 0.1 },
+                    { note: 'B5', duration: 0.1 }, { note: 'A5', duration: 0.1 },
+                    { note: 'G5', duration: 0.1 }, { note: 'REST', duration: 0.15 }
+                ]
+            },
 
-            { note: 'F5', duration: 0.2 },
-            { note: 'A5', duration: 0.2 },
-            { note: 'G5', duration: 0.2 },
-            { note: 'E5', duration: 0.2 },
-            { note: 'C5', duration: 0.4 },
-            { note: 'REST', duration: 0.2 }
-        ];
+            // Bike: urban driving rhythm — G mixolydian, square wave
+            bike: {
+                tempo: 170, type: 'square', volume: 0.05,
+                notes: [
+                    { note: 'G4', duration: 0.15 }, { note: 'REST', duration: 0.1 },
+                    { note: 'G4', duration: 0.1 },  { note: 'REST', duration: 0.1 },
+                    { note: 'G5', duration: 0.15 }, { note: 'D5', duration: 0.1 },
+                    { note: 'B4', duration: 0.15 }, { note: 'REST', duration: 0.1 },
+                    { note: 'G5', duration: 0.1 },  { note: 'A5', duration: 0.1 },
+                    { note: 'G5', duration: 0.1 },  { note: 'E5', duration: 0.1 },
+                    { note: 'D5', duration: 0.15 }, { note: 'REST', duration: 0.1 },
+                    { note: 'D5', duration: 0.1 },  { note: 'REST', duration: 0.1 },
+                    { note: 'B4', duration: 0.1 },  { note: 'D5', duration: 0.1 },
+                    { note: 'G5', duration: 0.1 },  { note: 'B5', duration: 0.15 },
+                    { note: 'A5', duration: 0.1 },  { note: 'G5', duration: 0.1 },
+                    { note: 'F5', duration: 0.1 },  { note: 'E5', duration: 0.1 },
+                    { note: 'D5', duration: 0.1 },  { note: 'G5', duration: 0.15 },
+                    { note: 'B5', duration: 0.1 },  { note: 'D6', duration: 0.15 },
+                    { note: 'B5', duration: 0.1 },  { note: 'G5', duration: 0.1 },
+                    { note: 'D5', duration: 0.1 },  { note: 'REST', duration: 0.15 }
+                ]
+            },
 
-        // Play a single 8-bit note using square wave
-        function playNote(frequency, duration, volume = 0.1) {
+            // Space: slow, ethereal, floating — C pentatonic, triangle wave
+            space: {
+                tempo: 400, type: 'triangle', volume: 0.07,
+                notes: [
+                    { note: 'C5',  duration: 0.35 }, { note: 'REST', duration: 0.3 },
+                    { note: 'G5',  duration: 0.35 }, { note: 'REST', duration: 0.3 },
+                    { note: 'E5',  duration: 0.3  }, { note: 'REST', duration: 0.3 },
+                    { note: 'A5',  duration: 0.35 }, { note: 'REST', duration: 0.3 },
+                    { note: 'G5',  duration: 0.3  }, { note: 'REST', duration: 0.3 },
+                    { note: 'REST', duration: 0.3 }, { note: 'E5',  duration: 0.3  },
+                    { note: 'REST', duration: 0.3 }, { note: 'C5',  duration: 0.35 },
+                    { note: 'REST', duration: 0.3 }, { note: 'REST', duration: 0.3 },
+                    { note: 'D6',  duration: 0.4  }, { note: 'REST', duration: 0.3 },
+                    { note: 'C6',  duration: 0.4  }, { note: 'REST', duration: 0.3 },
+                    { note: 'A5',  duration: 0.35 }, { note: 'REST', duration: 0.3 },
+                    { note: 'REST', duration: 0.3 }, { note: 'G5',  duration: 0.35 },
+                    { note: 'E5',  duration: 0.3  }, { note: 'REST', duration: 0.3 },
+                    { note: 'REST', duration: 0.35 },{ note: 'G5',  duration: 0.35 },
+                    { note: 'REST', duration: 0.3 }, { note: 'A5',  duration: 0.35 },
+                    { note: 'REST', duration: 0.3 }, { note: 'REST', duration: 0.4  }
+                ]
+            }
+        };
+
+        let currentMusicKey = 'walk';
+
+        // Play a single 8-bit note using specified oscillator type
+        function playNote(frequency, duration, volume = 0.1, oscType = 'square') {
             if (!musicEnabled || frequency === 0) return;
 
             const oscillator = audioContext.createOscillator();
@@ -926,7 +991,7 @@
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
 
-            oscillator.type = 'square'; // Classic 8-bit sound!
+            oscillator.type = oscType;
             oscillator.frequency.value = frequency;
 
             gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
@@ -936,20 +1001,27 @@
             oscillator.stop(audioContext.currentTime + duration);
         }
 
-        // Play the background music loop
-        function playBackgroundMusic() {
+        // Start background music (pass a key to switch tracks)
+        function startBackgroundMusic(key) {
+            stopBackgroundMusic();
             if (!musicEnabled) return;
-
-            const noteData = melody[currentMelodyNote];
-            const frequency = notes[noteData.note];
-
-            playNote(frequency, noteData.duration, 0.05); // Quieter for background
-
-            currentMelodyNote = (currentMelodyNote + 1) % melody.length;
+            if (key) currentMusicKey = key;
+            const mel = melodies[currentMusicKey] || melodies.walk;
+            currentMelodyNote = 0;
+            backgroundMusicInterval = setInterval(() => {
+                const noteData = mel.notes[currentMelodyNote];
+                playNote(notes[noteData.note] || 0, noteData.duration, mel.volume, mel.type);
+                currentMelodyNote = (currentMelodyNote + 1) % mel.notes.length;
+            }, mel.tempo);
         }
 
-        // Star collection sound effect
-        function playStarSound() {
+        // Stop the background music
+        function stopBackgroundMusic() {
+            if (backgroundMusicInterval) {
+                clearInterval(backgroundMusicInterval);
+                backgroundMusicInterval = null;
+            }
+        }
             if (!musicEnabled) return;
 
             // Ascending arpeggio
@@ -1010,25 +1082,6 @@
                 stopBackgroundMusic();
             }
         });
-
-        // Start the background music
-        function startBackgroundMusic() {
-            if (backgroundMusicInterval) return;
-
-            currentMelodyNote = 0;
-            backgroundMusicInterval = setInterval(() => {
-                const noteData = melody[currentMelodyNote];
-                playBackgroundMusic();
-            }, 250); // Play a note every 250ms
-        }
-
-        // Stop the background music
-        function stopBackgroundMusic() {
-            if (backgroundMusicInterval) {
-                clearInterval(backgroundMusicInterval);
-                backgroundMusicInterval = null;
-            }
-        }
 
         // Character selection function
         function selectCharacter(character) {
@@ -1187,7 +1240,7 @@
 
             // Start the game
             gameRunning = true;
-            startBackgroundMusic();
+            startBackgroundMusic('walk');
         }
 
         // Game state
@@ -1844,6 +1897,8 @@
                 flagWidth: 60,
                 flagHeight: 40
             };
+
+            if (gameRunning) startBackgroundMusic('walk');
         }
 
         // Draw player (8-bit style character)
@@ -3832,6 +3887,8 @@
             bikeTacos.push({ worldX: 2800, collected: false }); // mid-air over gap 3 (bonus)
             bikeTacos.push({ worldX: 3800, collected: false });
             bikeTacos.push({ worldX: 5100, collected: false });
+
+            if (gameRunning) startBackgroundMusic('bike');
         }
 
         // Get the ground surface Y (in screen coords) at the player's current world X.
@@ -4286,6 +4343,8 @@
             }
             // Yeti starts far behind, activates at 2000m
             skiYeti = { wx: 400, gap: 600, active: false };
+
+            if (gameRunning) startBackgroundMusic('ski');
         }
 
         function skiScreenPos(wx, wy) {
@@ -4743,6 +4802,8 @@
             const ap = getActivePlayer();
             ap.x = SPACE_PLAYER_SCREEN_X;
             ap.y = spacePlayerScreenY;
+
+            if (gameRunning) startBackgroundMusic('space');
         }
 
         function drawSpaceBackground() {
