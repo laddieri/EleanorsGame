@@ -1737,7 +1737,37 @@
                 "Boop!",
                 "You're my hero!",
                 "Almost there!!!",
-                "I saw a ghost back there"
+                "I saw a ghost back there",
+                "My birthday was yesterday",
+                "I am legally a vegetable",
+                "Have you tried the tacos?",
+                "I once jumped over a mountain",
+                "Watch out for that thing!!",
+                "I haven't slept in 3 days",
+                "You dropped something... just kidding",
+                "I wrote a book once. It was blank.",
+                "My tail does NOT look weird",
+                "I believe in you!!",
+                "That was SO impressive",
+                "Did you hear that noise??",
+                "I am VERY fast when I want to be",
+                "I know a shortcut. It's wrong.",
+                "Stars are just spicy air",
+                "I am a little scared honestly",
+                "Please collect all the stars",
+                "What's your wifi password?",
+                "I just learned to whistle!",
+                "My cousin does this way faster",
+                "Don't look down",
+                "I have no idea what I'm doing",
+                "You're going the right way. Probably.",
+                "I am rooting for you SO hard",
+                "Left! No wait, right!",
+                "I had a dream about this",
+                "Wow you are really good at this",
+                "Fire is just angry light",
+                "I am not a lizard. Please.",
+                "Honk if you love stars ⭐"
             ];
             for (let i = 0; i < axolotlCount; i++) {
                 axolotls.push({
@@ -1746,7 +1776,7 @@
                     width: 40,
                     height: 24,
                     animate: Math.random() * Math.PI * 2,
-                    quip: axolotlQuips[i % axolotlQuips.length],
+                    quip: axolotlQuips[Math.floor(Math.random() * axolotlQuips.length)],
                     quipTimer: 0
                 });
             }
