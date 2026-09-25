@@ -1,112 +1,103 @@
-# Eleanor's Adventure - 8-Bit Side Scroller Game
+# 🌟 Eleanor's Family Adventure 🌟
 
-A fun and colorful 8-bit style side-scrolling game created to teach young creators that they can build anything!
+A colorful 8-bit style adventure starring the whole family! Run through meadows,
+zoom down snowy mountains, race bikes through town and blast off into space —
+and rescue the lost baby axolotls along the way.
 
-## About This Game
+## How to play
 
-This is a simple but exciting adventure game where you control a character with blonde hair and a crown, jumping across platforms, collecting stars, meeting friendly axolotls, and avoiding obstacles. The game gets progressively more challenging as you collect more stars!
+Open `index.html` in any web browser (double-click it). No installing needed!
 
-## How to Play
-
-### Starting the Game
-
-1. Open the `index.html` file in any web browser (Chrome, Firefox, Safari, Edge)
-   - You can double-click the file, or
-   - Right-click and select "Open with" and choose your browser
-
-2. Choose your character:
-   - **Eleanor** 👑 - The Princess with blonde hair and a crown
-   - **William** 🧢 - The Prince with brown hair and a cap
-
-3. The game will start after you select your character!
+1. Press **Play**.
+2. Pick who's playing — everyone has their own **special power**.
+3. Pick a level on the map. Beat a level to unlock the next one.
 
 ### Controls
 
-**Keyboard:**
-- **All Characters**: Arrow keys (← →) to move, **Spacebar** to jump
+| | Keyboard | Touch | Gamepad |
+|---|---|---|---|
+| Move | ← → (or A D) | ◀ ▶ | Stick / D-pad |
+| Jump / fly / hop | SPACE or ↑ | ⬆ | A |
+| Special (pound, charge, tuck) | ↓ | ▼ | Stick down |
+| Pause | ESC or P | ⏸ | Start |
 
-**Mobile Touch:**
-- Use on-screen buttons to move left/right and jump
+## The goal: ★★★ on every level
 
-**Gamepad (🎮):**
-- **Left Stick / D-Pad**: Move left/right
-- **A Button**: Jump
-- Works with any standard gamepad (Xbox, PlayStation, etc.)
+Every level has three stars to earn:
 
-### Game Objective
+- ★ Finish the level
+- ★ Collect at least 70% of the gold stars
+- ★ Find all **3 lost baby axolotls** (they're hidden in tricky spots!)
 
-- **Complete each level** by reaching the victory flag pole at the end! 🏁
-- Collect as many **stars** ⭐ as possible (each star is worth 10 points!)
-- Meet the cute **axolotls** scattered throughout the world (they're friendly!)
-- Jump into **flowers** 🌸 to launch high into the sky!
-  - Pink flowers shoot you straight up
-  - Orange flowers shoot you diagonally (left or right)
-- Avoid the **fire obstacles** 🔥 (they cost you a life!)
-- Don't fall off platforms or you'll lose a life
-- You have 3 lives to complete as many levels as possible
-- Each level gets progressively harder with longer distances, more obstacles, and faster gameplay!
-- Watch for the **FINISH** flag to complete each level with a celebration! 🎉
+You get 3 hearts per level (Harry gets 5). Eat 🌮 **tacos** for extra hearts.
+Your progress and best scores are saved in your browser.
 
-## Features
+## The 4 kinds of levels (3 worlds × 4 = 12 levels)
 
-- 8-bit pixel art style graphics
-- **Multiple levels** with increasing difficulty! 🏆
-  - Each level is longer and more challenging than the last
-  - Victory flag pole at the end of each level (like Mario!)
-  - Celebration animation when you complete a level
-  - Progressive difficulty with more obstacles, gaps, and speed
-- **Two playable characters**: Eleanor (Princess) and William (Prince)
-- Character selection screen at the start
-- Adorable animated axolotls with wiggling gills
-- Interactive bouncy flowers that launch you into the air
-  - Straight-up flowers for vertical boosts
-  - Angled flowers for directional launches
-- Cheerful 8-bit background music with sound effects
-- **Gamepad support** 🎮 - Play with any standard controller!
-- Side-scrolling gameplay
-- Collectible stars
-- Dangerous obstacles
-- Platform jumping mechanics
-- Score tracking
-- Lives system
-- Beautiful background with clouds and sun
-- Level completion screens with stats
+- 🌸 **Meadow** – a real platformer! Bop grumpy purple blobs on the head (but not
+  the red spiky ones!), jump over fire and pits, hit ⭐ boxes from below, bounce
+  on pink & orange flowers, and grab the flagpole as high as you can. The babies
+  you find follow you home to Mama Axolotl's house.
+- ⛷️ **Ski** – steer down the mountain, hold ↓ to go faster, ski between the
+  flags for combos, hop rocks, jump ramps and press SPACE in the air to SPIN.
+  Halfway down the **Yeti** wakes up — outrun him!
+- 🚲 **Bike** – hold → to pedal faster, ← to brake, SPACE to hop hurdles.
+  Ramps launch you over the river; press SPACE right at the top for BIG AIR,
+  and hold ← or → in the air to do flips (land straight or you'll wipe out!).
+- 🚀 **Space** – hold SPACE to fly up with your jetpack, dodge asteroids and
+  comets (watch for the red ❗), fly through golden rings, and dock at the
+  space station.
 
-## For Young Creators
+World 1 is sunny, World 2 is at sunset and World 3 is at night — and each world
+is a bit harder than the last.
 
-This game was built using:
-- **HTML** - The structure of the webpage
-- **CSS** - The colors and styling
-- **JavaScript** - The code that makes everything move and work
+## The family and their powers
 
-You can open `index.html` in a text editor to see how it all works! Every part of the game is in that one file, and you can change:
-- Colors (look for the color codes like `#FF1493`)
-- Player size (look for `width` and `height`)
-- Jump height (look for the number when you press Space)
-- Number of stars and obstacles
-- Game speed
+| Character | Power |
+|---|---|
+| 👑 Eleanor | **Double Jump** – jump again in the air |
+| 🧢 William | **Super Speedy** – fastest runner |
+| 👩 Mom | **Graceful Glide** – hold jump while falling to float |
+| 💪 Dad | **Ground Pound** – press ↓ in the air to smash down |
+| 🐶 Mila | **Super Sniffer** – stars fly to her |
+| 🐘 Harry | **Big & Tough** – 5 hearts, can stomp spiky critters |
+| 🐝 Bee | **Flutter Wings** – buzz up 3 times in the air |
+| 🐡 Ricky Fish | **Bubble Float** – super floaty jumps |
+| 🐸 Green Froggy | **Mega Hop** – hold ↓ to charge a giant jump |
+| 👴 Grampa Rob | **Mighty Leap** – highest jump, plus ground pound |
+| 👵 Gramma B | **Love Bubble** – never falls! A bubble carries her back |
+| 💜 Aunt Jenni | **Zoom Dash** – press jump in the air to dash forward |
 
-## Customization Ideas
+## For young creators: how it's built
 
-Here are some fun things you can try changing:
+Everything is plain **HTML**, **CSS** and **JavaScript** — no downloads, no
+image or sound files. All the pictures are drawn with code, and all the music
+and sound effects are made with code too!
 
-1. **Change the player color**: Find `color: '#FF1493'` in the code and change it to another color!
-2. **Make higher jumps**: Find `-15` in the jump code and change it to `-20` for higher jumps
-3. **Add more stars**: Find the stars loop and change `30` to a bigger number
-4. **Change the background color**: Find `#87CEEB` and try different colors
+```
+index.html          the page and the menus
+css/style.css       colors and layout of the menus
+js/engine.js        math helpers, sparkles & confetti, saving
+js/audio.js         8-bit music and sound effects
+js/input.js         keyboard, touch and gamepad
+js/art.js           stars, tacos, hearts, axolotls, clouds
+js/characters.js    the family! looks, speed, jump and powers
+js/modes/walk.js    meadow levels
+js/modes/ski.js     ski levels
+js/modes/bike.js    bike levels
+js/modes/space.js   space levels
+js/game.js          level list, hearts & score, menus, main loop
+```
 
-## Tips for Playing
+### Things to try changing
 
-- Time your jumps carefully!
-- Stay on the platforms
-- Watch out for the fire obstacles
-- The game scrolls faster as you get more points
-- Try to beat your high score!
+- **Make someone jump higher:** in `js/characters.js`, change a character's `jump`.
+- **Make someone faster:** change their `speed`.
+- **Add a new level:** add a line to the `LEVELS` list at the top of `js/game.js`
+  (`d` is how hard it is, from `0` to `1`).
+- **New axolotl jokes:** add to `AXOLOTL_QUIPS` in `js/art.js`.
+- **Change the music:** the songs are at the bottom of `js/audio.js` — each word
+  like `C5` or `G4` is a note, and `.` is a rest.
 
-## Have Fun!
-
-Remember: If you can imagine it, you can create it! This game is proof that with a little code, you can make amazing things happen!
-
----
-
-Made with ❤️ to inspire young creators everywhere!
+Remember: if you can imagine it, you can create it! Made with ❤️ to inspire young
+creators everywhere.
