@@ -321,6 +321,7 @@ MODES.walk = (() => {
             return;
         }
         P.inv = 110;
+        P.coyote = 0; P.jumpBuf = 0;
         P.vx = (P.x + P.w / 2 < fromX ? -1 : 1) * 5;
         P.vy = -7;
         P.launch = 14;
@@ -392,6 +393,7 @@ MODES.walk = (() => {
         FX.burst(e.x + e.w / 2, e.y + e.h / 2, { count: 14, colors: e.kind === 'blob' ? ['#A77BEA', '#7E4FD0', '#FFFFFF'] : ['#FF6B6B', '#FFFFFF'], speed: 4, life: 30, size: 6 });
         if (!byPound) {
             const big = Game.char.ability === 'megahop' ? 14 : 12;
+            P.coyote = 0; P.jumpBuf = 0;
             P.vy = Input.held.jump ? -big : -8;
             P.cut = Input.held.jump;
             P.airJumps = 0; P.dashUsed = false;
@@ -403,6 +405,7 @@ MODES.walk = (() => {
         Sound.play('boing');
         P.pounding = false; P.dashT = 0; P.airJumps = 0; P.dashUsed = false;
         P.onGround = false; P.cut = false;
+        P.coyote = 0; P.jumpBuf = 0;
         if (f.dir === 'up') {
             P.vy = -17;
             P.vx *= 0.5;
@@ -418,7 +421,8 @@ MODES.walk = (() => {
     function updatePlayer() {
         const c = Game.char;
         const I = Input.held, IP = Input.pressed;
-        const grav = c.gravity || 0.62;
+        // flower launches use normal gravity so floaty characters land in the same spot
+        const grav = P.launch > 0 ? 0.62 : (c.gravity || 0.62);
         const maxFall = c.maxFall || 13;
         const dir = (I.right ? 1 : 0) - (I.left ? 1 : 0);
         if (dir && P.dashT <= 0) P.facing = dir;
