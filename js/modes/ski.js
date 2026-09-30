@@ -1,7 +1,7 @@
 // ============================================================
 //  SKI LEVELS: zoom down the mountain! Weave through trees,
 //  ski through gates for combos, launch off ramps and spin,
-//  and outrun the Yeti in the second half.
+//  and outrun the giant rolling snowball in the second half.
 // ============================================================
 'use strict';
 
@@ -20,7 +20,7 @@ MODES.ski = (() => {
         const d = level.d;
         const rng = makeRng(level.seed + 11);
         const len = Math.round(10000 + d * 7000);
-        S = { len, objs: [], stars: [], tacos: [], babies: [], gates: [], yeti: null, path: [], finished: 0 };
+        S = { len, objs: [], stars: [], tacos: [], babies: [], gates: [], ball: null, path: [], finished: 0 };
 
         // A winding "safe path" down the mountain. Trees stay off it.
         let cx = 480, drift = 0;
@@ -241,29 +241,32 @@ MODES.ski = (() => {
         for (const k of S.tacos) if (!k.got && Math.abs(k.x - P.x) < 30 && Math.abs(k.y - P.y) < 30) { k.got = true; Game.collectTaco(k.x, k.y - 20); }
         for (const b of S.babies) if (!b.got && Math.abs(b.x - P.x) < 32 && Math.abs(b.y - P.y) < 32) { b.got = true; Game.collectBaby(b.x, b.y - 30); }
 
-        // ---- the Yeti! ----
-        if (!S.yeti && P.y > S.len * 0.5) {
-            S.yeti = { x: P.x, y: P.y - 560, giveUp: false, roar: 60, arms: 0 };
-            Sound.play('roar');
-            FX.text(W / 2, P.y + 80, 'THE YETI IS AWAKE!', '#FF6B6B', 30);
-            FX.shake(10);
+        // ---- the giant rolling snowball! ----
+        if (!S.ball && P.y > S.len * 0.5) {
+            S.ball = { x: P.x, y: P.y - 560, stopped: false, spin: 0, r: 46 };
+            Sound.play('rumble');
+            FX.text(W / 2, P.y + 80, 'Uh oh... a GIANT SNOWBALL!', '#7FD4FF', 28);
+            FX.shake(5);
         }
-        const Y = S.yeti;
-        if (Y) {
-            if (Y.roar > 0) Y.roar--;
-            if (!Y.giveUp) {
-                Y.y += base() + 0.6 + lvl.d * 0.8;
-                Y.x += clamp(P.x - Y.x, -2, 2);
-                if (Y.y < P.y - 650) Y.y = P.y - 650;
+        const Bl = S.ball;
+        if (Bl) {
+            if (!Bl.stopped) {
+                const v = base() + 0.6 + lvl.d * 0.8;
+                Bl.y += v;
+                Bl.spin += v * 0.03;
+                Bl.x += clamp(P.x - Bl.x, -2, 2);
+                if (Bl.y < P.y - 650) Bl.y = P.y - 650;
+                if (t % 3 === 0) FX.burst(Bl.x + (Math.random() - 0.5) * 70, Bl.y, { count: 1, color: '#FFFFFF', speed: 1.5, angle: -Math.PI / 2, spread: 2, life: 22, shape: 'circle', size: 6, gravity: 0.05 });
                 if (P.y > S.len - 250) {
-                    Y.giveUp = true;
-                    FX.text(Y.x, Y.y - 90, 'Aww, no fair!', '#FFFFFF', 20);
+                    Bl.stopped = true;
+                    FX.text(Bl.x, Bl.y - 80, 'Wheee! I stopped!', '#FFFFFF', 20);
                 }
-                if (Y.y > P.y - 26 && Math.abs(Y.x - P.x) < 50 && P.inv <= 0) {
-                    Sound.play('roar');
-                    FX.text(P.x, P.y - 90, 'Yeti tickles!', '#FF9AD0', 24);
-                    FX.shake(10);
-                    Y.y = P.y - 460;
+                if (Bl.y > P.y - 30 && Math.abs(Bl.x - P.x) < 55 && P.inv <= 0) {
+                    Sound.play('snow');
+                    FX.text(P.x, P.y - 90, 'SPLAT! Snowball bump!', '#7FD4FF', 24);
+                    FX.burst(P.x, P.y - 20, { count: 30, colors: ['#FFFFFF', '#DDEEFF'], speed: 6, life: 40, shape: 'circle', size: 7, gravity: 0.12 });
+                    FX.shake(6);
+                    Bl.y = P.y - 460;
                     P.inv = 100;
                     if (!Game.hurt()) P.dead = true;
                 }
@@ -367,40 +370,58 @@ MODES.ski = (() => {
         }
     }
 
-    function drawYeti(g) {
-        const Y = S.yeti;
-        if (!Y) return;
-        const x = Y.x, y = Y.y - camY;
-        if (y < -120) {
-            // warning arrow at the top of the screen
+    function drawSnowball(g) {
+        const Bl = S.ball;
+        if (!Bl) return;
+        const x = Bl.x, y = Bl.y - camY, r = Bl.r;
+        if (y < -r - 20) {
+            // friendly heads-up at the top of the screen
             const a = 0.6 + 0.4 * Math.sin(t * 0.3);
             g.globalAlpha = a;
-            g.fillStyle = '#FF3B3B';
+            g.fillStyle = '#3DA9FF';
             g.beginPath(); g.moveTo(x, 12); g.lineTo(x + 18, 40); g.lineTo(x - 18, 40); g.fill();
             g.globalAlpha = 1;
-            outlinedText(g, 'YETI!', x, 58, 18, '#FFFFFF', '#B00020');
+            outlinedText(g, 'SNOWBALL!', x, 58, 18, '#FFFFFF', '#1F5FC4');
             return;
         }
-        const bounce = Y.giveUp ? 0 : Math.abs(Math.sin(t * 0.25)) * 6;
-        g.save();
-        g.translate(x, y - bounce);
+        // shadow
         g.fillStyle = 'rgba(80,110,160,0.3)';
-        g.beginPath(); g.ellipse(0, bounce + 4, 40, 10, 0, 0, TAU); g.fill();
-        const arm = Y.giveUp ? Math.sin(t * 0.2) * 0.4 : Math.sin(t * 0.3) * 0.5;
-        g.fillStyle = '#F4F7FF';
-        g.save(); g.translate(-30, -60); g.rotate(-0.8 + arm); g.fillRect(-10, -40, 20, 44); g.restore();
-        g.save(); g.translate(30, -60); g.rotate(0.8 - arm); g.fillRect(-10, -40, 20, 44); g.restore();
-        g.beginPath(); g.ellipse(0, -40, 36, 42, 0, 0, TAU); g.fill();
-        g.fillStyle = '#DDE6F7';
-        g.beginPath(); g.ellipse(0, -30, 22, 26, 0, 0, TAU); g.fill();
-        g.fillStyle = '#8FB8E8';
-        g.beginPath(); g.ellipse(0, -62, 20, 15, 0, 0, TAU); g.fill();
-        g.fillStyle = '#FFFFFF'; g.beginPath(); g.arc(-8, -66, 5, 0, TAU); g.arc(8, -66, 5, 0, TAU); g.fill();
-        g.fillStyle = '#222'; g.beginPath(); g.arc(-7, -65, 2.5, 0, TAU); g.arc(9, -65, 2.5, 0, TAU); g.fill();
-        g.fillStyle = '#5A2A4A';
-        if (Y.roar > 0 || !Y.giveUp) { g.beginPath(); g.ellipse(0, -53, 9, Y.roar > 0 ? 7 : 4, 0, 0, TAU); g.fill(); }
-        g.fillStyle = '#FFFFFF'; g.fillRect(-6, -57, 4, 3); g.fillRect(2, -57, 4, 3);
-        g.fillStyle = '#F4F7FF'; g.fillRect(-26, -6, 18, 8); g.fillRect(8, -6, 18, 8);
+        g.beginPath(); g.ellipse(x + 6, y + 4, r * 1.05, r * 0.3, 0, 0, TAU); g.fill();
+        const cy = y - r * 0.9;
+        g.save();
+        g.translate(x, cy);
+        // the ball, with rolling bumps
+        g.fillStyle = '#FFFFFF';
+        g.beginPath(); g.arc(0, 0, r, 0, TAU); g.fill();
+        g.fillStyle = '#E3EEFB';
+        g.beginPath(); g.arc(r * 0.18, r * 0.2, r * 0.8, 0, TAU); g.fill();
+        g.fillStyle = '#FFFFFF';
+        g.beginPath(); g.arc(-r * 0.1, -r * 0.1, r * 0.78, 0, TAU); g.fill();
+        g.fillStyle = '#D2E3F7';
+        for (let i = 0; i < 6; i++) {
+            const ang = Bl.spin + i * TAU / 6;
+            const py = Math.sin(ang) * r * 0.75;
+            if (Math.cos(ang) < 0) continue;
+            g.beginPath(); g.ellipse((i % 2 ? -1 : 1) * r * 0.5, py, 6, 3, 0, 0, TAU); g.fill();
+        }
+        // silly happy face
+        g.fillStyle = '#FFFFFF';
+        g.beginPath(); g.arc(-14, -10, 10, 0, TAU); g.arc(14, -10, 10, 0, TAU); g.fill();
+        g.strokeStyle = '#9DB8DA'; g.lineWidth = 2;
+        g.beginPath(); g.arc(-14, -10, 10, 0, TAU); g.stroke();
+        g.beginPath(); g.arc(14, -10, 10, 0, TAU); g.stroke();
+        const look = clamp((P.x - x) * 0.03, -3, 3);
+        g.fillStyle = '#2A2A40';
+        g.beginPath(); g.arc(-14 + look, -8, 5, 0, TAU); g.arc(14 + look, -8, 5, 0, TAU); g.fill();
+        g.fillStyle = '#FFFFFF';
+        g.beginPath(); g.arc(-12 + look, -10, 2, 0, TAU); g.arc(16 + look, -10, 2, 0, TAU); g.fill();
+        g.fillStyle = 'rgba(255,130,170,0.55)';
+        g.beginPath(); g.arc(-26, 6, 7, 0, TAU); g.arc(26, 6, 7, 0, TAU); g.fill();
+        g.fillStyle = '#FF7A00';
+        g.beginPath(); g.moveTo(-4, 0); g.lineTo(4, 0); g.lineTo(0, 9); g.fill();
+        g.strokeStyle = '#2A2A40'; g.lineWidth = 3; g.lineCap = 'round';
+        g.beginPath(); g.arc(0, 10, 13, 0.15 * Math.PI, 0.85 * Math.PI); g.stroke();
+        g.lineCap = 'butt';
         g.restore();
     }
 
@@ -527,7 +548,7 @@ MODES.ski = (() => {
             if (y > H + 120) break;
             if (y > -120) drawObj(g, list[i]);
         }
-        drawYeti(g);
+        drawSnowball(g);
         FX.draw(g, 0, camY);
 
         // falling snow
@@ -549,7 +570,7 @@ MODES.ski = (() => {
 
     return {
         music: 'ski', icon: '⛷️',
-        tip: '← → steer   ·   hold ↓ to go FAST   ·   SPACE hop (and spin in the air!)',
+        tip: '← → steer  ·  hold ↓ to go FAST  ·  SPACE hop & spin  ·  stay ahead of the giant snowball!',
         debug: () => ({ S, P }),
         init, update, draw, dying, progress
     };

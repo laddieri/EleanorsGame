@@ -93,7 +93,7 @@ const Sound = (() => {
         win:    () => arp(['C5', 'E5', 'G5', 'C6', 'G5', 'C6', 'E6', 'G6'], 0.1, { vol: 0.14, dur: 0.16 }),
         click:  () => tone(660, 0.05, { vol: 0.08, type: 'triangle' }),
         move:   () => tone(440, 0.04, { vol: 0.05, type: 'triangle' }),
-        roar:   () => { noise(0.7, { freq: 350, vol: 0.5 }); tone(95, 0.7, { slide: 55, vol: 0.2, type: 'sawtooth' }); },
+        rumble: () => { noise(0.8, { freq: 260, vol: 0.3 }); tone(120, 0.5, { slide: 180, vol: 0.08, type: 'triangle' }); },
         splash: () => noise(0.5, { freq: 1800, vol: 0.35 }),
         boost:  () => tone(300, 0.35, { slide: 1300, vol: 0.08, type: 'sawtooth' }),
         land:   () => noise(0.06, { freq: 700, vol: 0.12 }),
