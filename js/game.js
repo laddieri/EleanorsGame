@@ -12,7 +12,7 @@ const LEVELS = [
     { world: 1, mode: 'bike',  name: 'Ramp Town',         d: 0.1,  pal: 0 },
     { world: 1, mode: 'space', name: 'Starry Space',      d: 0.12, pal: 0 },
     { world: 2, mode: 'walk',  name: 'Sunset Hills',      d: 0.4,  pal: 1 },
-    { world: 2, mode: 'ski',   name: 'Yeti Peak',         d: 0.45, pal: 1 },
+    { world: 2, mode: 'ski',   name: 'Snowball Peak',     d: 0.45, pal: 1 },
     { world: 2, mode: 'bike',  name: 'Big City Jumps',    d: 0.5,  pal: 1 },
     { world: 2, mode: 'space', name: 'Asteroid Alley',    d: 0.55, pal: 1 },
     { world: 3, mode: 'walk',  name: 'Firefly Forest',    d: 0.8,  pal: 2 },

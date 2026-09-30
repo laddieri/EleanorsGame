@@ -40,7 +40,7 @@ Your progress and best scores are saved in your browser.
   you find follow you home to Mama Axolotl's house.
 - ⛷️ **Ski** – steer down the mountain, hold ↓ to go faster, ski between the
   flags for combos, hop rocks, jump ramps and press SPACE in the air to SPIN.
-  Halfway down the **Yeti** wakes up — outrun him!
+  Halfway down, a **giant snowball** starts rolling after you — stay ahead of it!
 - 🚲 **Bike** – hold → to pedal faster, ← to brake, SPACE to hop hurdles.
   Ramps launch you over the river; press SPACE right at the top for BIG AIR,
   and hold ← or → in the air to do flips (land straight or you'll wipe out!).
