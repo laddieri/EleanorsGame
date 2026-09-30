@@ -4,22 +4,43 @@
 // ============================================================
 'use strict';
 
-// 3 worlds x 4 levels. Each world repeats the family's
-// favourite adventures: meadow walk, skiing, biking and space!
+// 3 worlds x 5 levels. Each world repeats the family's
+// favourite adventures: meadow walk, skiing, biking, swimming and space!
+// (id and seed stay the same forever so saved stars and level layouts never move.)
 const LEVELS = [
-    { world: 1, mode: 'walk',  name: 'Axolotl Meadow',    d: 0.0,  pal: 0 },
-    { world: 1, mode: 'ski',   name: 'Snowy Slopes',      d: 0.05, pal: 0 },
-    { world: 1, mode: 'bike',  name: 'Ramp Town',         d: 0.1,  pal: 0 },
-    { world: 1, mode: 'space', name: 'Starry Space',      d: 0.12, pal: 0 },
-    { world: 2, mode: 'walk',  name: 'Sunset Hills',      d: 0.4,  pal: 1 },
-    { world: 2, mode: 'ski',   name: 'Snowball Peak',     d: 0.45, pal: 1 },
-    { world: 2, mode: 'bike',  name: 'Big City Jumps',    d: 0.5,  pal: 1 },
-    { world: 2, mode: 'space', name: 'Asteroid Alley',    d: 0.55, pal: 1 },
-    { world: 3, mode: 'walk',  name: 'Firefly Forest',    d: 0.8,  pal: 2 },
-    { world: 3, mode: 'ski',   name: 'Midnight Mountain', d: 0.85, pal: 2 },
-    { world: 3, mode: 'bike',  name: 'Neon Night Ride',   d: 0.9,  pal: 2 },
-    { world: 3, mode: 'space', name: 'Comet Chase',       d: 1.0,  pal: 2 }
-].map((l, i) => Object.assign(l, { index: i, seed: (i + 1) * 7919, label: `${l.world}-${(i % 4) + 1}` }));
+    { id: 'w1-walk',  world: 1, mode: 'walk',  name: 'Axolotl Meadow',    d: 0.0,  pal: 0, seed: 1 * 7919 },
+    { id: 'w1-ski',   world: 1, mode: 'ski',   name: 'Snowy Slopes',      d: 0.05, pal: 0, seed: 2 * 7919 },
+    { id: 'w1-bike',  world: 1, mode: 'bike',  name: 'Ramp Town',         d: 0.1,  pal: 0, seed: 3 * 7919 },
+    { id: 'w1-swim',  world: 1, mode: 'swim',  name: 'City Pool',         d: 0.08, pal: 0, seed: 101 },
+    { id: 'w1-space', world: 1, mode: 'space', name: 'Starry Space',      d: 0.12, pal: 0, seed: 4 * 7919 },
+    { id: 'w2-walk',  world: 2, mode: 'walk',  name: 'Sunset Hills',      d: 0.4,  pal: 1, seed: 5 * 7919 },
+    { id: 'w2-ski',   world: 2, mode: 'ski',   name: 'Snowball Peak',     d: 0.45, pal: 1, seed: 6 * 7919 },
+    { id: 'w2-bike',  world: 2, mode: 'bike',  name: 'Big City Jumps',    d: 0.5,  pal: 1, seed: 7 * 7919 },
+    { id: 'w2-swim',  world: 2, mode: 'swim',  name: 'Sunset Splash',     d: 0.5,  pal: 1, seed: 202 },
+    { id: 'w2-space', world: 2, mode: 'space', name: 'Asteroid Alley',    d: 0.55, pal: 1, seed: 8 * 7919 },
+    { id: 'w3-walk',  world: 3, mode: 'walk',  name: 'Firefly Forest',    d: 0.8,  pal: 2, seed: 9 * 7919 },
+    { id: 'w3-ski',   world: 3, mode: 'ski',   name: 'Midnight Mountain', d: 0.85, pal: 2, seed: 10 * 7919 },
+    { id: 'w3-bike',  world: 3, mode: 'bike',  name: 'Neon Night Ride',   d: 0.9,  pal: 2, seed: 11 * 7919 },
+    { id: 'w3-swim',  world: 3, mode: 'swim',  name: 'Night Swim',        d: 0.9,  pal: 2, seed: 303 },
+    { id: 'w3-space', world: 3, mode: 'space', name: 'Comet Chase',       d: 1.0,  pal: 2, seed: 12 * 7919 }
+].map((l, i, all) => Object.assign(l, {
+    index: i,
+    label: `${l.world}-${all.slice(0, i).filter(o => o.world === l.world).length + 1}`
+}));
+
+// Older saves stored stars by level number (before the swim levels were added).
+(function migrateSave() {
+    const d = Save.data;
+    if (d.ids) return;
+    const OLD = ['w1-walk', 'w1-ski', 'w1-bike', 'w1-space', 'w2-walk', 'w2-ski', 'w2-bike', 'w2-space', 'w3-walk', 'w3-ski', 'w3-bike', 'w3-space'];
+    const best = {};
+    for (const k in d.best) if (OLD[+k]) best[OLD[+k]] = d.best[k];
+    d.best = best;
+    const lastOpen = OLD[Math.max(0, Math.min(OLD.length, d.unlocked || 1) - 1)];
+    d.unlocked = LEVELS.findIndex(l => l.id === lastOpen) + 1;
+    d.ids = true;
+    Save.write();
+})();
 
 const WORLD_NAMES = ['Sunny Days', 'Sunset Adventure', 'Starlight Night'];
 
@@ -109,7 +130,7 @@ const Game = {
         const lv = this.level;
         const pct = this.starsTotal ? this.stars / this.starsTotal : 1;
         const rating = 1 + (pct >= 0.7 ? 1 : 0) + (this.babies >= 3 ? 1 : 0);
-        const key = String(lv.index);
+        const key = lv.id;
         const prev = Save.data.best[key] || { rating: 0, score: 0 };
         const newBest = this.levelScore > prev.score;
         Save.data.best[key] = { rating: Math.max(prev.rating, rating), score: Math.max(prev.score, this.levelScore) };
@@ -252,7 +273,7 @@ const UI = {
     showComplete(rating, pct, newBest) {
         const lv = Game.level;
         const last = lv.index === LEVELS.length - 1;
-        this.el('cTitle').textContent = last ? '🎉 You beat the game! 🎉' : 'Level Complete!';
+        this.el('cTitle').textContent = last ? '🎉 You beat the game! 🎉' : lv.mode === 'swim' ? '🏊 Swim Test Passed!' : 'Level Complete!';
         this.el('cSub').textContent = `${lv.label} · ${lv.name}`;
         this.el('cStars').textContent = `${Game.stars} / ${Game.starsTotal}`;
         this.el('cBabies').textContent = `${Game.babies} / 3`;
@@ -330,9 +351,9 @@ const UI = {
             const row = document.createElement('div');
             row.className = 'world-row';
             row.innerHTML = `<div class="world-name">World ${w + 1}<small>${WORLD_NAMES[w]}</small></div>`;
-            for (let i = w * 4; i < w * 4 + 4; i++) {
-                const lv = LEVELS[i];
-                const best = Save.data.best[String(i)];
+            for (const lv of LEVELS.filter(l => l.world === w + 1)) {
+                const i = lv.index;
+                const best = Save.data.best[lv.id];
                 const rating = best ? best.rating : 0;
                 total += rating;
                 const locked = i >= Save.data.unlocked;
