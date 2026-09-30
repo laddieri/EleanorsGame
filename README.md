@@ -1,7 +1,7 @@
 # 🌟 Eleanor's Family Adventure 🌟
 
 A colorful 8-bit style adventure starring the whole family! Run through meadows,
-zoom down snowy mountains, race bikes through town, pass the swim test at the pool and blast off into space —
+zoom down snowy mountains, race bikes through town, pass the swim test at the pool, bounce at the trampoline park and blast off into space —
 and rescue the lost baby axolotls along the way.
 
 ## How to play
@@ -32,7 +32,7 @@ Every level has three stars to earn:
 You get 3 hearts per level (Harry gets 5). Eat 🌮 **tacos** for extra hearts.
 Your progress and best scores are saved in your browser.
 
-## The 5 kinds of levels (3 worlds × 5 = 15 levels)
+## The 6 kinds of levels (3 worlds × 6 = 18 levels)
 
 - 🌸 **Meadow** – a real platformer! Bop grumpy purple blobs on the head (but not
   the red spiky ones!), jump over fire and pits, hit ⭐ boxes from below, bounce
@@ -49,6 +49,12 @@ Your progress and best scores are saved in your browser.
   and press SPACE to dive under things (and grab the diving rings on the bottom).
   Watch for the ❗ shadow — someone's about to do a CANNONBALL! Beach balls are
   safe to bonk. Ricky Fish can stay underwater twice as long.
+- 🤸 **Trampoline park** – boing from trampoline to trampoline! Steer with ← →,
+  and HOLD SPACE as you land for a BIG bounce (with a flip!) — look for the
+  "HOLD ⬆ BIG BOUNCE!" signs before wide gaps. ↓ drops you faster. Don't land on
+  the floor ("Oof!") or bump into the other kids. Red SUPER trampolines launch you
+  sky-high and the foam pit is a soft (but slow) bounce. Reach the safe landing
+  mat at the end for a giant slushy... BRAIN FREEZE!
 - 🚀 **Space** – hold SPACE to fly up with your jetpack, dodge asteroids and
   comets (watch for the red ❗), fly through golden rings, and dock at the
   space station.
@@ -91,6 +97,7 @@ js/modes/walk.js    meadow levels
 js/modes/ski.js     ski levels
 js/modes/bike.js    bike levels
 js/modes/swim.js    swim levels
+js/modes/bounce.js  trampoline park levels
 js/modes/space.js   space levels
 js/game.js          level list, hearts & score, menus, main loop
 ```
