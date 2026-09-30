@@ -1,7 +1,7 @@
 # 🌟 Eleanor's Family Adventure 🌟
 
 A colorful 8-bit style adventure starring the whole family! Run through meadows,
-zoom down snowy mountains, race bikes through town and blast off into space —
+zoom down snowy mountains, race bikes through town, pass the swim test at the pool and blast off into space —
 and rescue the lost baby axolotls along the way.
 
 ## How to play
@@ -32,7 +32,7 @@ Every level has three stars to earn:
 You get 3 hearts per level (Harry gets 5). Eat 🌮 **tacos** for extra hearts.
 Your progress and best scores are saved in your browser.
 
-## The 4 kinds of levels (3 worlds × 4 = 12 levels)
+## The 5 kinds of levels (3 worlds × 5 = 15 levels)
 
 - 🌸 **Meadow** – a real platformer! Bop grumpy purple blobs on the head (but not
   the red spiky ones!), jump over fire and pits, hit ⭐ boxes from below, bounce
@@ -44,6 +44,11 @@ Your progress and best scores are saved in your browser.
 - 🚲 **Bike** – hold → to pedal faster, ← to brake, SPACE to hop hurdles.
   Ramps launch you over the river; press SPACE right at the top for BIG AIR,
   and hold ← or → in the air to do flips (land straight or you'll wipe out!).
+- 🏊 **Swim** – pass the swim test at the city pool! Swim to the far wall while
+  dodging the other kids, inner tubes and pool noodles. Hold ↓ to kick faster
+  and press SPACE to dive under things (and grab the diving rings on the bottom).
+  Watch for the ❗ shadow — someone's about to do a CANNONBALL! Beach balls are
+  safe to bonk. Ricky Fish can stay underwater twice as long.
 - 🚀 **Space** – hold SPACE to fly up with your jetpack, dodge asteroids and
   comets (watch for the red ❗), fly through golden rings, and dock at the
   space station.
@@ -85,6 +90,7 @@ js/characters.js    the family! looks, speed, jump and powers
 js/modes/walk.js    meadow levels
 js/modes/ski.js     ski levels
 js/modes/bike.js    bike levels
+js/modes/swim.js    swim levels
 js/modes/space.js   space levels
 js/game.js          level list, hearts & score, menus, main loop
 ```

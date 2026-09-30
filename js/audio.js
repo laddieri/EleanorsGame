@@ -94,6 +94,7 @@ const Sound = (() => {
         click:  () => tone(660, 0.05, { vol: 0.08, type: 'triangle' }),
         move:   () => tone(440, 0.04, { vol: 0.05, type: 'triangle' }),
         rumble: () => { noise(0.8, { freq: 260, vol: 0.3 }); tone(120, 0.5, { slide: 180, vol: 0.08, type: 'triangle' }); },
+        whistle: () => { tone(2100, 0.12, { vol: 0.12, type: 'sine' }); tone(2100, 0.35, { delay: 0.16, vol: 0.12, type: 'sine', slide: 2300 }); },
         splash: () => noise(0.5, { freq: 1800, vol: 0.35 }),
         boost:  () => tone(300, 0.35, { slide: 1300, vol: 0.08, type: 'sawtooth' }),
         land:   () => noise(0.06, { freq: 700, vol: 0.12 }),
@@ -131,6 +132,11 @@ const Sound = (() => {
             bpm: 160, lead: 'square', mv: 0.045, bv: 0.14, drums: true,
             mel: seq(`G4 . G4 . G5 D5 B4 .  G5 A5 G5 E5 D5 . D5 .  B4 D5 G5 B5 A5 G5 F5 E5  D5 G5 B5 D6 B5 G5 D5 .`),
             bass: seq(`G2 . G2 G3 G2 . G2 G3  C3 . C3 C4 C3 . C3 C4  E2 . E2 E3 D2 . D2 D3  G2 . G2 G3 D3 . D3 .`)
+        },
+        swim: {
+            bpm: 132, lead: 'triangle', mv: 0.09, bv: 0.13, drums: true,
+            mel: seq(`F5 A5 C6 A5 A#5 A5 G5 .  E5 G5 A#5 A5 G5 . F5 .  F5 A5 C6 D6 C6 A5 F5 A5  G5 A5 G5 E5 F5 . . .`),
+            bass: seq(`F2 . C3 . F2 . C3 .  C3 . G2 . C3 . G2 .  F2 . A2 . A#2 . C3 .  C3 . E2 . F2 . C3 .`)
         },
         space: {
             bpm: 96, lead: 'triangle', mv: 0.09, bv: 0.12, drums: false, hold: 1.8,
