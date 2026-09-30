@@ -277,15 +277,6 @@ MODES.swim = (() => {
                 }
             }
         }
-        // lane ropes (floats)
-        for (let i = 1; i < LANES; i++) {
-            const x = POOL_L + LANE_W * i;
-            for (let wy = Math.floor(camY / 18) * 18; wy < camY + H + 18; wy += 18) {
-                const k = Math.floor(wy / 18) % 6;
-                g.fillStyle = k < 2 ? '#E53935' : k < 4 ? '#FFFFFF' : '#1E6FE8';
-                g.beginPath(); g.ellipse(x, wy - camY + Math.sin(t * 0.05 + wy * 0.02) * 1.5, 5, 8, 0, 0, TAU); g.fill();
-            }
-        }
     }
 
     function drawDeck(g) {
