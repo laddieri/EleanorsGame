@@ -393,9 +393,11 @@ MODES.bike = (() => {
                 g.fillStyle = color;
                 g.fillRect(sx, top, bw, bh + 200);
                 if (!windows) continue;
-                for (let wy = top + 12; wy < BASE - 30 - camY * par; wy += 22) {
+                // each window's on/off is fixed by its building, row and column so it never flickers
+                for (let row = 0; top + 12 + row * 22 < BASE - 30 - camY * par; row++) {
+                    const wy = top + 12 + row * 22;
                     for (let k = 0; sx + 8 + k * 16 < sx + bw - 12; k++) {
-                        const lit = hash(i * 31.7 + k * 3.1 + wy * 0.37 + seed) > (pal.night ? 0.45 : 0.72);
+                        const lit = hash(i * 31.7 + k * 3.1 + row * 7.3 + seed) > (pal.night ? 0.45 : 0.72);
                         g.fillStyle = lit ? pal.win : 'rgba(0,0,0,0.15)';
                         g.fillRect(sx + 8 + k * 16, wy, 8, 12);
                     }
@@ -569,11 +571,15 @@ MODES.bike = (() => {
         for (const b of B.babies) if (!b.got) drawBaby(g, b.x - camX, b.y - camY + 20, Game.t, 'goggles');
         drawBike(g);
         FX.draw(g, camX, camY);
-        if (P.boost > 0 || (Input.held.right && P.vx > base() + 1.5)) {
-            g.strokeStyle = 'rgba(255,255,255,0.5)'; g.lineWidth = 2;
+        // gentle speed lines: they glide smoothly and fade in/out (no flashing)
+        const fast = P.boost > 0 || (Input.held.right && P.vx > base() + 1.5);
+        P.speedFx = lerp(P.speedFx || 0, fast ? 1 : 0, 0.05);
+        if (P.speedFx > 0.02) {
+            g.strokeStyle = `rgba(255,255,255,${0.3 * P.speedFx})`; g.lineWidth = 2;
             for (let k = 0; k < 7; k++) {
-                const ly = hash(k + Math.floor(t / 3)) * H, lx = hash(k * 5 + Math.floor(t / 3)) * W;
-                g.beginPath(); g.moveTo(lx, ly); g.lineTo(lx - 60, ly); g.stroke();
+                const ly = 60 + hash(k * 1.7) * (H - 120);
+                const lx = W + 80 - ((t * 14 + hash(k * 5.3) * (W + 160)) % (W + 160));
+                g.beginPath(); g.moveTo(lx, ly); g.lineTo(lx + 70, ly); g.stroke();
             }
         }
         FX.drawTexts(g, camX, camY);
