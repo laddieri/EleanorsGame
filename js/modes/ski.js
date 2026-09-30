@@ -555,12 +555,15 @@ MODES.ski = (() => {
         g.fillStyle = 'rgba(255,255,255,0.85)';
         for (const f of flakes) { g.beginPath(); g.arc(f.x, f.y, f.s, 0, TAU); g.fill(); }
 
-        // speed lines when tucking
-        if (Input.held.down && P.speed > base() + 1 && !S.finished) {
-            g.strokeStyle = 'rgba(255,255,255,0.5)'; g.lineWidth = 2;
+        // gentle speed lines when tucking: they glide smoothly and fade in/out (no flashing)
+        const fast = Input.held.down && P.speed > base() + 1 && !S.finished;
+        P.speedFx = lerp(P.speedFx || 0, fast ? 1 : 0, 0.05);
+        if (P.speedFx > 0.02) {
+            g.strokeStyle = `rgba(255,255,255,${0.35 * P.speedFx})`; g.lineWidth = 2;
             for (let k = 0; k < 8; k++) {
-                const lx = hash(k + Math.floor(t / 3)) * W, ly = hash(k * 7 + Math.floor(t / 3)) * H;
-                g.beginPath(); g.moveTo(lx, ly); g.lineTo(lx, ly + 40); g.stroke();
+                const lx = 60 + hash(k * 2.3) * (W - 120);
+                const ly = H + 60 - ((t * 12 + hash(k * 4.1) * (H + 120)) % (H + 120));
+                g.beginPath(); g.moveTo(lx, ly); g.lineTo(lx, ly + 50); g.stroke();
             }
         }
         FX.drawTexts(g, 0, camY);
