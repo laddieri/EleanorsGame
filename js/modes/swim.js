@@ -68,12 +68,12 @@ MODES.swim = (() => {
         [0.35, 0.7].forEach(f => S.tacos.push({ x: laneX(rng.int(0, 5)), y: len * f, got: false }));
         [0.2, 0.5, 0.8].forEach(f => {
             const by = Math.round(len * f);
-            const bx = laneX(rng.pick([0, 5, 1, 4]));
+            const bx = laneX(rng.pick([1, 2, 3, 4]));
             S.babies.push({ x: bx, y: by, got: false });
         });
         // keep babies, tacos and rings from being buried under kids
         const clearAround = (list, r) => list.forEach(it => { S.obs = S.obs.filter(o => dist(o.x, o.y, it.x, it.y) > r); });
-        clearAround(S.babies, 80); clearAround(S.tacos, 70); clearAround(S.rings, 60);
+        clearAround(S.babies, 150); clearAround(S.tacos, 70); clearAround(S.rings, 60);
         S.stars = S.stars.filter(s => !S.obs.some(o => dist(o.x, o.y, s.x, s.y) < 45));
         S.obs.sort((a, b) => a.y - b.y);
         return S.stars.length + S.rings.length;
@@ -219,10 +219,15 @@ MODES.swim = (() => {
                 if (dist(s.x, s.y, P.x, P.y) < r) { s.got = true; cb(s); }
             }
         };
+        // lost babies spot you and swim over to meet you (even while you dive!)
+        for (const b of S.babies) {
+            if (b.got || b.y < P.y - 40 || b.y - P.y > 340) continue;
+            b.x = approach(b.x, P.x, 3.5);
+        }
+        grab(S.babies, 56, b => Game.collectBaby(b.x, b.y - 30));
         if (!under) {
             grab(S.stars, 30, s => Game.collectStar(s.x, s.y - 20));
             grab(S.tacos, 32, k => Game.collectTaco(k.x, k.y - 20));
-            grab(S.babies, 36, b => Game.collectBaby(b.x, b.y - 30));
         } else {
             grab(S.rings, 34, r => { Game.collectStar(r.x, r.y - 10); FX.text(r.x, r.y - 40, 'Ring!', r.color, 18); });
         }
@@ -504,6 +509,17 @@ MODES.swim = (() => {
             drawObs(g, list[i]);
         }
         drawCannon(g);
+        // a little pink arrow shows where the next baby is waiting
+        for (const b of S.babies) {
+            const ahead = b.y - camY;
+            if (b.got || ahead < H - 20 || ahead > H + 700) continue;
+            const a = 0.6 + 0.4 * Math.sin(Game.t * 0.2);
+            g.globalAlpha = a;
+            g.fillStyle = '#FF4FA3';
+            g.beginPath(); g.moveTo(b.x - 16, H - 34); g.lineTo(b.x + 16, H - 34); g.lineTo(b.x, H - 12); g.fill();
+            g.globalAlpha = 1;
+            outlinedText(g, 'Baby!', b.x, H - 42, 16, '#FFFFFF', '#FF4FA3');
+        }
         FX.draw(g, 0, camY);
         FX.drawTexts(g, 0, camY);
     }

@@ -4,27 +4,40 @@
 // ============================================================
 'use strict';
 
-// 3 worlds x 6 levels. Each world repeats the family's favourite adventures:
-// meadow walk, skiing, biking, swimming, the trampoline park and space!
+// 3 worlds x 10 levels. Each world repeats the family's favourite adventures:
+// skiing, biking, swimming, the trampoline park and space — with a meadow walk
+// before each one!
 // (id and seed stay the same forever so saved stars and level layouts never move.)
 const LEVELS = [
     { id: 'w1-walk',  world: 1, mode: 'walk',  name: 'Axolotl Meadow',    d: 0.0,  pal: 0, seed: 1 * 7919 },
     { id: 'w1-ski',   world: 1, mode: 'ski',   name: 'Snowy Slopes',      d: 0.05, pal: 0, seed: 2 * 7919 },
+    { id: 'w1-walk2', world: 1, mode: 'walk',  name: 'Bumblebee Field',   d: 0.04, pal: 0, seed: 1301 },
     { id: 'w1-bike',  world: 1, mode: 'bike',  name: 'Ramp Town',         d: 0.1,  pal: 0, seed: 3 * 7919 },
+    { id: 'w1-walk3', world: 1, mode: 'walk',  name: 'Taco Hill',         d: 0.07, pal: 0, seed: 1302 },
     { id: 'w1-swim',  world: 1, mode: 'swim',  name: 'City Pool',         d: 0.08, pal: 0, seed: 101 },
-    { id: 'w1-bounce', world: 1, mode: 'bounce', name: 'Bounce Park',       d: 0.1, pal: 0, seed: 111 },
+    { id: 'w1-walk4', world: 1, mode: 'walk',  name: 'Rainbow Creek',     d: 0.1,  pal: 0, seed: 1303 },
+    { id: 'w1-bounce', world: 1, mode: 'bounce', name: 'Bounce Park',     d: 0.1,  pal: 0, seed: 111 },
+    { id: 'w1-walk5', world: 1, mode: 'walk',  name: 'Picnic Park',       d: 0.13, pal: 0, seed: 1304 },
     { id: 'w1-space', world: 1, mode: 'space', name: 'Starry Space',      d: 0.12, pal: 0, seed: 4 * 7919 },
     { id: 'w2-walk',  world: 2, mode: 'walk',  name: 'Sunset Hills',      d: 0.4,  pal: 1, seed: 5 * 7919 },
     { id: 'w2-ski',   world: 2, mode: 'ski',   name: 'Snowball Peak',     d: 0.45, pal: 1, seed: 6 * 7919 },
+    { id: 'w2-walk2', world: 2, mode: 'walk',  name: 'Golden Grove',      d: 0.42, pal: 1, seed: 2301 },
     { id: 'w2-bike',  world: 2, mode: 'bike',  name: 'Big City Jumps',    d: 0.5,  pal: 1, seed: 7 * 7919 },
+    { id: 'w2-walk3', world: 2, mode: 'walk',  name: 'Pinky Pond',        d: 0.47, pal: 1, seed: 2302 },
     { id: 'w2-swim',  world: 2, mode: 'swim',  name: 'Sunset Splash',     d: 0.5,  pal: 1, seed: 202 },
+    { id: 'w2-walk4', world: 2, mode: 'walk',  name: 'Lantern Lane',      d: 0.52, pal: 1, seed: 2303 },
     { id: 'w2-bounce', world: 2, mode: 'bounce', name: 'Super Bounce Arena', d: 0.5, pal: 1, seed: 222 },
+    { id: 'w2-walk5', world: 2, mode: 'walk',  name: 'Dusky Meadow',      d: 0.56, pal: 1, seed: 2304 },
     { id: 'w2-space', world: 2, mode: 'space', name: 'Asteroid Alley',    d: 0.55, pal: 1, seed: 8 * 7919 },
     { id: 'w3-walk',  world: 3, mode: 'walk',  name: 'Firefly Forest',    d: 0.8,  pal: 2, seed: 9 * 7919 },
     { id: 'w3-ski',   world: 3, mode: 'ski',   name: 'Midnight Mountain', d: 0.85, pal: 2, seed: 10 * 7919 },
+    { id: 'w3-walk2', world: 3, mode: 'walk',  name: 'Moonbeam Marsh',    d: 0.82, pal: 2, seed: 3301 },
     { id: 'w3-bike',  world: 3, mode: 'bike',  name: 'Neon Night Ride',   d: 0.9,  pal: 2, seed: 11 * 7919 },
+    { id: 'w3-walk3', world: 3, mode: 'walk',  name: 'Owl Hollow',        d: 0.87, pal: 2, seed: 3302 },
     { id: 'w3-swim',  world: 3, mode: 'swim',  name: 'Night Swim',        d: 0.9,  pal: 2, seed: 303 },
-    { id: 'w3-bounce', world: 3, mode: 'bounce', name: 'Glow Bounce',       d: 0.9, pal: 2, seed: 333 },
+    { id: 'w3-walk4', world: 3, mode: 'walk',  name: 'Glowworm Gully',    d: 0.92, pal: 2, seed: 3303 },
+    { id: 'w3-bounce', world: 3, mode: 'bounce', name: 'Glow Bounce',     d: 0.9,  pal: 2, seed: 333 },
+    { id: 'w3-walk5', world: 3, mode: 'walk',  name: 'Starlight Path',    d: 0.96, pal: 2, seed: 3304 },
     { id: 'w3-space', world: 3, mode: 'space', name: 'Comet Chase',       d: 1.0,  pal: 2, seed: 12 * 7919 }
 ].map((l, i, all) => Object.assign(l, {
     index: i,

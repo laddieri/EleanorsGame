@@ -155,7 +155,8 @@ MODES.bike = (() => {
         pal = PALETTES[level.pal || 0];
         const total = build(level);
         P = { x: 200, y: BASE, vx: 0, vy: 0, ground: true, rot: 0, rotV: 0, spinAcc: 0, airT: 0,
-              crash: 0, inv: 0, lipT: 0, jumpBuf: 0, boost: 0, safeX: 200, bubble: 0, bubbleFrom: 0, dead: false, wheel: 0 };
+              crash: 0, inv: 0, lipT: 0, jumpBuf: 0, boost: 0, safeX: 200, bubble: 0, bubbleFrom: 0, dead: false, wheel: 0,
+              trail: [], followers: [] };
         camX = P.x - 260; camY = 0;
         return { stars: total };
     }
@@ -173,6 +174,9 @@ MODES.bike = (() => {
         t++;
         const I = Input.held, IP = Input.pressed;
         const c = Game.char;
+        // babies you've found ride their own tiny bikes along your path
+        P.trail.unshift({ x: P.x, y: P.y, rot: P.rot, ground: P.ground && P.bubble === 0 });
+        if (P.trail.length > 60) P.trail.pop();
 
         if (B.finished) {
             B.finished++;
@@ -193,6 +197,7 @@ MODES.bike = (() => {
             P.x = lerp(P.bubbleFrom, P.safeX, e);
             P.y = lerp(H + 40, BASE - 80, e) + Math.sin(P.bubble * 0.2) * 4;
             if (P.bubble > 95) {
+                P.trail.length = 0;
                 Sound.play('pop');
                 P.bubble = 0; P.ground = false; P.vy = 0; P.vx = base(); P.rot = 0; P.inv = 60;
             }
@@ -339,6 +344,7 @@ MODES.bike = (() => {
         }
         if (!Game.hurt()) { P.dead = true; return; }
         P.x = P.safeX; P.y = BASE; P.ground = true; P.vy = 0; P.vx = base(); P.inv = 90; P.crash = 0;
+        P.trail.length = 0;
         camX = P.x - 260;
     }
 
@@ -351,7 +357,7 @@ MODES.bike = (() => {
             if (Math.abs(s.x - px) < 30 && Math.abs(s.y - py) < 40) { s.got = true; Game.collectStar(s.x, s.y); }
         }
         for (const k of B.tacos) if (!k.got && Math.abs(k.x - px) < 32 && Math.abs(k.y - py) < 44) { k.got = true; Game.collectTaco(k.x, k.y); }
-        for (const b of B.babies) if (!b.got && Math.abs(b.x - px) < 44 && Math.abs(b.y - py) < 50) { b.got = true; Game.collectBaby(b.x, b.y - 20); }
+        for (const b of B.babies) if (!b.got && Math.abs(b.x - px) < 44 && Math.abs(b.y - py) < 50) { b.got = true; P.followers.push(b); Game.collectBaby(b.x, b.y - 20); }
         for (const br of B.barriers) {
             if (br.hit) { br.fy += br.vy; br.vy += 0.5; br.rot += 0.2; continue; }
             if (Math.abs(br.x - P.x) < 18 && P.y > BASE - 26 && P.inv <= 0 && P.crash <= 0) {
@@ -489,6 +495,44 @@ MODES.bike = (() => {
         }
     }
 
+    function drawTinyBike(g, x, y, rot, wheel, k) {
+        g.save();
+        g.translate(x, y);
+        g.rotate(rot);
+        g.scale(0.65, 0.65);
+        const wh = (wx) => {
+            g.strokeStyle = '#1E1E26'; g.lineWidth = 5;
+            g.beginPath(); g.arc(wx, -14, 13, 0, TAU); g.stroke();
+            g.strokeStyle = '#E8E8F0'; g.lineWidth = 2;
+            const a = wheel;
+            g.beginPath(); g.moveTo(wx - Math.cos(a) * 11, -14 - Math.sin(a) * 11); g.lineTo(wx + Math.cos(a) * 11, -14 + Math.sin(a) * 11); g.stroke();
+        };
+        wh(-20); wh(20);
+        g.strokeStyle = ['#FF7BC0', '#3DDC84', '#7FD4FF'][k % 3]; g.lineWidth = 5; g.lineCap = 'round';
+        g.beginPath();
+        g.moveTo(-20, -14); g.lineTo(-4, -30); g.lineTo(14, -30); g.lineTo(20, -14);
+        g.moveTo(-4, -30); g.lineTo(2, -14); g.lineTo(-20, -14);
+        g.moveTo(14, -30); g.lineTo(16, -40);
+        g.stroke();
+        g.strokeStyle = '#333'; g.lineWidth = 4;
+        g.beginPath(); g.moveTo(10, -42); g.lineTo(22, -42); g.stroke();
+        g.lineCap = 'butt';
+        // the baby on the seat, with a little helmet
+        drawAxolotl(g, 2, -28, Game.t * 1.4 + k * 20, -1, 1.1, '#FFC6E4');
+        g.fillStyle = ['#FFD400', '#FF4F5E', '#B36BFF'][k % 3];
+        g.beginPath(); g.arc(13, -44, 11, Math.PI, 0); g.fill();
+        g.restore();
+    }
+
+    function drawFollowers(g) {
+        if (P.bubble > 0) return;
+        for (let i = P.followers.length - 1; i >= 0; i--) {
+            const pt = P.trail[Math.min(P.trail.length - 1, (i + 1) * 10)];
+            if (!pt) continue;
+            drawTinyBike(g, pt.x - camX, pt.y - camY, pt.ground ? pt.rot : pt.rot * 0.5, P.wheel * 1.6 + i, i);
+        }
+    }
+
     function drawBike(g) {
         const c = Game.char;
         if (P.inv > 0 && Math.floor(P.inv / 4) % 2 === 0 && P.bubble === 0) return;
@@ -569,6 +613,7 @@ MODES.bike = (() => {
         }
         for (const k of B.tacos) if (!k.got) drawTaco(g, k.x - camX, k.y - camY, Game.t);
         for (const b of B.babies) if (!b.got) drawBaby(g, b.x - camX, b.y - camY + 20, Game.t, 'goggles');
+        drawFollowers(g);
         drawBike(g);
         FX.draw(g, camX, camY);
         // gentle speed lines: they glide smoothly and fade in/out (no flashing)
