@@ -41,7 +41,8 @@ trampoline, walk, space.
 - 🌸 **Meadow** – a real platformer! Bop grumpy purple blobs on the head (but not
   the red spiky ones!), jump over fire and pits, hit ⭐ boxes from below, bounce
   on pink & orange flowers, and grab the flagpole as high as you can. The babies
-  you find follow you home to Mama Axolotl's house.
+  you find bounce along behind you on tiny pogo sticks all the way home to
+  Mama Axolotl's house.
 - ⛷️ **Ski** – steer down the mountain, hold ↓ to go faster, ski between the
   flags for combos, hop rocks, jump ramps and press SPACE in the air to SPIN.
   Halfway down, a **giant snowball** starts rolling after you — stay ahead of it!
