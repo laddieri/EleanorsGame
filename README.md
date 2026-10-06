@@ -32,7 +32,11 @@ Every level has three stars to earn:
 You get 3 hearts per level (Harry gets 5). Eat 🌮 **tacos** for extra hearts.
 Your progress and best scores are saved in your browser.
 
-## The 6 kinds of levels (3 worlds × 6 = 18 levels)
+## The 6 kinds of levels (3 worlds × 10 = 30 levels)
+
+Every special level (ski, bike, swim, trampoline, space) comes right after a
+meadow walking level, so each world goes walk, ski, walk, bike, walk, swim, walk,
+trampoline, walk, space.
 
 - 🌸 **Meadow** – a real platformer! Bop grumpy purple blobs on the head (but not
   the red spiky ones!), jump over fire and pits, hit ⭐ boxes from below, bounce
@@ -44,11 +48,13 @@ Your progress and best scores are saved in your browser.
 - 🚲 **Bike** – hold → to pedal faster, ← to brake, SPACE to hop hurdles.
   Ramps launch you over the river; press SPACE right at the top for BIG AIR,
   and hold ← or → in the air to do flips (land straight or you'll wipe out!).
+  The babies you find ride along behind you on their own tiny bikes!
 - 🏊 **Swim** – pass the swim test at the city pool! Swim to the far wall while
   dodging the other kids, inner tubes and pool noodles. Hold ↓ to kick faster
   and press SPACE to dive under things (and grab the diving rings on the bottom).
   Watch for the ❗ shadow — someone's about to do a CANNONBALL! Beach balls are
-  safe to bonk. Ricky Fish can stay underwater twice as long.
+  safe to bonk. Lost babies swim over to meet you — follow the pink "Baby!"
+  arrow at the bottom of the screen. Ricky Fish can stay underwater twice as long.
 - 🤸 **Trampoline park** – boing from trampoline to trampoline! Steer with ← →,
   and HOLD SPACE as you land for a BIG bounce (with a flip!) — look for the
   "HOLD ⬆ BIG BOUNCE!" signs before wide gaps. ↓ drops you faster. Don't land on

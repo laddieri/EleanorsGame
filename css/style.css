@@ -279,7 +279,7 @@ h2 {
 }
 .world-row {
     display: grid;
-    grid-template-columns: 7.5em repeat(6, 1fr);
+    grid-template-columns: 7.5em repeat(5, 1fr);
     gap: 0.5em;
     margin-bottom: 0.5em;
     align-items: stretch;
@@ -293,6 +293,7 @@ h2 {
     color: var(--pink);
     text-align: left;
     line-height: 1.1;
+    grid-row: span 2;
 }
 .world-name small { font-size: 0.65em; color: #7A6A9A; font-weight: 600; }
 .level-btn {
@@ -394,7 +395,7 @@ body.small .overlay {
 body.small .panel { min-width: 0; width: 100%; }
 body.small .char-grid { grid-template-columns: repeat(3, 1fr); }
 body.small .world-row { grid-template-columns: repeat(2, 1fr); }
-body.small .world-name { grid-column: 1 / -1; flex-direction: row; gap: 0.5em; align-items: baseline; }
+body.small .world-name { grid-column: 1 / -1; grid-row: auto; flex-direction: row; gap: 0.5em; align-items: baseline; }
 body.small .logo { font-size: 2.6em; }
 body.small .title-card { margin-top: 2em; }
 body.small .menu-head .spacer { display: none; }
