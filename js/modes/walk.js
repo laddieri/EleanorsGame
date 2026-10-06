@@ -692,8 +692,12 @@ MODES.walk = (() => {
         }
 
         // babies you've found follow you like ducklings
-        P.trail.unshift({ x: P.x + P.w / 2, y: P.y + P.h });
-        if (P.trail.length > 80) P.trail.pop();
+        // (only when you move, so they wait politely in a line when you stop)
+        const last = P.trail[0], fx = P.x + P.w / 2, fy = P.y + P.h;
+        if (!last || Math.abs(fx - last.x) + Math.abs(fy - last.y) > 1.5) {
+            P.trail.unshift({ x: fx, y: fy });
+            if (P.trail.length > 80) P.trail.pop();
+        }
 
         // camera
         let tx = P.x + P.w / 2 - W * 0.4 + P.facing * 40;
@@ -1101,10 +1105,39 @@ MODES.walk = (() => {
         P.followers.forEach((b, i) => {
             const pt = P.trail[Math.min(P.trail.length - 1, (i + 1) * 14)];
             if (!pt) return;
-            const hop = Math.abs(Math.sin((Game.t + i * 10) * 0.18)) * 6;
             if (P.state === 'home' && P.x + P.w / 2 >= L.house.x + 65 && P.homeT > 30 + i * 12) return; // went inside!
-            drawAxolotl(g, pt.x - cam.x, pt.y - cam.y - hop, Game.t * 1.4 + i * 20, P.facing, 0.7, '#FFC6E4');
+            // boing boing! each baby bounces along on a tiny pogo stick
+            const ph = ((Game.t + i * 9) * 0.09) % Math.PI;
+            const hop = Math.sin(ph) * 22;
+            const squish = Math.max(0, 1 - ph / 0.35, 1 - (Math.PI - ph) / 0.35) * 4;
+            drawPogo(g, pt.x - cam.x, pt.y - cam.y - hop, squish, i, Game.t * 1.4 + i * 20);
         });
+    }
+
+    function drawPogo(g, x, y, squish, k, at) {
+        const lean = Math.sin(Game.t * 0.09 + k) * 0.08;
+        g.save();
+        g.translate(x, y);
+        g.rotate(lean);
+        g.scale(1.3, 1.3);
+        // spring (it squishes when it hits the ground)
+        const top = -12 + squish;
+        g.strokeStyle = '#C8CCD8'; g.lineWidth = 2;
+        g.beginPath(); g.moveTo(0, 0);
+        for (let j = 1; j <= 4; j++) g.lineTo(j % 2 ? -4 : 4, top * j / 4);
+        g.lineTo(0, top);
+        g.stroke();
+        g.fillStyle = '#333'; g.fillRect(-2, -2, 4, 3);
+        // pole, foot pegs and handlebar
+        const col = ['#FF4F8B', '#3D8BFF', '#3DDC84'][k % 3];
+        g.fillStyle = col;
+        g.fillRect(-2, top - 30, 4, 30);
+        g.fillRect(-9, top - 2, 18, 3);
+        g.fillRect(-9, top - 32, 18, 4);
+        g.fillStyle = '#333'; g.fillRect(-11, top - 32, 4, 4); g.fillRect(7, top - 32, 4, 4);
+        // the baby standing on the pegs, holding on tight
+        drawAxolotl(g, -3 * P.facing, top - 2, at, -P.facing, 0.6, '#FFC6E4');
+        g.restore();
     }
 
     function draw(g) {
