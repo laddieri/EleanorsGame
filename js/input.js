@@ -6,8 +6,8 @@
 //  In 2-player mode the keyboard is split in half:
 //    Player 1: A D move · W or SPACE jump · S special
 //    Player 2: ← → move · ↑ jump · ↓ special
-//  Gamepad 1 is Player 1, Gamepad 2 is Player 2, and the touch
-//  buttons always belong to Player 1.
+//  The first gamepad to press a button is Player 1, the next one
+//  is Player 2, and the touch buttons always belong to Player 1.
 // ============================================================
 'use strict';
 
@@ -90,14 +90,59 @@ const Input = (() => {
     }
 
     // ---------- Gamepad ----------
+    // A gamepad joins a player the first time you press something on it:
+    // the first one becomes Player 1, the next one Player 2. Some computers
+    // list one controller twice (Steam and some drivers add a copy). A copy
+    // wakes up at the very same moment as the real one, so a pad that starts
+    // pressing at the same instant as a joined pad counts as that same controller.
+    const owner = {};     // gamepad index -> player number
+    const joinedAt = {};  // gamepad index -> tick it joined
+    const lastSig = {};   // gamepad index -> what it was pressing last tick
+    const wokeAt = {};    // gamepad index -> tick it last went from idle to pressing
+    let tick = 0;
+    window.addEventListener('gamepaddisconnected', (e) => { delete owner[e.gamepad.index]; delete lastSig[e.gamepad.index]; });
+
+    function signature(gp) {
+        let sig = '';
+        for (let i = 0; i < gp.buttons.length; i++) if (gp.buttons[i] && gp.buttons[i].pressed) sig += 'b' + i;
+        // only the left stick: some controllers rest their triggers at -1
+        for (let i = 0; i < Math.min(2, gp.axes.length); i++) {
+            const v = gp.axes[i] || 0;
+            if (v < -0.5) sig += 'a' + i + '-'; else if (v > 0.5) sig += 'a' + i + '+';
+        }
+        return sig;
+    }
+
+    function claim(gp, sig) {
+        for (const k of Object.keys(owner)) {
+            // woke up together with a joined pad (and pressing the same thing,
+            // or that pad only just joined): it's a copy of that controller
+            const together = Math.abs(tick - (wokeAt[k] || -99)) <= 1;
+            if (together && (lastSig[k] === sig || tick - joinedAt[k] <= 1)) {
+                owner[gp.index] = owner[k]; joinedAt[gp.index] = tick;
+                return;
+            }
+        }
+        const used = new Set(Object.values(owner));
+        const free = [0, 1].find(p => !used.has(p));
+        if (free == null) return;   // two players already have controllers
+        owner[gp.index] = free; joinedAt[gp.index] = tick;
+    }
+
     function readPads() {
+        tick++;
         for (const pad of pads) for (const k in pad) pad[k] = false;
-        const list = navigator.getGamepads ? navigator.getGamepads() : [];
-        let n = 0;
+        const list = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : [];
+        const sigs = list.map(signature);
+        list.forEach((gp, n) => {
+            if (sigs[n] && !lastSig[gp.index]) wokeAt[gp.index] = tick;
+            lastSig[gp.index] = sigs[n];
+        });
+        list.forEach((gp, n) => { if (owner[gp.index] == null && sigs[n]) claim(gp, sigs[n]); });
         for (const gp of list) {
-            if (!gp) continue;
-            const pad = pads[split ? Math.min(n, 1) : 0];
-            n++;
+            const who = owner[gp.index];
+            if (split && who == null) continue;   // 2 players: wait until it joins
+            const pad = pads[split ? who : 0];
             const b = (i) => !!(gp.buttons[i] && gp.buttons[i].pressed);
             const ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
             if (ax < -0.35 || b(14)) pad.left = true;
