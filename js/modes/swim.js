@@ -11,7 +11,7 @@ MODES.swim = (() => {
     const POOL_L = 70, POOL_R = 890;
     const LANES = 6, LANE_W = (POOL_R - POOL_L) / LANES;
     const DIVE = 46, DIVE_COOL = 40;
-    let S, P, camY, t, lvl, pal;
+    let S, P, PL = [], camY, t, lvl, pal;   // P = the swimmer being updated, PL = all swimmers
 
     const PALETTES = [
         { water: ['#3FC8F0', '#1E9FE0'], deck: '#F3E6CC', tile: '#E2D2B0', light: 'rgba(255,255,255,0.22)', night: false },
@@ -84,7 +84,9 @@ MODES.swim = (() => {
         lvl = level;
         pal = PALETTES[level.pal || 0];
         const total = build(level);
-        P = { x: laneX(2) + LANE_W / 2, y: 0, vx: 0, speed: 0, dive: 0, cool: 0, stun: 0, inv: 0, dead: false, facing: 1 };
+        PL = Game.players.map((pl, i) => ({
+            x: laneX(2) + LANE_W / 2 + (Game.coop ? (i ? 60 : -60) : 0), y: 0, vx: 0, speed: 0, dive: 0, cool: 0, stun: 0, inv: 0, dead: false, facing: 1, ko: null }));
+        P = PL[0];
         camY = P.y - PY;
         return { stars: total };
     }
@@ -103,20 +105,109 @@ MODES.swim = (() => {
         if (!Game.hurt()) P.dead = true;
     }
 
+    const active = (p) => !p.ko && !p.dead;
+
     function update() {
         t++;
-        const I = Input.held, IP = Input.pressed;
-        const c = Game.char;
-
         if (S.finished) {
             S.finished++;
-            P.speed *= 0.9;
-            P.y = Math.min(P.y + P.speed, S.len);
-            if (S.finished % 30 === 0) FX.confetti(P.x, P.y - 80, 30);
+            for (const p of PL) {
+                if (p.ko) continue;
+                p.speed *= 0.9;
+                p.y = Math.min(p.y + p.speed, S.len);
+            }
+            const lead = PL.reduce((a, b) => (b.y > a.y ? b : a));
+            if (S.finished % 30 === 0) FX.confetti(lead.x, lead.y - 80, 30);
             if (S.finished === 150) Game.levelDone();
-            camY += (P.y - PY - camY) * 0.1;
+            camY += (lead.y - PY - camY) * 0.1;
             return;
         }
+        const on = PL.filter(active);
+        if (!on.length) return;
+        const lead = on.reduce((a, b) => (b.y > a.y ? b : a));
+        const back = on.reduce((a, b) => (b.y < a.y ? b : a));
+
+        // ---- the other kids & pool toys swim around ----
+        for (const o of S.obs) {
+            if (o.y < back.y - 700) continue;
+            if (o.y > lead.y + 700) break;
+            if (o.hit > 0) o.hit--;
+            if (o.kind === 'swimmer') {
+                o.x += o.vx;
+                if (o.x < POOL_L + 24 || o.x > POOL_R - 24) o.vx = -o.vx;
+            } else if (o.kind === 'kid') {
+                o.x = o.home + Math.sin(t * 0.02 + o.phase) * 14;
+            } else if (o.kind === 'tube') {
+                o.x += o.vx; o.spin += 0.01;
+                if (o.x < POOL_L + 34 || o.x > POOL_R - 34) o.vx = -o.vx;
+            } else if (o.kind === 'ball') {
+                o.x += o.vx; o.spin += o.vx * 0.05;
+                if (o.x < POOL_L + 22 || o.x > POOL_R - 22) o.vx = -o.vx;
+                o.vx *= 0.995;
+                if (Math.abs(o.vx) < 1) o.vx = Math.sign(o.vx || 1) * 1;
+            }
+            if (o.quip && on.some(p => Math.abs(o.y - p.y) < 220)) o.show = 90; else if (o.show > 0) o.show--;
+        }
+
+        // ---- cannonballs! ----
+        for (const cb of S.cannon) {
+            if (cb.state === 'wait' && cb.y - lead.y < 420) { cb.state = 'warn'; cb.timer = 75; }
+            else if (cb.state === 'warn') {
+                if (--cb.timer <= 0) {
+                    cb.state = 'splash'; cb.timer = 30;
+                    Sound.play('splash');
+                    FX.shake(6);
+                    FX.burst(cb.x, cb.y, { count: 40, colors: ['#FFFFFF', '#BDEBFF', '#7FD4FF'], speed: 7, life: 40, shape: 'circle', size: 7, gravity: 0.2 });
+                    FX.text(cb.x, cb.y - 70, 'CANNONBALL!', '#FFFFFF', 24);
+                    Coop.each(PL, (p, i) => {
+                        P = p;
+                        if (active(p) && p.dive <= 0 && dist(p.x, p.y, cb.x, cb.y) < 70) { bump(cb, 'Whoa, big splash!'); knockOut(i); }
+                    });
+                    P = PL[0];
+                }
+            } else if (cb.state === 'splash' && --cb.timer <= 0) {
+                cb.state = 'done';
+                S.obs.push(Object.assign(cb.kid, { kind: 'kid', r: 22, vx: 0, home: cb.x, x: cb.x, y: cb.y, quip: 'Did you see that?!' }));
+                S.obs.sort((a, b) => a.y - b.y);
+            }
+        }
+
+        Coop.each(PL, (p, i) => { P = p; updateOne(i); });
+        P = PL[0];
+
+        if (!Game.coop) { camY = P.y - PY; return; }
+        // 2 players: keep the leader on screen; if you fall way behind, you bubble along
+        const on2 = PL.filter(active);
+        if (!on2.length) return;
+        const lead2 = on2.reduce((a, b) => (b.y > a.y ? b : a));
+        const back2 = on2.reduce((a, b) => (b.y < a.y ? b : a));
+        camY += (Math.max(back2.y - PY, lead2.y - (H - 150)) - camY) * 0.2;
+        Coop.each(PL, (p, i) => { if (active(p) && p !== lead2 && p.y - camY < -30) Coop.bubble(p, p.x, camY + 40, 'Wait for me!'); });
+    }
+
+    // 2 players: out of hearts? Into a bubble to float back to your partner!
+    function knockOut(i) {
+        if (!Game.coop || !Game.players[i].out || Game.state !== 'play' || P.ko) return;
+        Coop.bubble(P, P.x, P.y - 30, 'Rescue me!');
+        P.dead = false; P.stun = 0; P.dive = 0;
+    }
+
+    function updateOne(i) {
+        const I = Input.held, IP = Input.pressed;
+        const c = Game.char;
+        if (P.ko) {
+            const mate = PL.find(o => o !== P && active(o));
+            if (!mate) return;
+            P.ko.y += mate.speed;   // the bubble drifts along too
+            if (Coop.floatTo(P, mate.x, mate.y - 40)) {
+                const b = P.ko;
+                Coop.pop(P, i);
+                P.x = clamp(b.x, POOL_L + 20, POOL_R - 20); P.y = mate.y - 10;
+                P.speed = mate.speed; P.vx = 0; P.inv = 90; P.cool = 0;
+            }
+            return;
+        }
+        if (P.dead) return;
 
         if (P.inv > 0) P.inv--;
         if (P.cool > 0) P.cool--;
@@ -154,27 +245,11 @@ MODES.swim = (() => {
         P.y += P.speed;
         const under = P.dive > 0;
 
-        // ---- the other kids & pool toys ----
+        // ---- bumping into the other kids & pool toys ----
         for (const o of S.obs) {
-            if (o.y < P.y - 700) continue;
-            if (o.y > P.y + 700) break;
-            if (o.hit > 0) o.hit--;
-            if (o.kind === 'swimmer') {
-                o.x += o.vx;
-                if (o.x < POOL_L + 24 || o.x > POOL_R - 24) o.vx = -o.vx;
-            } else if (o.kind === 'kid') {
-                o.x = o.home + Math.sin(t * 0.02 + o.phase) * 14;
-            } else if (o.kind === 'tube') {
-                o.x += o.vx; o.spin += 0.01;
-                if (o.x < POOL_L + 34 || o.x > POOL_R - 34) o.vx = -o.vx;
-            } else if (o.kind === 'ball') {
-                o.x += o.vx; o.spin += o.vx * 0.05;
-                if (o.x < POOL_L + 22 || o.x > POOL_R - 22) o.vx = -o.vx;
-                o.vx *= 0.995;
-                if (Math.abs(o.vx) < 1) o.vx = Math.sign(o.vx || 1) * 1;
-            }
-            if (o.quip && Math.abs(o.y - P.y) < 220) o.show = 90; else if (o.show > 0) o.show--;
-            if (under || P.stun > 0) continue;
+            if (o.y < P.y - 100) continue;
+            if (o.y > P.y + 100) break;
+            if (under || P.stun > 0) break;
             if (o.kind === 'noodle') {
                 if (Math.abs(P.y - o.y) < 12 && Math.abs(P.x - o.x) < o.w / 2 + 12) { o.hit = 20; bump(o, 'Noodle bonk!'); }
             } else if (o.kind === 'ball') {
@@ -188,25 +263,6 @@ MODES.swim = (() => {
             } else if (dist(P.x, P.y, o.x, o.y) < o.r + 14) {
                 o.hit = 30;
                 bump(o);
-            }
-        }
-
-        // ---- cannonballs! ----
-        for (const cb of S.cannon) {
-            if (cb.state === 'wait' && cb.y - P.y < 420) { cb.state = 'warn'; cb.timer = 75; }
-            else if (cb.state === 'warn') {
-                if (--cb.timer <= 0) {
-                    cb.state = 'splash'; cb.timer = 30;
-                    Sound.play('splash');
-                    FX.shake(6);
-                    FX.burst(cb.x, cb.y, { count: 40, colors: ['#FFFFFF', '#BDEBFF', '#7FD4FF'], speed: 7, life: 40, shape: 'circle', size: 7, gravity: 0.2 });
-                    FX.text(cb.x, cb.y - 70, 'CANNONBALL!', '#FFFFFF', 24);
-                    if (!under && dist(P.x, P.y, cb.x, cb.y) < 70) bump(cb, 'Whoa, big splash!');
-                }
-            } else if (cb.state === 'splash' && --cb.timer <= 0) {
-                cb.state = 'done';
-                S.obs.push(Object.assign(cb.kid, { kind: 'kid', r: 22, vx: 0, home: cb.x, x: cb.x, y: cb.y, quip: 'Did you see that?!' }));
-                S.obs.sort((a, b) => a.y - b.y);
             }
         }
 
@@ -240,10 +296,10 @@ MODES.swim = (() => {
             FX.text(W / 2, S.len - 150, 'SWIM TEST PASSED!', '#FFD400', 38);
             FX.confetti(P.x, P.y - 80, 90);
         }
-        camY = P.y - PY;
+        knockOut(i);
     }
 
-    function dying() { P.stun = 10; P.speed *= 0.9; }
+    function dying() { for (const p of PL) if (!p.ko) { p.stun = 10; p.speed *= 0.9; } }
 
     // ---------- drawing ----------
     function drawWater(g) {
@@ -445,8 +501,10 @@ MODES.swim = (() => {
         }
     }
 
-    function drawPlayer(g) {
+    function drawPlayer(g, i) {
         const c = Game.char;
+        if (P.ko) { Coop.drawBubble(g, c, P.ko.x, P.ko.y - camY, i); return; }
+        Coop.label(g, P.x, P.y - camY - c.h - (P.dive > 0 ? 50 : 34), i);
         if (P.inv > 0 && Math.floor(P.inv / 4) % 2 === 0) return;
         const x = P.x, y = P.y - camY;
         if (P.dive > 0) {
@@ -486,7 +544,7 @@ MODES.swim = (() => {
             if (r.got) continue;
             const y = r.y - camY;
             if (y < -30 || y > H + 30) continue;
-            g.globalAlpha = P.dive > 0 ? 1 : 0.55;
+            g.globalAlpha = PL.some(p => p.dive > 0) ? 1 : 0.55;
             g.strokeStyle = r.color; g.lineWidth = 6;
             g.beginPath(); g.ellipse(r.x, y, 14, 9, 0, 0, TAU); g.stroke();
             g.globalAlpha = 1;
@@ -500,14 +558,22 @@ MODES.swim = (() => {
         }
         for (const k of S.tacos) { const y = k.y - camY; if (!k.got && y > -40 && y < H + 40) drawTaco(g, k.x, y - 20, Game.t); }
         for (const b of S.babies) { const y = b.y - camY; if (!b.got && y > -60 && y < H + 60) drawBaby(g, b.x, y, Game.t, 'goggles'); }
-        let i = 0;
-        const list = S.obs;
-        for (; i < list.length && list[i].y < P.y; i++) drawObs(g, list[i]);
-        drawPlayer(g);
-        for (; i < list.length; i++) {
-            if (list[i].y - camY > H + 80) break;
-            drawObs(g, list[i]);
+        // things behind each swimmer, then the swimmer, then things in front
+        const order = PL.map((p, k) => k).sort((a, b) => PL[a].y - PL[b].y);
+        let next = 0;
+        const swimmersUpTo = (wy) => {
+            for (; next < order.length && PL[order[next]].y < wy; next++) {
+                const k = order[next];
+                Game.use(k); P = PL[k]; drawPlayer(g, k);
+            }
+            Game.use(-1); P = PL[0];
+        };
+        for (const o of S.obs) {
+            if (o.y - camY > H + 80) break;
+            swimmersUpTo(o.y);
+            drawObs(g, o);
         }
+        swimmersUpTo(Infinity);
         drawCannon(g);
         // a little pink arrow shows where the next baby is waiting
         for (const b of S.babies) {
@@ -524,12 +590,12 @@ MODES.swim = (() => {
         FX.drawTexts(g, 0, camY);
     }
 
-    function progress() { return clamp(P.y / S.len, 0, 1); }
+    function progress(i) { return clamp(PL[i || 0].y / S.len, 0, 1); }
 
     return {
         music: 'swim', icon: '🏊',
         tip: '← → swim sideways · hold ↓ to kick FAST · SPACE to dive under kids & noodles!',
-        debug: () => ({ S, P }),
+        debug: () => ({ S, P, PL }),
         init, update, draw, dying, progress
     };
 })();

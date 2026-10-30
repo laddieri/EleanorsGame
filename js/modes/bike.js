@@ -8,7 +8,7 @@
 MODES.bike = (() => {
     const BASE = 440;
     const GRAV = 0.42;
-    let B, P, camX, camY, t, lvl, pal;
+    let B, P, PL = [], camX, camY, t, lvl, pal;   // P = the rider being updated, PL = all riders
 
     const PALETTES = [
         { sky: ['#6EC6FF', '#D8F1FF'], far: '#9DB7D6', near: '#7B93B8', win: '#CFE8FF', ground: '#8A8F9C', road: '#4A4D5A', water: '#3AA0E8', night: false },
@@ -154,9 +154,11 @@ MODES.bike = (() => {
         lvl = level;
         pal = PALETTES[level.pal || 0];
         const total = build(level);
-        P = { x: 200, y: BASE, vx: 0, vy: 0, ground: true, rot: 0, rotV: 0, spinAcc: 0, airT: 0,
-              crash: 0, inv: 0, lipT: 0, jumpBuf: 0, boost: 0, safeX: 200, bubble: 0, bubbleFrom: 0, dead: false, wheel: 0,
-              trail: [], followers: [] };
+        PL = Game.players.map((pl, i) => ({
+            x: 200 - i * 70, y: BASE, vx: 0, vy: 0, ground: true, rot: 0, rotV: 0, spinAcc: 0, airT: 0,
+            crash: 0, inv: 0, lipT: 0, jumpBuf: 0, boost: 0, safeX: 200 - i * 70, bubble: 0, bubbleFrom: 0, dead: false, wheel: 0,
+            trail: [], followers: [], ko: null }));
+        P = PL[0];
         camX = P.x - 260; camY = 0;
         return { stars: total };
     }
@@ -170,23 +172,72 @@ MODES.bike = (() => {
         if (!Game.hurt()) P.dead = true;
     }
 
+    const active = (p) => !p.ko && !p.dead;
+
     function update() {
         t++;
+        // knocked-over barriers go flying
+        for (const br of B.barriers) if (br.hit) { br.fy += br.vy; br.vy += 0.5; br.rot += 0.2; }
+
+        if (B.finished) {
+            B.finished++;
+            for (const p of PL) {
+                p.trail.unshift({ x: p.x, y: p.y, rot: p.rot, ground: true });
+                if (p.trail.length > 60) p.trail.pop();
+                if (p.ko) continue;
+                p.vx *= 0.97;
+                p.x += p.vx;
+                p.y = groundY(p.x) || BASE;
+                p.wheel += p.vx * 0.08;
+            }
+            const lead = PL.reduce((a, b) => (b.x > a.x ? b : a));
+            if (B.finished % 30 === 0) FX.confetti(lead.x + 80, lead.y - 120, 30);
+            if (B.finished === 130) Game.levelDone();
+            camX += (lead.x - 380 - camX) * 0.05;
+            return;
+        }
+
+        const cam0 = camX, camY0 = camY;
+        Coop.each(PL, (p, i) => { P = p; updateOne(i); });
+        P = PL[0];
+        if (!Game.coop) return;
+
+        // 2 players share the screen: if you fall way behind, you bubble along
+        camX = cam0; camY = camY0;
+        const on = PL.filter(active);
+        if (!on.length) return;
+        const lead = on.reduce((a, b) => (b.x > a.x ? b : a));
+        const back = on.reduce((a, b) => (b.x < a.x ? b : a));
+        camX += (Math.max(back.x - 200, lead.x - (W - 260)) - camX) * 0.15;
+        const ty = Math.min(0, Math.min(...on.map(p => p.y)) - 140);
+        camY += (ty - camY) * 0.12;
+        Coop.each(PL, (p, i) => { if (active(p) && p !== lead && p.x - camX < -40) Coop.bubble(p, camX + 40, p.y - 40, 'Wait for me!'); });
+    }
+
+    // 2 players: out of hearts? Into a bubble to float back to your partner!
+    function knockOut(i) {
+        if (!Game.coop || !Game.players[i].out || Game.state !== 'play' || P.ko) return;
+        Coop.bubble(P, P.x, Math.min(P.y - 40, camY + H - 60), 'Rescue me!');
+        P.dead = false; P.crash = 0; P.bubble = 0;
+    }
+
+    function updateOne(i) {
         const I = Input.held, IP = Input.pressed;
         const c = Game.char;
         // babies you've found ride their own tiny bikes along your path
         P.trail.unshift({ x: P.x, y: P.y, rot: P.rot, ground: P.ground && P.bubble === 0 });
         if (P.trail.length > 60) P.trail.pop();
 
-        if (B.finished) {
-            B.finished++;
-            P.vx *= 0.97;
-            P.x += P.vx;
-            P.y = groundY(P.x) || BASE;
-            P.wheel += P.vx * 0.08;
-            if (B.finished % 30 === 0) FX.confetti(P.x + 80, P.y - 120, 30);
-            if (B.finished === 130) Game.levelDone();
-            camX += (P.x - 380 - camX) * 0.05;
+        if (P.ko) {
+            const mate = PL.find(o => o !== P && active(o));
+            if (!mate) return;
+            P.ko.x += mate.vx;    // the bubble rides along too
+            if (Coop.floatTo(P, mate.x, mate.y - 60)) {
+                Coop.pop(P, i);
+                for (const k of ['x', 'y', 'vx', 'vy', 'ground', 'rot']) P[k] = mate[k];
+                P.rotV = 0; P.spinAcc = 0; P.airT = 0; P.crash = 0; P.lipT = 0; P.inv = 90;
+                P.safeX = mate.safeX; P.trail.length = 0;
+            }
             return;
         }
 
@@ -290,6 +341,7 @@ MODES.bike = (() => {
             Sound.play('win');
             FX.confetti(P.x + 60, P.y - 100, 90);
         }
+        knockOut(i);
 
         camX += (P.x - 260 + (P.vx - base()) * 20 - camX) * 0.15;
         const ty = Math.min(0, P.y - 140);
@@ -336,13 +388,18 @@ MODES.bike = (() => {
         Sound.play('splash');
         FX.burst(P.x, BASE + 60, { count: 25, colors: ['#9FDBFF', '#FFFFFF'], speed: 6, angle: -Math.PI / 2, spread: 1.4, life: 35, shape: 'circle', size: 6 });
         P.rot = 0; P.rotV = 0; P.spinAcc = 0; P.airT = 0;
+        // 2 players: float back to your partner instead of back in time
+        const mate = Game.coop && PL.find(o => o !== P && active(o));
+        const toMate = () => Coop.bubble(P, P.x, camY + H - 60);
         if (c.ability === 'bubble') {
+            if (mate) { toMate(); return; }
             P.bubble = 1;
             P.bubbleFrom = P.x;
             Sound.play('pop');
             return;
         }
         if (!Game.hurt()) { P.dead = true; return; }
+        if (mate) { toMate(); return; }
         P.x = P.safeX; P.y = BASE; P.ground = true; P.vy = 0; P.vx = base(); P.inv = 90; P.crash = 0;
         P.trail.length = 0;
         camX = P.x - 260;
@@ -359,7 +416,7 @@ MODES.bike = (() => {
         for (const k of B.tacos) if (!k.got && Math.abs(k.x - px) < 32 && Math.abs(k.y - py) < 44) { k.got = true; Game.collectTaco(k.x, k.y); }
         for (const b of B.babies) if (!b.got && Math.abs(b.x - px) < 44 && Math.abs(b.y - py) < 50) { b.got = true; P.followers.push(b); Game.collectBaby(b.x, b.y - 20); }
         for (const br of B.barriers) {
-            if (br.hit) { br.fy += br.vy; br.vy += 0.5; br.rot += 0.2; continue; }
+            if (br.hit) continue;
             if (Math.abs(br.x - P.x) < 18 && P.y > BASE - 26 && P.inv <= 0 && P.crash <= 0) {
                 br.hit = true; br.vy = -8;
                 wipeout();
@@ -368,8 +425,11 @@ MODES.bike = (() => {
     }
 
     function dying() {
-        P.crash = 10;
-        P.vx *= 0.9;
+        for (const p of PL) {
+            if (p.ko) continue;
+            p.crash = 10;
+            p.vx *= 0.9;
+        }
     }
 
     // ---------- drawing ----------
@@ -525,7 +585,7 @@ MODES.bike = (() => {
     }
 
     function drawFollowers(g) {
-        if (P.bubble > 0) return;
+        if (P.bubble > 0 || P.ko) return;
         for (let i = P.followers.length - 1; i >= 0; i--) {
             const pt = P.trail[Math.min(P.trail.length - 1, (i + 1) * 10)];
             if (!pt) continue;
@@ -533,8 +593,10 @@ MODES.bike = (() => {
         }
     }
 
-    function drawBike(g) {
+    function drawBike(g, i) {
         const c = Game.char;
+        if (P.ko) { Coop.drawBubble(g, c, P.ko.x - camX, P.ko.y - camY, i); return; }
+        Coop.label(g, P.x - camX, P.y - camY - 36 - c.h * 0.8, i);
         if (P.inv > 0 && Math.floor(P.inv / 4) % 2 === 0 && P.bubble === 0) return;
         g.save();
         g.translate(P.x - camX, P.y - camY);
@@ -613,8 +675,10 @@ MODES.bike = (() => {
         }
         for (const k of B.tacos) if (!k.got) drawTaco(g, k.x - camX, k.y - camY, Game.t);
         for (const b of B.babies) if (!b.got) drawBaby(g, b.x - camX, b.y - camY + 20, Game.t, 'goggles');
-        drawFollowers(g);
-        drawBike(g);
+        Coop.each(PL, (p, i) => { P = p; drawFollowers(g); });
+        for (let i = PL.length - 1; i >= 0; i--) { Game.use(i); P = PL[i]; drawBike(g, i); }
+        Game.use(-1);
+        P = PL[0];
         FX.draw(g, camX, camY);
         // gentle speed lines: they glide smoothly and fade in/out (no flashing)
         const fast = P.boost > 0 || (Input.held.right && P.vx > base() + 1.5);
@@ -630,12 +694,12 @@ MODES.bike = (() => {
         FX.drawTexts(g, camX, camY);
     }
 
-    function progress() { return clamp((P.x - 200) / (B.finishX - 200), 0, 1); }
+    function progress(i) { return clamp((PL[i || 0].x - 200) / (B.finishX - 200), 0, 1); }
 
     return {
         music: 'bike', icon: '🚲',
         tip: '→ pedal faster · ← brake · SPACE hop · in the air hold ← or → to FLIP!',
-        debug: () => ({ B, P }),
+        debug: () => ({ B, P, PL }),
         init, update, draw, dying, progress
     };
 })();

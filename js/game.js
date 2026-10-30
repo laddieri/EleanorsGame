@@ -72,9 +72,28 @@ const WORLD_NAMES = ['Sunny Days', 'Sunset Adventure', 'Starlight Night'];
 const Game = {
     state: 'title', stateT: 0, t: 0,
     char: null, level: null, mode: null,
-    hearts: 3, maxHearts: 3, score: 0, levelScore: 0,
+    picks: [null, null],   // the characters chosen for player 1 and player 2
+    twoP: false,           // playing together?
+    players: [],           // in a level: { char, hearts, maxHearts, out, pulse } per player
+    cur: 0,                // which player the level code is working on right now
+    score: 0, levelScore: 0,
     stars: 0, starsTotal: 0, babies: 0,
-    pulse: { hearts: 0, stars: 0, babies: 0 },
+    pulse: { stars: 0, babies: 0 },
+
+    get coop() { return this.players.length > 1; },
+
+    // Hearts belong to whichever player is being updated right now
+    get hearts() { const p = this.players[this.cur]; return p ? p.hearts : 0; },
+    set hearts(v) { const p = this.players[this.cur]; if (p) p.hearts = v; },
+    get maxHearts() { const p = this.players[this.cur]; return p ? p.maxHearts : 3; },
+
+    // Switch Game.char and the controls to player i (-1 = back to normal)
+    use(i) {
+        this.cur = Math.max(0, i);
+        const p = this.players[this.cur];
+        this.char = p ? p.char : this.picks[0];
+        Input.use(this.players.length > 1 ? i : -1);
+    },
 
     setState(s) {
         this.state = s;
@@ -86,8 +105,10 @@ const Game = {
         const lv = LEVELS[i];
         this.level = lv;
         this.mode = MODES[lv.mode];
-        this.maxHearts = this.char.hearts;
-        this.hearts = this.maxHearts;
+        const picks = this.twoP ? this.picks : [this.picks[0]];
+        this.players = picks.map(c => ({ char: c, hearts: c.hearts, maxHearts: c.hearts, out: false, pulse: 0 }));
+        Input.setSplit(this.players.length > 1);
+        this.use(-1);
         this.stars = 0;
         this.babies = 0;
         this.levelScore = 0;
@@ -109,7 +130,7 @@ const Game = {
 
     collectTaco(x, y) {
         this.hearts = Math.min(this.hearts + 1, this.maxHearts + 2);
-        this.pulse.hearts = 20;
+        this.players[this.cur].pulse = 20;
         this.addScore(100);
         Sound.play('taco');
         FX.text(x, y - 20, 'YUM! +1 ❤', '#FF8FB8', 24);
@@ -129,19 +150,39 @@ const Game = {
     // Called by levels when you get hurt. Returns false if you're out of hearts.
     hurt() {
         if (this.state !== 'play') return true;
-        this.hearts--;
-        this.pulse.hearts = 20;
+        const pl = this.players[this.cur];
+        pl.hearts--;
+        pl.pulse = 20;
         Sound.play('hurt');
         FX.shake(7);
         FX.flash(0.5);
-        if (this.hearts <= 0) {
-            this.hearts = 0;
+        if (pl.hearts <= 0) {
+            pl.hearts = 0;
+            pl.out = true;
+            // In a 2-player game your partner can still rescue you!
+            if (this.players.some(o => !o.out)) return false;
             this.setState('dying');
             Sound.stopMusic();
             Sound.play('gameover');
             return false;
         }
         return true;
+    },
+
+    // Back to the menus: everyone shares the controls again
+    endLevel() {
+        this.players = [];
+        Input.setSplit(false);
+        this.use(-1);
+    },
+
+    // A rescued player pops out of their bubble with some hearts back
+    revive(i) {
+        const pl = this.players[i];
+        if (!pl || !pl.out) return;
+        pl.out = false;
+        pl.hearts = Math.max(1, Math.ceil(pl.maxHearts * 2 / 3));
+        pl.pulse = 20;
     },
 
     addScore(n, x, y, color) {
@@ -247,7 +288,7 @@ const UI = {
     back() {
         Sound.play('click');
         const c = this.current;
-        if (c === 'chars') this.show('title');
+        if (c === 'chars') { if (this.pickFor === 1) this.showChars(0); else this.show('title'); }
         else if (c === 'levels') this.showChars();
         else if (c === 'pause') this.resume();
         else if (c === 'complete' || c === 'over') this.showLevels();
@@ -257,22 +298,37 @@ const UI = {
     showTitle() {
         Game.setState('title');
         Game.mode = null;
+        Game.endLevel();
         Sound.music('title');
         this.show('title');
     },
 
-    showChars() {
+    // pickFor: 0 = player 1 is choosing, 1 = player 2 is choosing
+    showChars(pickFor = 0) {
         Game.setState('menu');
         Game.mode = null;
         Sound.music('title');
+        Game.endLevel();
+        this.pickFor = pickFor;
+        const taken = pickFor === 1 ? Game.picks[0] : null;
+        this.el('charsTitle').innerHTML = !Game.twoP ? "Who's playing?"
+            : `<span class="ptag p${pickFor + 1}">P${pickFor + 1}</span> Player ${pickFor + 1}, pick your character!`;
+        document.querySelectorAll('.char-card').forEach(card => {
+            const isTaken = !!taken && card.dataset.id === taken.id;
+            card.disabled = isTaken;
+            card.classList.toggle('taken', isTaken);
+        });
         this.show('chars');
-        const cur = (Game.char && document.querySelector(`.char-card[data-id="${Game.char.id}"]`)) || document.querySelector('.char-card');
+        let want = Game.picks[pickFor];
+        if (!want || want === taken) want = CHARACTERS.find(c => c !== taken);
+        const cur = document.querySelector(`.char-card[data-id="${want.id}"]`) || document.querySelector('.char-card:not([disabled])');
         if (cur) this.select(cur, false);
     },
 
     showLevels() {
         Game.setState('menu');
         Game.mode = null;
+        Game.endLevel();
         FX.clear();
         Sound.music('title');
         this.buildLevels();
@@ -397,7 +453,8 @@ const UI = {
             grid.appendChild(row);
         }
         this.el('totalStars').textContent = `★ ${total} / ${LEVELS.length * 3}`;
-        this.el('playingAs').textContent = Game.char ? `${Game.char.emoji} ${Game.char.name}` : '';
+        const who = (Game.twoP ? Game.picks : [Game.picks[0]]).filter(Boolean);
+        this.el('playingAs').textContent = who.map(c => `${c.emoji} ${c.name}`).join(' & ');
     },
 
     onAction(el) {
@@ -405,15 +462,24 @@ const UI = {
         Sound.unlock();
         Sound.play('click');
         el.blur();
-        if (a === 'play') this.showChars();
-        else if (a === 'char') {
-            Game.char = CHAR_BY_ID[el.dataset.id];
-            Save.data.char = Game.char.id;
+        if (a === 'play' || a === 'play2') {
+            Game.twoP = a === 'play2';
+            this.showChars(0);
+        } else if (a === 'char') {
+            const c = CHAR_BY_ID[el.dataset.id];
+            Game.picks[this.pickFor] = c;
+            Save.data[this.pickFor === 1 ? 'char2' : 'char'] = c.id;
             Save.write();
-            this.showLevels();
+            if (Game.twoP && this.pickFor === 0) {
+                if (Game.picks[1] === c) Game.picks[1] = null;
+                this.showChars(1);
+            } else {
+                Game.char = Game.picks[0];
+                this.showLevels();
+            }
         } else if (a === 'level') Game.startLevel(+el.dataset.idx);
         else if (a === 'to-title') this.showTitle();
-        else if (a === 'to-chars') this.showChars();
+        else if (a === 'to-chars') this.showChars(0);
         else if (a === 'to-levels') this.showLevels();
         else if (a === 'resume') this.resume();
         else if (a === 'restart' || a === 'replay' || a === 'retry') Game.startLevel(Game.level.index);
@@ -430,24 +496,39 @@ const UI = {
 // ============================================================
 function drawHUD(g) {
     const P = Game.pulse;
-    // left panel
+    const coop = Game.coop;
+    // left panel: one row of hearts per player, then stars & babies
+    const most = Math.max(...Game.players.map(p => Math.max(p.maxHearts, p.hearts)));
+    const hx = coop ? 82 : 36;            // where the hearts start
+    const rowY = coop ? 74 : 44;          // extra height for player 2's row
     g.fillStyle = 'rgba(25,12,60,0.55)';
-    rrect(g, 10, 10, 250 + Math.max(0, Game.maxHearts - 3) * 30, 74, 16); g.fill();
-    const slots = Math.max(Game.maxHearts, Game.hearts);
-    for (let i = 0; i < slots; i++) {
-        const full = i < Game.hearts;
-        const s = 24 * (P.hearts > 0 && full ? 1 + Math.sin(P.hearts * 0.6) * 0.15 : 1);
-        drawHeart(g, 36 + i * 30, 22, s, full ? (i >= Game.maxHearts ? '#FFD400' : '#FF3D6E') : '#3a2a4a', full ? '#5A1030' : '#1a1030');
-    }
+    rrect(g, 10, 10, Math.max(250, hx + most * 30 - 6), rowY + 30, 16); g.fill();
+    Game.players.forEach((pl, r) => {
+        const y = 22 + r * 30;
+        if (coop) {
+            const c = pl.char;
+            outlinedText(g, 'P' + (r + 1), 30, y, 15, '#FFFFFF', Coop.COLORS[r]);
+            drawChar(g, c, 56, y + 11, { t: Game.t, scale: 24 / Math.max(c.h, c.w) });
+        }
+        const slots = Math.max(pl.maxHearts, pl.hearts);
+        for (let i = 0; i < slots; i++) {
+            const full = i < pl.hearts;
+            const s = 24 * (pl.pulse > 0 && full ? 1 + Math.sin(pl.pulse * 0.6) * 0.15 : 1);
+            drawHeart(g, hx + i * 30, y, s, full ? (i >= pl.maxHearts ? '#FFD400' : '#FF3D6E') : '#3a2a4a', full ? '#5A1030' : '#1a1030');
+        }
+        if (pl.out && Math.floor(Game.t / 20) % 2 === 0) outlinedText(g, 'Bubble! 🫧', hx + 4, y, 16, '#BFE9FF', '#2A1060', 'left');
+        if (pl.pulse > 0) pl.pulse--;
+    });
+    const sy = 22 + rowY;
     const ss = 1 + (P.stars > 0 ? P.stars * 0.03 : 0);
-    g.save(); g.translate(36, 66); g.scale(ss, ss);
+    g.save(); g.translate(36, sy); g.scale(ss, ss);
     starPath(g, 0, 0, 13); g.fillStyle = '#FFD400'; g.fill(); g.lineWidth = 3; g.strokeStyle = '#8A4B00'; g.stroke();
     g.restore();
-    outlinedText(g, `${Game.stars}/${Game.starsTotal}`, 56, 67, 20, '#FFFFFF', '#2A1060', 'left');
+    outlinedText(g, `${Game.stars}/${Game.starsTotal}`, 56, sy + 1, 20, '#FFFFFF', '#2A1060', 'left');
     // baby axolotls to find
     for (let i = 0; i < 3; i++) {
         const got = i < Game.babies;
-        const bx = 160 + i * 34, by = 76;
+        const bx = 160 + i * 34, by = sy + 10;
         const bounce = got && P.babies > 0 && i === Game.babies - 1 ? Math.sin(P.babies * 0.5) * 4 : 0;
         if (got) drawAxolotl(g, bx, by + bounce, Game.t + i * 30, 1, 0.62, '#FFC6E4');
         else {
@@ -471,14 +552,17 @@ function drawHUD(g) {
     rrect(g, px0 - 8, py - 10, pw + 16, 20, 10); g.fill();
     g.fillStyle = 'rgba(255,255,255,0.25)';
     rrect(g, px0, py - 3, pw, 6, 3); g.fill();
-    const pr = Game.mode.progress();
+    const prs = Game.players.map((pl, i) => Game.mode.progress(i));
+    const pr = Math.max(...prs);
     g.fillStyle = '#FFD400';
     rrect(g, px0, py - 3, Math.max(6, pw * pr), 6, 3); g.fill();
     g.fillStyle = '#FF4FA3';
     g.beginPath(); g.moveTo(px0 + pw, py - 12); g.lineTo(px0 + pw + 12, py - 8); g.lineTo(px0 + pw, py - 4); g.fill();
     g.fillStyle = '#FFFFFF'; g.fillRect(px0 + pw - 1, py - 12, 2, 16);
-    const c = Game.char;
-    drawChar(g, c, px0 + pw * pr, py + 12, { t: Game.t, scale: 22 / Math.max(c.h, c.w), run: true });
+    for (let i = Game.players.length - 1; i >= 0; i--) {
+        const c = Game.players[i].char;
+        drawChar(g, c, px0 + pw * prs[i], py + 12, { t: Game.t + i * 7, scale: 22 / Math.max(c.h, c.w), run: true });
+    }
 
     for (const k in P) if (P[k] > 0) P[k]--;
 }
@@ -491,7 +575,8 @@ function drawIntro(g) {
     g.fillStyle = `rgba(25,12,60,${0.55 * e})`;
     g.fillRect(0, 0, W, H);
     g.fillStyle = 'rgba(255,255,255,0.96)';
-    rrect(g, W / 2 - 330, y - 110, 660, 230, 26); g.fill();
+    const extra = Game.coop ? 26 : 0;     // room for the 2-player controls
+    rrect(g, W / 2 - 330, y - 110, 660, 230 + extra, 26); g.fill();
     g.lineWidth = 6; g.strokeStyle = '#FF4FA3'; g.stroke();
     outlinedText(g, `WORLD ${lv.label}`, W / 2, y - 76, 22, '#FFD400', '#7A2A00');
     outlinedText(g, `${MODES[lv.mode].icon} ${lv.name}`, W / 2, y - 34, 42, '#FFFFFF', '#FF4FA3');
@@ -501,13 +586,23 @@ function drawIntro(g) {
     g.fillText(MODES[lv.mode].tip, W / 2, y + 14);
     g.fillStyle = '#E0457B';
     g.font = `700 18px ${FONT}`;
-    g.fillText(`Playing as ${Game.char.name} — ${Game.char.power}: ${Game.char.powerDesc}`, W / 2, y + 44);
-    drawBaby(g, W / 2 - 200, y + 96, Game.t, null, 0.7);
+    if (Game.coop) {
+        const [a, b] = Game.players.map(p => p.char);
+        g.fillText(`${a.name} & ${b.name} — team up! Out of hearts? Float back in a bubble!`, W / 2, y + 44);
+        g.font = `600 15px ${FONT}`;
+        g.fillStyle = Coop.COLORS[0];
+        g.fillText(`P1 ${a.name}: A D move · W or SPACE jump · S ${a.power}`, W / 2, y + 66);
+        g.fillStyle = Coop.COLORS[1];
+        g.fillText(`P2 ${b.name}: ← → move · ↑ jump · ↓ ${b.power}`, W / 2, y + 86);
+    } else {
+        g.fillText(`Playing as ${Game.char.name} — ${Game.char.power}: ${Game.char.powerDesc}`, W / 2, y + 44);
+    }
+    drawBaby(g, W / 2 - 200, y + 96 + extra, Game.t, null, 0.7);
     g.fillStyle = '#6A4A9A';
     g.font = `700 17px ${FONT}`;
-    g.fillText('Find the 3 lost baby axolotls!', W / 2, y + 88);
+    g.fillText('Find the 3 lost baby axolotls!', W / 2, y + 88 + extra);
     if (Game.stateT > 30 && Math.floor(Game.t / 20) % 2 === 0) {
-        outlinedText(g, Input.isTouchDevice() ? 'Tap ⬆ to start!' : 'Press SPACE to start!', W / 2, y + 150, 22, '#FFFFFF', '#2A1060');
+        outlinedText(g, Input.isTouchDevice() ? 'Tap ⬆ to start!' : 'Press SPACE to start!', W / 2, y + 150 + extra, 22, '#FFFFFF', '#2A1060');
     }
 }
 
@@ -673,7 +768,8 @@ function boot() {
     });
     document.addEventListener('visibilitychange', () => { if (document.hidden && Game.state === 'play') UI.pause(); });
 
-    if (Save.data.char && CHAR_BY_ID[Save.data.char]) Game.char = CHAR_BY_ID[Save.data.char];
+    if (Save.data.char && CHAR_BY_ID[Save.data.char]) Game.char = Game.picks[0] = CHAR_BY_ID[Save.data.char];
+    if (Save.data.char2 && CHAR_BY_ID[Save.data.char2]) Game.picks[1] = CHAR_BY_ID[Save.data.char2];
     UI.showTitle();
     requestAnimationFrame(frame);
 }

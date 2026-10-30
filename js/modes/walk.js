@@ -8,7 +8,7 @@ const MODES = {};
 
 MODES.walk = (() => {
     const GY = 450; // top of the ground
-    let L, P, cam, t = 0, pal;
+    let L, P, PL = [], cam, t = 0, pal;   // P = the player being updated, PL = all players
 
     const PALETTES = [
         { // World 1: sunny day
@@ -263,14 +263,15 @@ MODES.walk = (() => {
     // ---------------------------------------------------------
     //  PLAYER
     // ---------------------------------------------------------
-    function makePlayer() {
+    function makePlayer(i) {
         const c = Game.char;
+        const x = 120 - i * 60;
         return {
-            x: 120, y: GY - c.h, w: c.w, h: c.h, vx: 0, vy: 0,
+            x, y: GY - c.h, w: c.w, h: c.h, vx: 0, vy: 0,
             onGround: true, coyote: 0, jumpBuf: 0, facing: 1, cut: false,
             airJumps: 0, dashT: 0, dashUsed: false, pounding: false, poundHang: 0, charge: 0,
             launch: 0, inv: 0, sx: 1, sy: 1, combo: 0, gliding: false,
-            state: 'play', onMover: null, safeX: 120, safeY: GY - c.h,
+            state: 'play', onMover: null, safeX: x, safeY: GY - c.h, ko: null,
             bubbleT: 0, bubbleFromX: 0, bubbleFromY: 0, homeT: 0,
             trail: [], followers: []
         };
@@ -280,7 +281,9 @@ MODES.walk = (() => {
         t = 0;
         pal = PALETTES[level.pal || 0];
         const total = build(level);
-        P = makePlayer();
+        PL = [];
+        Coop.each(Game.players, (pl, i) => PL.push(makePlayer(i)));
+        P = PL[0];
         cam = { x: 0, y: 0 };
         return { stars: total };
     }
@@ -330,7 +333,11 @@ MODES.walk = (() => {
 
     function fall() {
         const c = Game.char;
+        // 2 players: float back to your partner instead of back in time
+        const mate = Game.coop && PL.find(o => o !== P && active(o));
+        const toMate = () => Coop.bubble(P, P.x + P.w / 2, cam.y + H - 60);
         if (c.ability === 'bubble') {
+            if (mate) { toMate(); return; }
             P.state = 'bubble';
             P.bubbleT = 0;
             P.bubbleFromX = P.x; P.bubbleFromY = H + 20;
@@ -338,6 +345,7 @@ MODES.walk = (() => {
             return;
         }
         if (!Game.hurt()) { P.state = 'dead'; P.vy = 0; return; }
+        if (mate) { toMate(); return; }
         respawn();
     }
 
@@ -609,7 +617,7 @@ MODES.walk = (() => {
 
         // Grab the flag!
         const fl = L.flag;
-        if (!fl.got && P.x + P.w >= fl.x - 2) {
+        if (P.x + P.w >= fl.x - 2) {
             fl.got = true;
             P.state = 'flag';
             P.x = fl.x - P.w + 6;
@@ -656,6 +664,32 @@ MODES.walk = (() => {
     function update() {
         t++;
         updateWorld();
+        Coop.each(PL, (p, i) => { P = p; updateOne(i); });
+        P = PL[0];
+        updateCamera();
+    }
+
+    // Who can a bubble float back to? (anyone still running around)
+    const active = (p) => !p.ko && p.state !== 'dead';
+
+    function updateOne(i) {
+        if (P.ko) {
+            // float to your partner (or, if everyone's in a bubble, back to safe ground)
+            const mate = PL.find(o => o !== P && active(o));
+            const home = !mate && !Game.players[i].out;
+            if (mate || home) {
+                const tx = mate ? mate.x + mate.w / 2 : P.safeX + P.w / 2;
+                const ty = mate ? mate.y + mate.h / 2 - 30 : P.safeY + P.h / 2 - 30;
+                if (Coop.floatTo(P, tx, ty)) {
+                    const b = P.ko;
+                    Coop.pop(P, i);
+                    P.x = b.x - P.w / 2; P.y = b.y - P.h / 2;
+                    P.vx = 0; P.vy = -6; P.inv = 90; P.onGround = false;
+                    P.trail.length = 0;
+                }
+            }
+            return;
+        }
         if (P.state === 'play') {
             updatePlayer();
             if (P.state === 'play') interact();
@@ -691,6 +725,12 @@ MODES.walk = (() => {
             if (P.homeT === 170) Game.levelDone();
         }
 
+        // 2 players: out of hearts? Into a bubble to float back to your partner!
+        if (Game.coop && Game.players[i].out && Game.state === 'play' && !P.ko) {
+            Coop.bubble(P, P.x + P.w / 2, Math.min(P.y + P.h / 2, cam.y + H - 60), 'Rescue me!');
+            P.state = 'play'; P.pounding = false; P.dashT = 0; P.gliding = false; P.charge = 0;
+        }
+
         // babies you've found follow you like ducklings
         // (only when you move, so they wait politely in a line when you stop)
         const last = P.trail[0], fx = P.x + P.w / 2, fy = P.y + P.h;
@@ -699,19 +739,44 @@ MODES.walk = (() => {
             if (P.trail.length > 80) P.trail.pop();
         }
 
-        // camera
-        let tx = P.x + P.w / 2 - W * 0.4 + P.facing * 40;
-        if (P.state === 'home' || P.state === 'flag') tx = L.house.x - W * 0.55;
+    }
+
+    function updateCamera() {
+        if (!Game.coop) {
+            let tx = P.x + P.w / 2 - W * 0.4 + P.facing * 40;
+            if (P.state === 'home' || P.state === 'flag') tx = L.house.x - W * 0.55;
+            cam.x += (tx - cam.x) * 0.1;
+            cam.x = clamp(cam.x, 0, L.end - W);
+            const ty = Math.min(0, P.y - 110);
+            cam.y += (ty - cam.y) * 0.12;
+            return;
+        }
+        // 2 players share one screen: keep the camera between them
+        const on = PL.filter(active);
+        if (!on.length) return;
+        const lo = Math.min(...on.map(p => p.x)), hi = Math.max(...on.map(p => p.x + p.w));
+        let tx = (lo + hi) / 2 - W / 2;
+        if (on.every(p => p.state === 'home' || p.state === 'flag')) tx = L.house.x - W * 0.55;
         cam.x += (tx - cam.x) * 0.1;
         cam.x = clamp(cam.x, 0, L.end - W);
-        const ty = Math.min(0, P.y - 110);
+        const top = Math.min(...on.map(p => p.y)), bottom = Math.max(...on.map(p => p.y + p.h));
+        const ty = Math.min(0, Math.max(top - 110, bottom - H + 40));
         cam.y += (ty - cam.y) * 0.12;
+        // nobody can run off the edge of the screen: wait for your partner!
+        for (const p of on) {
+            if (p.state !== 'play') continue;
+            if (p.x < cam.x + 4) { p.x = cam.x + 4; if (p.vx < 0) p.vx = 0; }
+            if (p.x + p.w > cam.x + W - 4) { p.x = cam.x + W - 4 - p.w; if (p.vx > 0) p.vx = 0; }
+        }
     }
 
     function dying() {
         // classic "oops!" hop off the screen
-        P.vy += 0.5;
-        P.y += P.vy;
+        for (const p of PL) {
+            if (p.state !== 'dead') continue;
+            p.vy += 0.5;
+            p.y += p.vy;
+        }
     }
 
     // ---------------------------------------------------------
@@ -1019,7 +1084,7 @@ MODES.walk = (() => {
         g.fillRect(-3, -2, 2, 2); g.fillRect(2, -2, 2, 2);
         g.restore();
         // arrow hint
-        const near = Math.abs(P.x + P.w / 2 - f.x) < 200;
+        const near = PL.some(p => !p.ko && Math.abs(p.x + p.w / 2 - f.x) < 200);
         if (near) {
             const bob = Math.sin(t * 0.15) * 4;
             g.save();
@@ -1070,8 +1135,10 @@ MODES.walk = (() => {
         g.fillStyle = '#E0457B'; g.font = `700 14px ${FONT}`; g.textAlign = 'center'; g.fillText('HOME', x + 195, y - 58);
     }
 
-    function drawPlayer(g) {
+    function drawPlayer(g, i) {
         const c = Game.char;
+        if (P.ko) { Coop.drawBubble(g, c, P.ko.x - cam.x, P.ko.y - cam.y, i); return; }
+        Coop.label(g, P.x + P.w / 2 - cam.x, P.y - cam.y - 14, i);
         if (P.inv > 0 && Math.floor(P.inv / 4) % 2 === 0 && P.state === 'play') return;
         const cx = P.x + P.w / 2 - cam.x, by = P.y + P.h - cam.y;
         const running = P.onGround && Math.abs(P.vx) > 0.5;
@@ -1102,6 +1169,7 @@ MODES.walk = (() => {
     }
 
     function drawFollowers(g) {
+        if (P.ko) return;
         P.followers.forEach((b, i) => {
             const pt = P.trail[Math.min(P.trail.length - 1, (i + 1) * 14)];
             if (!pt) return;
@@ -1183,8 +1251,10 @@ MODES.walk = (() => {
         }
         for (const b of L.babies) if (!b.got) drawBaby(g, b.x - cam.x, b.y - cam.y, Game.t);
         L.enemies.forEach(e => drawEnemy(g, e));
-        drawFollowers(g);
-        drawPlayer(g);
+        Coop.each(PL, (p, i) => { P = p; drawFollowers(g); });
+        for (let i = PL.length - 1; i >= 0; i--) { Game.use(i); P = PL[i]; drawPlayer(g, i); }
+        Game.use(-1);
+        P = PL[0];
         FX.draw(g, cam.x, cam.y);
         if (pal.night) {
             for (let i = 0; i < 18; i++) {
@@ -1200,8 +1270,9 @@ MODES.walk = (() => {
         FX.drawTexts(g, cam.x, cam.y);
     }
 
-    function progress() {
-        return clamp((P.x - 120) / (L.flag.x - 120), 0, 1);
+    function progress(i) {
+        const p = PL[i || 0];
+        return clamp((p.x - 120) / (L.flag.x - 120), 0, 1);
     }
 
     // Scenery for the title screen
@@ -1222,7 +1293,7 @@ MODES.walk = (() => {
     return {
         GY, music: 'walk', icon: '🌸',
         tip: '← → run   ·   SPACE jump   ·   Bop blobs, find 3 babies, reach the flag!',
-        debug: () => ({ L, P }),
+        debug: () => ({ L, P, PL, cam }),
         init, update, draw, dying, progress, drawScenery
     };
 })();

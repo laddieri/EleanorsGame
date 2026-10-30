@@ -8,8 +8,9 @@ and rescue the lost baby axolotls along the way.
 
 Open `index.html` in any web browser (double-click it). No installing needed!
 
-1. Press **Play**.
-2. Pick who's playing — everyone has their own **special power**.
+1. Press **1 Player** or **2 Players**.
+2. Pick who's playing — everyone has their own **special power**. In a
+   2-player game, Player 1 picks first, then Player 2 picks someone different.
 3. Pick a level on the map. Beat a level to unlock the next one.
 
 ### Controls
@@ -20,6 +21,29 @@ Open `index.html` in any web browser (double-click it). No installing needed!
 | Jump / fly / hop | SPACE or ↑ | ⬆ | A |
 | Special (pound, charge, tuck) | ↓ | ▼ | Stick down |
 | Pause | ESC or P | ⏸ | Start |
+
+### 👫 Playing together (2 players)
+
+Two players share one screen, each playing their own character with their own
+hearts. Stars, baby axolotls and score are shared, so you're a team!
+
+| | Player 1 | Player 2 |
+|---|---|---|
+| Move | A D | ← → |
+| Jump / fly / hop | W or SPACE | ↑ |
+| Special | S | ↓ |
+| Gamepad | Gamepad 1 | Gamepad 2 |
+
+The touch buttons always control Player 1.
+
+- The screen follows **both** players. In meadow and trampoline levels you can't
+  run off the edge of the screen, so wait for your partner!
+- In the racing levels (ski, bike, swim), if you fall too far behind you float
+  along in a **bubble** and pop out next to your partner.
+- Run out of hearts? You don't lose — you turn into a **rescue bubble** that
+  floats to your partner and pops you back in with some hearts. It's only game
+  over if **both** players run out of hearts.
+- Either player can reach the finish to win the level for the team.
 
 ## The goal: ★★★ on every level
 
@@ -100,6 +124,7 @@ js/audio.js         8-bit music and sound effects
 js/input.js         keyboard, touch and gamepad
 js/art.js           stars, tacos, hearts, axolotls, clouds
 js/characters.js    the family! looks, speed, jump and powers
+js/coop.js          2-player helpers: rescue bubbles and P1/P2 labels
 js/modes/walk.js    meadow levels
 js/modes/ski.js     ski levels
 js/modes/bike.js    bike levels

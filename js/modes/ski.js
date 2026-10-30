@@ -7,7 +7,7 @@
 
 MODES.ski = (() => {
     const PY = 175; // where the skier sits on the screen
-    let S, P, camY, t, lvl, pal;
+    let S, P, PL = [], camY, t, lvl, pal;   // P = the skier being updated, PL = all skiers
     let flakes = [];
 
     const PALETTES = [
@@ -98,8 +98,10 @@ MODES.ski = (() => {
         lvl = level;
         pal = PALETTES[level.pal || 0];
         const total = build(level);
-        P = { x: S.pathX(0), y: 0, vx: 0, speed: 0, air: 0, airMax: 1, fromRamp: false, spin: 0, spinDone: false,
-              crash: 0, inv: 0, trail: [], combo: 0, facing: 1, dead: false };
+        PL = Game.players.map((pl, i) => ({
+            x: S.pathX(0) + (Game.coop ? (i ? 40 : -40) : 0), y: 0, vx: 0, speed: 0, air: 0, airMax: 1, fromRamp: false, spin: 0, spinDone: false,
+            crash: 0, inv: 0, trail: [], combo: 0, facing: 1, dead: false, gi: 0, ko: null }));
+        P = PL[0];
         camY = -PY;
         flakes = [];
         for (let i = 0; i < 70; i++) flakes.push({ x: Math.random() * W, y: Math.random() * H, s: 1 + Math.random() * 2.5, v: 0.5 + Math.random() });
@@ -123,19 +125,105 @@ MODES.ski = (() => {
         if (!Game.hurt()) P.dead = true;
     }
 
+    const active = (p) => !p.ko && !p.dead;
+
     function update() {
         t++;
-        const I = Input.held, IP = Input.pressed;
-        const c = Game.char;
-
         if (S.finished) {
             S.finished++;
-            P.speed *= 0.95;
-            P.y += P.speed;
-            P.vx *= 0.9;
-            if (S.finished % 30 === 0) FX.confetti(P.x, P.y - 60, 30);
+            for (const p of PL) {
+                if (p.ko) continue;
+                p.speed *= 0.95;
+                p.y += p.speed;
+                p.vx *= 0.9;
+            }
+            const lead = PL.reduce((a, b) => (b.y > a.y ? b : a));
+            if (S.finished % 30 === 0) FX.confetti(lead.x, lead.y - 60, 30);
             if (S.finished === 140) Game.levelDone();
-            camY = P.y - PY;
+            camY = lead.y - PY;
+            return;
+        }
+        Coop.each(PL, (p, i) => { P = p; updateOne(i); });
+        P = PL[0];
+        const on = PL.filter(active);
+        if (!on.length) return;
+        const lead = on.reduce((a, b) => (b.y > a.y ? b : a));
+        const back = on.reduce((a, b) => (b.y < a.y ? b : a));
+
+        // ---- the giant rolling snowball! (it chases whoever is at the back) ----
+        if (!S.ball && lead.y > S.len * 0.5) {
+            S.ball = { x: back.x, y: back.y - 560, stopped: false, spin: 0, r: 46 };
+            Sound.play('rumble');
+            FX.text(W / 2, lead.y + 80, 'Uh oh... a GIANT SNOWBALL!', '#7FD4FF', 28);
+            FX.shake(5);
+        }
+        const Bl = S.ball;
+        if (Bl && !Bl.stopped) {
+            const v = base() + 0.6 + lvl.d * 0.8;
+            Bl.y += v;
+            Bl.spin += v * 0.03;
+            Bl.x += clamp(back.x - Bl.x, -2, 2);
+            if (Bl.y < back.y - 650) Bl.y = back.y - 650;
+            if (t % 3 === 0) FX.burst(Bl.x + (Math.random() - 0.5) * 70, Bl.y, { count: 1, color: '#FFFFFF', speed: 1.5, angle: -Math.PI / 2, spread: 2, life: 22, shape: 'circle', size: 6, gravity: 0.05 });
+            if (lead.y > S.len - 250) {
+                Bl.stopped = true;
+                FX.text(Bl.x, Bl.y - 80, 'Wheee! I stopped!', '#FFFFFF', 20);
+            }
+            Coop.each(PL, (p, i) => {
+                if (!active(p) || Bl.y <= p.y - 30 || Math.abs(Bl.x - p.x) >= 55 || p.inv > 0) return;
+                Sound.play('snow');
+                FX.text(p.x, p.y - 90, 'SPLAT! Snowball bump!', '#7FD4FF', 24);
+                FX.burst(p.x, p.y - 20, { count: 30, colors: ['#FFFFFF', '#DDEEFF'], speed: 6, life: 40, shape: 'circle', size: 7, gravity: 0.12 });
+                FX.shake(6);
+                Bl.y = p.y - 460;
+                p.inv = 100;
+                if (!Game.hurt()) p.dead = true;
+                knockOut(p, i);
+            });
+        }
+
+        if (lead.y >= S.len) {
+            S.finished = 1;
+            Sound.play('win');
+            FX.confetti(lead.x, lead.y - 60, 80);
+        }
+
+        if (!Game.coop) camY = P.y - PY;
+        else {
+            // 2 players: keep the leader on screen; if you fall way behind, you bubble along
+            camY += (Math.max(back.y - PY, lead.y - (H - 150)) - camY) * 0.2;
+            Coop.each(PL, (p, i) => { if (active(p) && p !== lead && p.y - camY < -30) Coop.bubble(p, p.x, camY + 40, 'Wait for me!'); });
+        }
+        for (const f of flakes) {
+            f.y += f.v - lead.speed * 0.25 * f.s * 0.5;
+            f.x += Math.sin((t + f.y) * 0.01) * 0.4 - lead.vx * 0.1;
+            if (f.y < -10) { f.y = H + 10; f.x = Math.random() * W; }
+            if (f.y > H + 10) { f.y = -10; f.x = Math.random() * W; }
+            if (f.x < -10) f.x = W + 10;
+            if (f.x > W + 10) f.x = -10;
+        }
+    }
+
+    // 2 players: out of hearts? Into a bubble to float back to your partner!
+    function knockOut(p, i) {
+        if (!Game.coop || !Game.players[i].out || Game.state !== 'play' || p.ko) return;
+        Coop.bubble(p, p.x, p.y - 30, 'Rescue me!');
+        p.dead = false; p.crash = 0; p.spin = 0; p.air = 0;
+    }
+
+    function updateOne(i) {
+        const I = Input.held, IP = Input.pressed;
+        const c = Game.char;
+        if (P.ko) {
+            const mate = PL.find(o => o !== P && active(o));
+            if (!mate) return;
+            P.ko.y += mate.speed;   // the bubble rides down the mountain too
+            if (Coop.floatTo(P, mate.x, mate.y - 40)) {
+                const b = P.ko;
+                Coop.pop(P, i);
+                P.x = clamp(b.x, 50, W - 50); P.y = mate.y - 10;
+                P.speed = mate.speed; P.vx = 0; P.inv = 90; P.trail.length = 0;
+            }
             return;
         }
 
@@ -215,8 +303,8 @@ MODES.ski = (() => {
         }
 
         // gates: ski between the flags for a combo!
-        for (const gt of S.gates) {
-            if (gt.done || P.y < gt.y) continue;
+        while (P.gi < S.gates.length && P.y >= S.gates[P.gi].y) {
+            const gt = S.gates[P.gi++];
             gt.done = true;
             if (P.x > gt.x1 && P.x < gt.x2) {
                 gt.ok = true;
@@ -241,57 +329,11 @@ MODES.ski = (() => {
         for (const k of S.tacos) if (!k.got && Math.abs(k.x - P.x) < 30 && Math.abs(k.y - P.y) < 30) { k.got = true; Game.collectTaco(k.x, k.y - 20); }
         for (const b of S.babies) if (!b.got && Math.abs(b.x - P.x) < 32 && Math.abs(b.y - P.y) < 32) { b.got = true; Game.collectBaby(b.x, b.y - 30); }
 
-        // ---- the giant rolling snowball! ----
-        if (!S.ball && P.y > S.len * 0.5) {
-            S.ball = { x: P.x, y: P.y - 560, stopped: false, spin: 0, r: 46 };
-            Sound.play('rumble');
-            FX.text(W / 2, P.y + 80, 'Uh oh... a GIANT SNOWBALL!', '#7FD4FF', 28);
-            FX.shake(5);
-        }
-        const Bl = S.ball;
-        if (Bl) {
-            if (!Bl.stopped) {
-                const v = base() + 0.6 + lvl.d * 0.8;
-                Bl.y += v;
-                Bl.spin += v * 0.03;
-                Bl.x += clamp(P.x - Bl.x, -2, 2);
-                if (Bl.y < P.y - 650) Bl.y = P.y - 650;
-                if (t % 3 === 0) FX.burst(Bl.x + (Math.random() - 0.5) * 70, Bl.y, { count: 1, color: '#FFFFFF', speed: 1.5, angle: -Math.PI / 2, spread: 2, life: 22, shape: 'circle', size: 6, gravity: 0.05 });
-                if (P.y > S.len - 250) {
-                    Bl.stopped = true;
-                    FX.text(Bl.x, Bl.y - 80, 'Wheee! I stopped!', '#FFFFFF', 20);
-                }
-                if (Bl.y > P.y - 30 && Math.abs(Bl.x - P.x) < 55 && P.inv <= 0) {
-                    Sound.play('snow');
-                    FX.text(P.x, P.y - 90, 'SPLAT! Snowball bump!', '#7FD4FF', 24);
-                    FX.burst(P.x, P.y - 20, { count: 30, colors: ['#FFFFFF', '#DDEEFF'], speed: 6, life: 40, shape: 'circle', size: 7, gravity: 0.12 });
-                    FX.shake(6);
-                    Bl.y = P.y - 460;
-                    P.inv = 100;
-                    if (!Game.hurt()) P.dead = true;
-                }
-            }
-        }
-
-        if (P.y >= S.len) {
-            S.finished = 1;
-            Sound.play('win');
-            FX.confetti(P.x, P.y - 60, 80);
-        }
-
-        camY = P.y - PY;
-        for (const f of flakes) {
-            f.y += f.v - P.speed * 0.25 * f.s * 0.5;
-            f.x += Math.sin((t + f.y) * 0.01) * 0.4 - P.vx * 0.1;
-            if (f.y < -10) { f.y = H + 10; f.x = Math.random() * W; }
-            if (f.y > H + 10) { f.y = -10; f.x = Math.random() * W; }
-            if (f.x < -10) f.x = W + 10;
-            if (f.x > W + 10) f.x = -10;
-        }
+        knockOut(P, i);
     }
 
     function dying() {
-        P.crash = 10;
+        for (const p of PL) if (!p.ko) p.crash = 10;
     }
 
     // ---------- drawing ----------
@@ -453,8 +495,10 @@ MODES.ski = (() => {
         }
     }
 
-    function drawPlayer(g) {
+    function drawPlayer(g, i) {
         const c = Game.char;
+        if (P.ko) { Coop.drawBubble(g, c, P.ko.x, P.ko.y - camY, i); return; }
+        Coop.label(g, P.x, P.y - camY - airHeight() - c.h - 18, i);
         if (P.inv > 0 && Math.floor(P.inv / 4) % 2 === 0) return;
         const x = P.x, y = P.y - camY, h = airHeight();
         g.fillStyle = 'rgba(60,90,140,0.3)';
@@ -509,14 +553,16 @@ MODES.ski = (() => {
         // ski tracks
         g.strokeStyle = pal.light ? 'rgba(255,255,255,0.4)' : 'rgba(150,185,225,0.55)';
         g.lineWidth = 3;
-        for (const side of [-8, 8]) {
-            g.beginPath();
-            let pen = false;
-            for (const p of P.trail) {
-                if (p.air) { pen = false; continue; }
-                if (!pen) { g.moveTo(p.x + side, p.y - camY + 4); pen = true; } else g.lineTo(p.x + side, p.y - camY + 4);
+        for (const sk of PL) {
+            for (const side of [-8, 8]) {
+                g.beginPath();
+                let pen = false;
+                for (const p of sk.trail) {
+                    if (p.air) { pen = false; continue; }
+                    if (!pen) { g.moveTo(p.x + side, p.y - camY + 4); pen = true; } else g.lineTo(p.x + side, p.y - camY + 4);
+                }
+                g.stroke();
             }
-            g.stroke();
         }
         // forest edges
         const e0 = Math.floor(camY / 55) * 55;
@@ -535,19 +581,23 @@ MODES.ski = (() => {
         for (const k of S.tacos) { const y = k.y - camY; if (!k.got && y > -40 && y < H + 40) drawTaco(g, k.x, y - 20, Game.t); }
         for (const b of S.babies) { const y = b.y - camY; if (!b.got && y > -60 && y < H + 60) drawBaby(g, b.x, y, Game.t, 'scarf'); }
 
-        // objects behind the player, then the player, then objects in front
-        let i = 0;
-        const list = S.objs;
-        for (; i < list.length && list[i].y < P.y; i++) {
-            const y = list[i].y - camY;
-            if (y > -120 && y < H + 120) drawObj(g, list[i]);
-        }
-        drawPlayer(g);
-        for (; i < list.length; i++) {
-            const y = list[i].y - camY;
+        // objects behind each skier, then the skier, then objects in front
+        const order = PL.map((p, k) => k).sort((a, b) => PL[a].y - PL[b].y);
+        let next = 0;
+        const skiersUpTo = (wy) => {
+            for (; next < order.length && PL[order[next]].y < wy; next++) {
+                const k = order[next];
+                Game.use(k); P = PL[k]; drawPlayer(g, k);
+            }
+            Game.use(-1); P = PL[0];
+        };
+        for (const o of S.objs) {
+            const y = o.y - camY;
             if (y > H + 120) break;
-            if (y > -120) drawObj(g, list[i]);
+            skiersUpTo(o.y);
+            if (y > -120) drawObj(g, o);
         }
+        skiersUpTo(Infinity);
         drawSnowball(g);
         FX.draw(g, 0, camY);
 
@@ -569,12 +619,12 @@ MODES.ski = (() => {
         FX.drawTexts(g, 0, camY);
     }
 
-    function progress() { return clamp(P.y / S.len, 0, 1); }
+    function progress(i) { return clamp(PL[i || 0].y / S.len, 0, 1); }
 
     return {
         music: 'ski', icon: '⛷️',
         tip: '← → steer  ·  hold ↓ to go FAST  ·  SPACE hop & spin  ·  stay ahead of the giant snowball!',
-        debug: () => ({ S, P }),
+        debug: () => ({ S, P, PL }),
         init, update, draw, dying, progress
     };
 })();
