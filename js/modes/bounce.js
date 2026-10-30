@@ -10,7 +10,7 @@ MODES.bounce = (() => {
     const FLOOR = 500;       // top of the padded floor
     const G = 0.5;           // gravity
     const NORMAL = 12.5, BIG = 16.5, SUPER = 18, FOAM = 10.5;
-    let T, P, cam, t, lvl, pal;
+    let T, P, PL = [], cam, t, lvl, pal;   // P = the bouncer being updated, PL = all bouncers
 
     const PALETTES = [
         { wall: ['#FFE9A8', '#FFD1E6'], stripe: ['#FF7BC0', '#7FD4FF', '#FFD400', '#7FE3A0'], mat: ['#3D8BFF', '#2F6FD8'], pad: ['#FFD400', '#FF4F8B', '#3DDC84', '#FF8A3D'], frame: '#555C70', bed: '#26283A', night: false },
@@ -99,10 +99,14 @@ MODES.bounce = (() => {
         pal = PALETTES[level.pal || 0];
         const total = build(level);
         const first = T.tramps[0];
-        P = { x: first.x + 70, y: first.y - 120, vx: 0, vy: 0, inv: 0, stun: 0, rot: 0, flip: false, big: false,
-              lastT: first, state: 'play', bubbleT: 0, fromX: 0, fromY: 0, finT: 0, dead: false, r: 0, facing: 1 };
-        const c = Game.char;
-        P.r = Math.min(c.w, c.h) * 0.45 + 2;
+        PL = [];
+        Coop.each(Game.players, (pl, i) => {
+            const c = Game.char;
+            PL.push({ x: first.x + 70 - i * 45, y: first.y - 120 - i * 40, vx: 0, vy: 0, inv: 0, stun: 0, rot: 0, flip: false, big: false,
+                      lastT: first, state: 'play', bubbleT: 0, fromX: 0, fromY: 0, finT: 0, dead: false, facing: 1, ko: null,
+                      r: Math.min(c.w, c.h) * 0.45 + 2 });
+        });
+        P = PL[0];
         cam = { x: 0, y: 0 };
         return { stars: total };
     }
@@ -139,6 +143,7 @@ MODES.bounce = (() => {
     function hurtAndRespawn(msg) {
         FX.text(P.x, P.y - 70, msg, '#FFFFFF', 26);
         if (Game.char.ability === 'bubble') {
+            if (Game.coop && PL.some(o => o !== P && active(o))) { respawn(); return; }
             P.state = 'bubble'; P.bubbleT = 0; P.fromX = P.x; P.fromY = P.y;
             Sound.play('pop');
             return;
@@ -149,24 +154,69 @@ MODES.bounce = (() => {
     }
 
     function respawn() {
+        // 2 players: float back to your partner instead
+        const mate = Game.coop && PL.find(o => o !== P && active(o));
+        if (mate) { P.state = 'play'; P.stun = 0; Coop.bubble(P, P.x, P.y - 40); return; }
         const tr = P.lastT;
         P.x = tr.x + tr.w / 2; P.y = tr.y - 160; P.vx = 0; P.vy = 0;
         P.inv = 90; P.state = 'play'; P.flip = false; P.rot = 0;
         FX.sparkle(P.x, P.y - 20, '#FFFFFF');
     }
 
+    const active = (p) => !p.ko && p.state !== 'dead';
+
     function update() {
         t++;
-        const I = Input.held;
-        const c = Game.char;
-
         for (const tr of T.tramps) {
             if (tr.amp) { const nx = tr.x0 + Math.sin(t * tr.speed + tr.phase) * tr.amp; tr.dx = nx - tr.x; tr.x = nx; }
             tr.squish *= 0.8;
         }
         for (const k of T.kids) {
             if (k.oops > 0) k.oops--;
-            if (k.quip && Math.abs(k.tr.x - P.x) < 260) k.show = 90; else if (k.show > 0) k.show--;
+            if (k.quip && PL.some(p => Math.abs(k.tr.x - p.x) < 260)) k.show = 90; else if (k.show > 0) k.show--;
+        }
+        const cam0 = { x: cam.x, y: cam.y };
+        Coop.each(PL, (p, i) => {
+            P = p;
+            updateOne(i);
+            // 2 players: out of hearts? Into a bubble to float back to your partner!
+            if (Game.coop && Game.players[i].out && Game.state === 'play' && !P.ko) {
+                Coop.bubble(P, P.x, Math.min(P.y - 40, cam.y + H - 60), 'Rescue me!');
+                P.dead = false; P.state = 'play'; P.flip = false; P.rot = 0;
+            }
+        });
+        P = PL[0];
+        if (!Game.coop) return;
+
+        // 2 players share one screen: keep the camera between them
+        cam.x = cam0.x; cam.y = cam0.y;
+        const on = PL.filter(active);
+        if (!on.length) return;
+        const lo = Math.min(...on.map(p => p.x)), hi = Math.max(...on.map(p => p.x));
+        const tx = on.every(p => p.state === 'finish') ? T.counterX - W * 0.55 : (lo + hi) / 2 - W / 2;
+        cam.x += (tx - cam.x) * 0.1;
+        cam.x = clamp(cam.x, 0, T.end - W);
+        const ty = Math.min(0, Math.min(...on.map(p => p.y)) - 190);
+        cam.y += (ty - cam.y) * 0.1;
+        for (const p of on) {
+            if (p.state !== 'play') continue;
+            if (p.x < cam.x + 30) { p.x = cam.x + 30; if (p.vx < 0) p.vx = 0; }
+            if (p.x > cam.x + W - 30) { p.x = cam.x + W - 30; if (p.vx > 0) p.vx = 0; }
+        }
+    }
+
+    function updateOne(i) {
+        const I = Input.held;
+        const c = Game.char;
+        if (P.ko) {
+            const mate = PL.find(o => o !== P && active(o));
+            if (mate && Coop.floatTo(P, mate.x, mate.y - c.h - 40)) {
+                const b = P.ko;
+                Coop.pop(P, i);
+                P.x = b.x; P.y = b.y + c.h / 2; P.vx = 0; P.vy = -4; P.inv = 90;
+                P.flip = false; P.rot = 0; P.lastT = mate.lastT;
+            }
+            return;
         }
 
         if (P.state === 'finish') {
@@ -277,7 +327,7 @@ MODES.bounce = (() => {
         cam.y += (ty - cam.y) * 0.1;
     }
 
-    function dying() { P.vy += 0.4; P.y += P.vy; P.rot += 0.1; }
+    function dying() { for (const p of PL) if (p.state === 'dead') { p.vy += 0.4; p.y += p.vy; p.rot += 0.1; } }
 
     // ---------- drawing ----------
     function drawRoom(g) {
@@ -445,8 +495,10 @@ MODES.bounce = (() => {
         g.restore();
     }
 
-    function drawPlayer(g) {
+    function drawPlayer(g, i) {
         const c = Game.char;
+        if (P.ko) { Coop.drawBubble(g, c, P.ko.x - cam.x, P.ko.y - cam.y, i); return; }
+        Coop.label(g, P.x - cam.x, P.y - cam.y - c.h - 16, i);
         if (P.inv > 0 && Math.floor(P.inv / 4) % 2 === 0 && P.state === 'play') return;
         const x = P.x - cam.x, y = P.y - cam.y;
         if (P.state === 'floor') {
@@ -480,17 +532,19 @@ MODES.bounce = (() => {
         for (const k of T.tacos) if (!k.got) drawTaco(g, k.x - cam.x, k.y - cam.y, Game.t);
         for (const b of T.babies) if (!b.got) drawBaby(g, b.x - cam.x, b.y - cam.y + 15, Game.t);
         for (const k of T.kids) drawKid(g, k);
-        drawPlayer(g);
+        for (let i = PL.length - 1; i >= 0; i--) { Game.use(i); P = PL[i]; drawPlayer(g, i); }
+        Game.use(-1);
+        P = PL[0];
         FX.draw(g, cam.x, cam.y);
         FX.drawTexts(g, cam.x, cam.y);
     }
 
-    function progress() { return clamp((P.x - 100) / (T.finishX - 100), 0, 1); }
+    function progress(i) { return clamp((PL[i || 0].x - 100) / (T.finishX - 100), 0, 1); }
 
     return {
         music: 'bounce', icon: '🤸',
         tip: '← → steer · HOLD SPACE as you land for a BIG bounce · ↓ drop faster · don\'t hit the floor!',
-        debug: () => ({ T, P }),
+        debug: () => ({ T, P, PL, cam }),
         init, update, draw, dying, progress
     };
 })();

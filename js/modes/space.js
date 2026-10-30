@@ -6,7 +6,7 @@
 'use strict';
 
 MODES.space = (() => {
-    let S, P, camX, t, lvl, pal;
+    let S, P, PL = [], camX, t, lvl, pal;   // P = the astronaut being updated, PL = all astronauts
 
     const PALETTES = [
         { bg: ['#0B0630', '#1B0F4E'], neb1: 'rgba(170,60,220,0.22)', neb2: 'rgba(40,120,255,0.18)' },
@@ -96,9 +96,13 @@ MODES.space = (() => {
         lvl = level;
         pal = PALETTES[level.pal || 0];
         const total = build(level);
-        P = { sx: 170, y: 270, vy: 0, inv: 0, tilt: 0, thrust: false, dead: false, dock: 0, combo: 0, r: 0 };
-        const c = Game.char;
-        P.r = Math.min(c.w, c.h) * 0.45 + 4;
+        PL = [];
+        Coop.each(Game.players, (pl, i) => {
+            const c = Game.char;
+            PL.push({ sx: 170, y: Game.coop ? (i ? 340 : 200) : 270, vy: 0, inv: 0, tilt: 0, thrust: false, dead: false, dock: 0, combo: 0,
+                      ri: 0, ko: null, r: Math.min(c.w, c.h) * 0.45 + 4 });
+        });
+        P = PL[0];
         camX = 0;
         return { stars: total };
     }
@@ -114,17 +118,18 @@ MODES.space = (() => {
         if (!Game.hurt()) P.dead = true;
     }
 
+    const active = (p) => !p.ko && !p.dead;
+
     function update() {
         t++;
-        const I = Input.held;
-        const c = Game.char;
-        const px = () => camX + P.sx;
-
         if (S.finished) {
             S.finished++;
-            const tx = S.stationX - camX + 10;
-            P.sx += (tx - P.sx) * 0.05;
-            P.y += (H / 2 + 10 - P.y) * 0.05;
+            PL.forEach((p, i) => {
+                if (p.ko) return;
+                const tx = S.stationX - camX + 10 - i * 50;
+                p.sx += (tx - p.sx) * 0.05;
+                p.y += (H / 2 + 10 + (Game.coop ? (i ? 30 : -30) : 0) - p.y) * 0.05;
+            });
             camX += speed() * Math.max(0, 1 - S.finished / 60);
             if (S.finished % 30 === 0) FX.confetti(S.stationX, H / 2 - 60, 30);
             if (S.finished === 150) Game.levelDone();
@@ -132,6 +137,41 @@ MODES.space = (() => {
         }
 
         camX += speed();
+        for (const o of S.rocks) o.rot += o.vr;
+        const on = PL.filter(active);
+        for (const cm of S.comets) {
+            if (!cm.active && cm.spawnX - camX < W + 500) { cm.active = true; cm.x = camX + W + 500; cm.warn = 70; cm.aim = on.length ? on[Math.floor(Math.random() * on.length)] : P; Sound.play('boost'); }
+            if (!cm.active) continue;
+            if (cm.warn > 0) { cm.warn--; cm.x = camX + W + 500; cm.y += (cm.aim.y - cm.y) * 0.02; continue; }
+            cm.x += cm.vx;
+            if (t % 2 === 0) FX.burst(cm.x + 14, cm.y, { count: 1, colors: ['#9FF3FF', '#FFFFFF', '#6FB7FF'], speed: 1, life: 26, gravity: 0, shape: 'circle', size: 7, vx: 1 });
+        }
+        Coop.each(PL, (p, i) => {
+            P = p;
+            updateOne(i);
+            // 2 players: out of hearts? Into a bubble to float back to your partner!
+            if (Game.coop && Game.players[i].out && Game.state === 'play' && !P.ko) {
+                Coop.bubble(P, camX + P.sx, P.y, 'Rescue me!');
+                P.dead = false; P.thrust = false;
+            }
+        });
+        P = PL[0];
+    }
+
+    function updateOne(i) {
+        const I = Input.held;
+        const c = Game.char;
+        const px = () => camX + P.sx;
+        if (P.ko) {
+            P.ko.x += speed();   // the bubble keeps up with the screen
+            const mate = PL.find(o => o !== P && active(o));
+            if (mate && Coop.floatTo(P, camX + mate.sx, mate.y - 50)) {
+                const b = P.ko;
+                Coop.pop(P, i);
+                P.sx = clamp(b.x - camX, 70, 560); P.y = clamp(b.y, 40, H - 40); P.vy = 0; P.inv = 90;
+            }
+            return;
+        }
         if (P.inv > 0) P.inv--;
 
         P.thrust = I.jump || I.up;
@@ -153,21 +193,16 @@ MODES.space = (() => {
 
         const X = px();
         for (const o of S.rocks) {
-            o.rot += o.vr;
             if (o.x < camX - 100 || o.x > camX + W + 100) continue;
             const oy = o.y + Math.sin(t * 0.02 + o.phase) * o.bob;
             if (dist(X, P.y, o.x, oy) < o.r * 0.85 + P.r) hit(oy);
         }
         for (const cm of S.comets) {
-            if (!cm.active && cm.spawnX - camX < W + 500) { cm.active = true; cm.x = camX + W + 500; cm.warn = 70; Sound.play('boost'); }
-            if (!cm.active) continue;
-            if (cm.warn > 0) { cm.warn--; cm.x = camX + W + 500; cm.y += (P.y - cm.y) * 0.02; continue; }
-            cm.x += cm.vx;
-            if (t % 2 === 0) FX.burst(cm.x + 14, cm.y, { count: 1, colors: ['#9FF3FF', '#FFFFFF', '#6FB7FF'], speed: 1, life: 26, gravity: 0, shape: 'circle', size: 7, vx: 1 });
+            if (!cm.active || cm.warn > 0) continue;
             if (dist(X, P.y, cm.x, cm.y) < 16 + P.r) hit(cm.y);
         }
-        for (const rg of S.rings) {
-            if (rg.done || X < rg.x) continue;
+        while (P.ri < S.rings.length && X >= S.rings[P.ri].x) {
+            const rg = S.rings[P.ri++];
             rg.done = true;
             if (Math.abs(P.y - rg.y) < 44) {
                 rg.ok = true;
@@ -194,7 +229,7 @@ MODES.space = (() => {
         }
     }
 
-    function dying() { P.vy += 0.3; P.y += P.vy; P.tilt += 0.1; }
+    function dying() { for (const p of PL) if (p.dead) { p.vy += 0.3; p.y += p.vy; p.tilt += 0.1; } }
 
     // ---------- drawing ----------
     function drawRock(g, o, x, y) {
@@ -239,8 +274,10 @@ MODES.space = (() => {
         outlinedText(g, 'SPACE STATION', x + 15, y - 90, 20, '#FFD400', '#2A1060');
     }
 
-    function drawPlayer(g) {
+    function drawPlayer(g, i) {
         const c = Game.char;
+        if (P.ko) { Coop.drawBubble(g, c, P.ko.x - camX, P.ko.y, i); return; }
+        Coop.label(g, P.sx, P.y - c.h * 0.15 - Math.max(c.w, c.h) * 0.62 - 6, i);
         if (P.inv > 0 && Math.floor(P.inv / 4) % 2 === 0) return;
         const x = P.sx, y = P.y;
         g.save();
@@ -336,7 +373,9 @@ MODES.space = (() => {
             g.fillStyle = '#FFFFFF';
             g.beginPath(); g.arc(x - 4, cm.y - 4, 6, 0, TAU); g.fill();
         }
-        drawPlayer(g);
+        for (let i = PL.length - 1; i >= 0; i--) { Game.use(i); P = PL[i]; drawPlayer(g, i); }
+        Game.use(-1);
+        P = PL[0];
         for (const rg of S.rings) {
             const x = rg.x - camX;
             if (x < -80 || x > W + 80) continue;
@@ -348,12 +387,12 @@ MODES.space = (() => {
         FX.drawTexts(g, camX, 0);
     }
 
-    function progress() { return clamp((camX + P.sx) / S.stationX, 0, 1); }
+    function progress(i) { return clamp((camX + PL[i || 0].sx) / S.stationX, 0, 1); }
 
     return {
         music: 'space', icon: '🚀',
         tip: 'Hold SPACE to fly up · ← → move · fly through rings, dodge rocks & comets!',
-        debug: () => ({ S, P, camX }),
+        debug: () => ({ S, P, PL, camX }),
         init, update, draw, dying, progress
     };
 })();

@@ -249,6 +249,21 @@ h2 {
     min-width: 0;
 }
 .char-card:hover { transform: scale(1.04); }
+/* 2 players: the character player 1 already picked */
+.char-card.taken { position: relative; filter: grayscale(0.7); opacity: 0.6; cursor: not-allowed; }
+.char-card.taken:hover { transform: none; }
+.char-card.taken::after {
+    content: 'P1';
+    position: absolute; top: 0.3em; right: 0.4em;
+    background: #FF4FA3; color: #fff; font-weight: 700;
+    border-radius: 0.6em; padding: 0.05em 0.45em;
+}
+.ptag {
+    display: inline-block; color: #fff; font-weight: 700;
+    border-radius: 0.5em; padding: 0 0.4em; font-size: 0.85em;
+}
+.ptag.p1 { background: #FF4FA3; }
+.ptag.p2 { background: #3D8BFF; }
 .char-prev { width: 100%; aspect-ratio: 4 / 3; height: auto; }
 .cname { font-weight: 700; font-size: 1.35em; line-height: 1.05; }
 .ctitle { font-size: 0.9em; color: rgba(40, 20, 70, 0.75); font-weight: 600; }

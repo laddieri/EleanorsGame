@@ -28,7 +28,10 @@
                 <div class="title-card">
                     <div class="logo">Eleanor's<span>Family Adventure</span></div>
                     <p class="tag">Run, ski, bike, swim, bounce and blast off with the whole family!<br>Rescue the lost baby axolotls and earn ★★★ on all 18 levels.</p>
-                    <button class="menu-item btn big pink default" data-action="play">▶ Play!</button>
+                    <div class="row">
+                        <button class="menu-item btn big pink default" data-action="play">▶ 1 Player</button>
+                        <button class="menu-item btn big" data-action="play2">👫 2 Players</button>
+                    </div>
                     <p class="hint">Keyboard · Touch · 🎮 Gamepad</p>
                 </div>
             </div>
@@ -38,7 +41,7 @@
                 <div class="menu-panel wide">
                     <div class="menu-head">
                         <button class="menu-item btn small ghost" data-action="to-title">◀ Back</button>
-                        <h2>Who's playing?</h2>
+                        <h2 id="charsTitle">Who's playing?</h2>
                         <span class="spacer"></span>
                     </div>
                     <div id="charGrid" class="char-grid"></div>
@@ -119,7 +122,7 @@
             </div>
         </div>
 
-        <p id="help">← → move · <b>SPACE</b> or ↑ jump · ↓ special power · <b>ESC</b> pause · 🎮 gamepads work too!</p>
+        <p id="help">← → move · <b>SPACE</b> or ↑ jump · ↓ special power · <b>ESC</b> pause · 🎮 gamepads work too! · 👫 2 players: P1 uses A D + W, P2 uses ← → + ↑</p>
     </div>
 
     <script src="js/engine.js"></script>
@@ -127,6 +130,7 @@
     <script src="js/input.js"></script>
     <script src="js/art.js"></script>
     <script src="js/characters.js"></script>
+    <script src="js/coop.js"></script>
     <script src="js/modes/walk.js"></script>
     <script src="js/modes/ski.js"></script>
     <script src="js/modes/bike.js"></script>
