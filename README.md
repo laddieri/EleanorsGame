@@ -32,9 +32,11 @@ hearts. Stars, baby axolotls and score are shared, so you're a team!
 | Move | A D | ← → |
 | Jump / fly / hop | W or SPACE | ↑ |
 | Special | S | ↓ |
-| Gamepad | Gamepad 1 | Gamepad 2 |
+| Gamepad | first gamepad to press a button | the next gamepad |
 
-The touch buttons always control Player 1.
+The touch buttons always control Player 1. Gamepads join when you press any
+button on them (navigating the menus counts), so whoever picks up a controller
+and presses something first is Player 1. Reload the page to choose again.
 
 - The screen follows **both** players. In meadow and trampoline levels you can't
   run off the edge of the screen, so wait for your partner!
