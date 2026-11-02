@@ -38,11 +38,26 @@ const LEVELS = [
     { id: 'w3-walk4', world: 3, mode: 'walk',  name: 'Glowworm Gully',    d: 0.92, pal: 2, seed: 3303 },
     { id: 'w3-bounce', world: 3, mode: 'bounce', name: 'Glow Bounce',     d: 0.9,  pal: 2, seed: 333 },
     { id: 'w3-walk5', world: 3, mode: 'walk',  name: 'Starlight Path',    d: 0.96, pal: 2, seed: 3304 },
-    { id: 'w3-space', world: 3, mode: 'space', name: 'Comet Chase',       d: 1.0,  pal: 2, seed: 12 * 7919 }
+    { id: 'w3-space', world: 3, mode: 'space', name: 'Comet Chase',       d: 1.0,  pal: 2, seed: 12 * 7919 },
+    // 3D bonus levels! Each one opens as soon as you reach its world.
+    { id: 'b1-sky', world: 1, bonus: true, mode: 'sky', name: 'Cloud Path 3D',     d: 0.05, pal: 0, seed: 4401 },
+    { id: 'b2-sky', world: 2, bonus: true, mode: 'sky', name: 'Sunset Skyway 3D',  d: 0.45, pal: 1, seed: 4402 },
+    { id: 'b3-sky', world: 3, bonus: true, mode: 'sky', name: 'Starlight Road 3D', d: 0.85, pal: 2, seed: 4403 }
 ].map((l, i, all) => Object.assign(l, {
     index: i,
-    label: `${l.world}-${all.slice(0, i).filter(o => o.world === l.world).length + 1}`
+    label: l.bonus ? `3D-${l.world}`
+                   : `${l.world}-${all.slice(0, i).filter(o => o.world === l.world && !o.bonus).length + 1}`
 }));
+
+// The main adventure (bonus levels sit outside it and don't change what's unlocked)
+const MAIN_LEVELS = LEVELS.filter(l => !l.bonus).length;
+
+// Can you play this level yet?
+function levelOpen(lv) {
+    if (!lv.bonus) return lv.index < Save.data.unlocked;
+    const first = LEVELS.find(l => !l.bonus && l.world === lv.world);
+    return first.index < Save.data.unlocked;
+}
 
 // Saves remember the furthest unlocked level by its id (lastOpen), so adding
 // new levels never scrambles anyone's progress. Older saves are converted here.
@@ -200,8 +215,8 @@ const Game = {
         const prev = Save.data.best[key] || { rating: 0, score: 0 };
         const newBest = this.levelScore > prev.score;
         Save.data.best[key] = { rating: Math.max(prev.rating, rating), score: Math.max(prev.score, this.levelScore) };
-        const next = Math.min(LEVELS.length - 1, lv.index + 1);
-        if (next + 1 > Save.data.unlocked) { Save.data.unlocked = next + 1; Save.data.lastOpen = LEVELS[next].id; }
+        const next = Math.min(MAIN_LEVELS - 1, lv.index + 1);
+        if (!lv.bonus && next + 1 > Save.data.unlocked) { Save.data.unlocked = next + 1; Save.data.lastOpen = LEVELS[next].id; }
         Save.write();
         this.setState('complete');
         Sound.stopMusic();
@@ -354,8 +369,8 @@ const UI = {
 
     showComplete(rating, pct, newBest) {
         const lv = Game.level;
-        const last = lv.index === LEVELS.length - 1;
-        this.el('cTitle').textContent = last ? '🎉 You beat the game! 🎉' : lv.mode === 'swim' ? '🏊 Swim Test Passed!' : lv.mode === 'bounce' ? '🥤 Slushy Time!' : 'Level Complete!';
+        const last = lv.index === MAIN_LEVELS - 1;
+        this.el('cTitle').textContent = last ? '🎉 You beat the game! 🎉' : lv.mode === 'swim' ? '🏊 Swim Test Passed!' : lv.mode === 'bounce' ? '🥤 Slushy Time!' : lv.mode === 'sky' ? '🌈 Home Through the Sky!' : 'Level Complete!';
         this.el('cSub').textContent = `${lv.label} · ${lv.name}`;
         this.el('cStars').textContent = `${Game.stars} / ${Game.starsTotal}`;
         this.el('cBabies').textContent = `${Game.babies} / 3`;
@@ -372,8 +387,15 @@ const UI = {
         this.el('cHint').textContent = rating === 3
             ? (last ? 'You are a SUPERSTAR! Can you get ★★★ on every level?' : 'PERFECT! Every star earned!')
             : `For ★★★: ${hints.join(' and ')}!`;
-        this.el('btnNext').textContent = last ? '🗺️ Level Map' : 'Next Level ▶';
+        this.el('btnNext').textContent = last || (lv.bonus && !this.nextLevel()) ? '🗺️ Level Map' : 'Next Level ▶';
         this.show('complete');
+    },
+
+    // What "Next Level" leads to (null = back to the map)
+    nextLevel() {
+        const lv = Game.level;
+        if (lv.bonus) return LEVELS.find(l => l.bonus && l.index > lv.index && levelOpen(l)) || null;
+        return lv.index + 1 < MAIN_LEVELS ? LEVELS[lv.index + 1] : null;
     },
 
     showOver() {
@@ -429,18 +451,20 @@ const UI = {
         const grid = this.el('levelGrid');
         grid.innerHTML = '';
         let total = 0;
-        for (let w = 0; w < 3; w++) {
+        for (let w = 0; w < 4; w++) {
+            const bonus = w === 3;
             const row = document.createElement('div');
-            row.className = 'world-row';
-            row.innerHTML = `<div class="world-name">World ${w + 1}<small>${WORLD_NAMES[w]}</small></div>`;
-            for (const lv of LEVELS.filter(l => l.world === w + 1)) {
+            row.className = 'world-row' + (bonus ? ' bonus-row' : '');
+            row.innerHTML = bonus ? `<div class="world-name">✨ 3D Bonus<small>Sky Paths</small></div>`
+                                  : `<div class="world-name">World ${w + 1}<small>${WORLD_NAMES[w]}</small></div>`;
+            for (const lv of LEVELS.filter(l => (bonus ? l.bonus : l.world === w + 1 && !l.bonus))) {
                 const i = lv.index;
                 const best = Save.data.best[lv.id];
                 const rating = best ? best.rating : 0;
                 total += rating;
-                const locked = i >= Save.data.unlocked;
+                const locked = !levelOpen(lv);
                 const b = document.createElement('button');
-                b.className = 'menu-item level-btn w' + (w + 1);
+                b.className = 'menu-item level-btn ' + (bonus ? 'w3d' : 'w' + (w + 1));
                 b.dataset.action = 'level';
                 b.dataset.idx = i;
                 if (locked) b.disabled = true;
@@ -484,8 +508,8 @@ const UI = {
         else if (a === 'resume') this.resume();
         else if (a === 'restart' || a === 'replay' || a === 'retry') Game.startLevel(Game.level.index);
         else if (a === 'next') {
-            const n = Game.level.index + 1;
-            if (n < LEVELS.length) Game.startLevel(n); else this.showLevels();
+            const n = this.nextLevel();
+            if (n) Game.startLevel(n.index); else this.showLevels();
         } else if (a === 'music') toggleMusic();
         else if (a === 'fullscreen') toggleFullscreen();
     }
@@ -578,7 +602,7 @@ function drawIntro(g) {
     const extra = Game.coop ? 26 : 0;     // room for the 2-player controls
     rrect(g, W / 2 - 330, y - 110, 660, 230 + extra, 26); g.fill();
     g.lineWidth = 6; g.strokeStyle = '#FF4FA3'; g.stroke();
-    outlinedText(g, `WORLD ${lv.label}`, W / 2, y - 76, 22, '#FFD400', '#7A2A00');
+    outlinedText(g, lv.bonus ? `✨ 3D BONUS ${lv.world} ✨` : `WORLD ${lv.label}`, W / 2, y - 76, 22, '#FFD400', '#7A2A00');
     outlinedText(g, `${MODES[lv.mode].icon} ${lv.name}`, W / 2, y - 34, 42, '#FFFFFF', '#FF4FA3');
     g.fillStyle = '#4A3A7A';
     g.font = `600 17px ${FONT}`;
