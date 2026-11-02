@@ -1,7 +1,7 @@
 # 🌟 Eleanor's Family Adventure 🌟
 
 A colorful 8-bit style adventure starring the whole family! Run through meadows,
-zoom down snowy mountains, race bikes through town, pass the swim test at the pool, bounce at the trampoline park and blast off into space —
+zoom down snowy mountains, race bikes through town, pass the swim test at the pool, bounce at the trampoline park, blast off into space and run through the sky in **3D** —
 and rescue the lost baby axolotls along the way.
 
 ## How to play
@@ -58,7 +58,7 @@ Every level has three stars to earn:
 You get 3 hearts per level (Harry gets 5). Eat 🌮 **tacos** for extra hearts.
 Your progress and best scores are saved in your browser.
 
-## The 6 kinds of levels (3 worlds × 10 = 30 levels)
+## The 7 kinds of levels (3 worlds × 10 = 30 levels, plus 3 bonus 3D levels)
 
 Every special level (ski, bike, swim, trampoline, space) comes right after a
 meadow walking level, so each world goes walk, ski, walk, bike, walk, swim, walk,
@@ -91,6 +91,21 @@ trampoline, walk, space.
 - 🚀 **Space** – hold SPACE to fly up with your jetpack, dodge asteroids and
   comets (watch for the red ❗), fly through golden rings, and dock at the
   space station.
+
+### ✨ 3D Bonus: Sky Paths 🌈
+
+Three bonus levels in **3D**! You run *into* the screen along a floating path
+high above the clouds, all the way home to Mama Axolotl's house. Each one opens
+as soon as you reach its world (the first one is open right away).
+
+- You run forward on your own — steer with ← →, and hold ↓ to slow down.
+- Jump the gaps (watch out, the path floats in the sky!), jump over hedges or
+  steer through the open lane, and bop grumpy blobs on the head.
+- Bounce on the big pink flowers to launch sky-high — there might be a baby
+  axolotl up there! The shadow under you shows where you'll land.
+- Look out for skinny bridges and stepping-stone islands.
+- Powers work in 3D too: double jump, flutter, glide, mega hop, zoom dash,
+  ground pound (smashes hedges!), and Harry crashes right through hedges.
 
 World 1 is sunny, World 2 is at sunset and World 3 is at night — and each world
 is a bit harder than the last.
@@ -133,6 +148,7 @@ js/modes/bike.js    bike levels
 js/modes/swim.js    swim levels
 js/modes/bounce.js  trampoline park levels
 js/modes/space.js   space levels
+js/modes/sky.js     3D sky path levels (how the 3D works is explained at the top!)
 js/game.js          level list, hearts & score, menus, main loop
 ```
 

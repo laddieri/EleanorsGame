@@ -144,6 +144,11 @@ const Sound = (() => {
             mel: seq(`D5 . F#5 A5 . F#5 D6 .  B5 . A5 F#5 . E5 D5 .  E5 . G5 B5 . A5 G5 E5  F#5 A5 D6 A5 F#5 . D5 .`),
             bass: seq(`D3 . A2 . D3 . A2 .  G2 . D3 . G2 . D3 .  E2 . B2 . A2 . E3 .  D3 . A2 . D3 . A2 .`)
         },
+        sky: {
+            bpm: 140, lead: 'square', mv: 0.045, bv: 0.13, drums: true,
+            mel: seq(`G5 . B5 D6 . B5 G5 .  A5 . C6 E6 . C6 A5 .  B5 D6 G6 . F#6 E6 D6 .  C6 B5 A5 F#5 G5 . . .`),
+            bass: seq(`G2 . D3 . G2 . D3 .  A2 . E3 . A2 . E3 .  E2 . B2 . E2 . B2 .  D3 . A2 . G2 . D3 .`)
+        },
         space: {
             bpm: 96, lead: 'triangle', mv: 0.09, bv: 0.12, drums: false, hold: 1.8,
             mel: seq(`C5 . G5 . E5 . A5 .  G5 . . E5 . C5 . .  D6 . C6 . A5 . . G5  E5 . . G5 . A5 . .`),
